@@ -1,6 +1,6 @@
 {
   "notify_min_score": 35,
-  "min_score_keep": 30,
+  "min_score_keep": 28,
   "max_age_days": 21,
   "role_keywords": {
     "üretim": 12,
@@ -143,7 +143,16 @@
     "part time": 6,
     "yarı zamanlı": 6,
     "gönüllü": 15,
-    "volunteer": 15
+    "volunteer": 15,
+    "hr": 15,
+    "grafik": 15,
+    "graphic": 15,
+    "brand": 15,
+    "tasarım": 8,
+    "cloud": 10,
+    "laborant": 10,
+    "yapay zeka": 8,
+    "data scientist": 8
   },
   "location": {
     "home_cities": [
