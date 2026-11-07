@@ -314,6 +314,79 @@ class RadarTests(unittest.TestCase):
             self.assertIn("Son başvuru 3 gün", rem[0]["title"])
             self.assertEqual(s["meta"]["companies"][0]["name"], "X")
 
+    def test_deadline_reminders_7_3_1(self):
+        import datetime as dt
+        tr_today = dt.datetime.now(dt.timezone(dt.timedelta(hours=3))).date()
+        page = {"d": 7}
+
+        def fake(url, headers=None, timeout=25, retries=2, data=None):
+            if "page=" in url:
+                return "<html></html>"
+            dd = (tr_today + dt.timedelta(days=page["d"])).strftime("%d.%m.%Y")
+            return ('<a href="https://www.youthall.com/tr/acme/yaz-staji-uretim-planlama_77/"><div>Acme - Yaz Stajı Üretim Planlama</div>'
+                    f'<span>Stajyer</span> <span>{dd}</span> <span>Bursa</span></a>')
+        radar.http_get = fake
+        with tempfile.TemporaryDirectory() as d:
+            cdir = Path(d) / "cfg"
+            cdir.mkdir()
+            (cdir / "profile.json").write_text(json.dumps(self.prof))
+            off = {"enabled": False}
+            (cdir / "sources.json").write_text(json.dumps({
+                "youthall": {"enabled": True, "urls": ["https://www.youthall.com/tr/is-ilanlari/stajyer/"], "max_pages": 1},
+                "arbeitnow": off, "adzuna": off, "rss": off, "careers": off, "pages": off}))
+            data = Path(d) / "jobs.json"
+            args = Namespace(dry_run=True, no_notify=False, force=True, data=str(data), config_dir=str(cdir))
+            for days in (9, 7, 7, 4, 3, 3, 1, 1, 0):
+                page["d"] = days
+                radar.run(args)
+            s = json.loads(data.read_text())
+            titles = [e["title"] for e in s["events"] if e["type"] == "hatirlatma"]
+            self.assertEqual(len(titles), 3, titles)  # 7, 3 ve 1 gün eşikleri birer kez
+
+    def test_firm_slug_and_names(self):
+        self.assertEqual(radar.firm_slug("Oyak Renault"), "oyak-renault")
+        names = radar.company_names({}, {"companies": [{"name": "Bosch Bursa"}]})
+        self.assertEqual(names["firma:bosch-bursa"], "Bosch Bursa (ilansız başvuru)")
+
+    def test_followups_guarded_and_parsed(self):
+        import os
+        keys = ("SUPABASE_URL", "SUPABASE_ANON_KEY", "STAJ_INGEST_TOKEN")
+        old = {k: os.environ.get(k) for k in keys}
+        orig = radar.supa_rpc
+        try:
+            for k in keys:
+                os.environ.pop(k, None)
+            self.assertEqual(radar.followups(), [])
+            os.environ.update({"SUPABASE_URL": "https://x.supabase.co", "SUPABASE_ANON_KEY": "anon", "STAJ_INGEST_TOKEN": "tok"})
+            radar.supa_rpc = lambda name, payload: [{"job_id": "firma:x", "days": 8, "kind": 7, "contact": "ik@x.com"}, "bozuk", {"yok": 1}]
+            got = radar.followups()
+            self.assertEqual(len(got), 1)
+            self.assertEqual(got[0]["contact"], "ik@x.com")
+        finally:
+            radar.supa_rpc = orig
+            for k, v in old.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+
+    def test_weekly_digest(self):
+        import datetime as dt
+        now = dt.datetime(2026, 11, 8, 16, 0, tzinfo=dt.timezone.utc)  # Pazar 19:00 TR
+        today = dt.date(2026, 11, 8)
+        jobs = {
+            "a": {"id": "a", "title": "Yaz Stajı Üretim", "company": "Acme", "score": 60, "first_seen": "2026-11-05T10:00:00+00:00",
+                  "deadline": "2026-11-10"},
+            "b": {"id": "b", "title": "Eski ilan", "company": "Eski", "score": 50, "first_seen": "2026-10-01T10:00:00+00:00"},
+            "c": {"id": "c", "title": "Alakasız", "company": "Z", "score": 5, "first_seen": "2026-11-06T10:00:00+00:00"},
+        }
+        subj, body = radar.build_digest(jobs, {"applied_week": 3, "applied_total": 5, "waiting": 4, "interview": 1, "known": 2}, today, 28, now)
+        self.assertIn("haftalık", subj.lower())
+        self.assertIn("Bu hafta 1 yeni uygun ilan", body)
+        self.assertIn("2 gün: Yaz Stajı Üretim", body)
+        self.assertIn("bu hafta 3, toplam 5", body)
+        self.assertIn("Tanıdığın olan 2", body)
+
     def test_new_access_requests(self):
         import os
         keys = ("SUPABASE_URL", "SUPABASE_ANON_KEY", "STAJ_INGEST_TOKEN")

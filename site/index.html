@@ -83,6 +83,13 @@
   .card.dueSoon { border-color: var(--warn); }
   .group.sub { margin-top: 16px; }
   textarea.big { width: 100%; min-height: 200px; font: inherit; font-size: .86rem; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; resize: vertical; }
+  .field { font: inherit; font-size: .84rem; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; flex: 1 1 180px; min-width: 0; }
+  .fieldrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .chk { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .chk:last-child { border-bottom: 0; }
+  .chk label { flex: 1; cursor: pointer; }
+  .chk.done label { color: var(--muted); text-decoration: line-through; }
+  .chk input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
   .modal { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: grid; place-items: center; padding: 14px; z-index: 10; overflow-y: auto; }
   .sheet { background: var(--card); border: 1px solid var(--line); border-radius: 16px; max-width: 640px; width: 100%; max-height: 92vh; overflow-y: auto; padding: 16px 18px; }
   .sheet h2 { margin: 0 0 4px; font-size: 1.05rem; }
@@ -127,6 +134,7 @@
         </select>
         <button class="chip" id="fNew" aria-pressed="false">Yeni (48 saat)</button>
         <button class="chip" id="fDue" aria-pressed="false">⏳ Yaklaşan</button>
+        <button class="chip" id="fIcs" title="Son başvuru ve takip tarihlerini telefon takvimine ekle">📅 Takvime ekle</button>
       </div>
       <div id="list"></div>
     </section>
@@ -167,9 +175,29 @@
 
     <section class="pane" id="p-takip" hidden>
       <p class="hint">Kaydettiğin ve başvurduğun ilanlar. Durumu değiştir, not ekle. Telefon ve bilgisayar arasında eşitlenir.</p>
-      <div class="bar"><button class="chip" id="fHidden" aria-pressed="false">Gizlediklerimi göster</button></div>
+      <div class="bar"><button class="chip" id="fHidden" aria-pressed="false">Gizlediklerimi göster</button><button class="chip" id="fIcs2">📅 Takvime ekle (.ics)</button></div>
       <div class="board" id="board"></div>
     </section>
+
+    <section class="pane" id="p-belgeler" hidden>
+      <p class="hint">Staj öncesi ve sırasında yapılacaklar. Liste, Uludağ Mühendislik Fakültesi Endüstri Mühendisliği Uygulamalı Eğitim Kılavuzu'nun özetinden hazırlandı. Bölümün güncel yönergesinde başka belge veya tarih varsa aşağıdan ekle.</p>
+      <div class="panel"><h2 id="docTitle">Kontrol listesi</h2><div id="docList"></div>
+        <div class="fieldrow"><input type="text" class="field" id="docNew" placeholder="Yeni madde ekle (ör. staj başvuru formu)"><button class="btn" id="docAdd">Ekle</button></div>
+      </div>
+    </section>
+
+    <div class="modal" id="mailModal" hidden>
+      <div class="sheet">
+        <h2>Başvuru e-postası</h2>
+        <div class="meta" id="mailSub"></div>
+        <div class="bar" style="margin-top:10px"><button class="chip" id="mailKindIlk" aria-pressed="true">İlk başvuru</button><button class="chip" id="mailKindTakip" aria-pressed="false">Takip e-postası</button></div>
+        <div class="fieldrow"><input type="email" class="field" id="mailTo" placeholder="Alıcı e-posta (İK / staj sorumlusu)"></div>
+        <div class="fieldrow"><input type="text" class="field" id="mailSubject" placeholder="Konu"></div>
+        <textarea class="big" id="mailBody" style="margin-top:8px"></textarea>
+        <div class="actions"><a class="btn on" id="mailOpen" href="mailto:">E-postayı aç</a><button class="btn" id="mailCopy">Metni kopyala</button><button class="btn" id="mailSent">Gönderdim, işaretle</button><button class="btn" id="mailClose">Kapat</button></div>
+        <p class="meta" id="mailNote">CV'ni e-postaya eklemeyi unutma. Metni göndermeden önce düzenleyebilirsin. “Gönderdim” dersen 7. ve 14. günde takip hatırlatması gelir.</p>
+      </div>
+    </div>
 
     <section class="pane" id="p-duyurular" hidden>
       <p class="hint">Okul ve bölüm duyuru sayfalarında görülen son duyurular. Staj, kariyer, burs gibi kelime geçenler öne çıkar.</p>
@@ -213,12 +241,12 @@
   var REGIONS = [["all", "Hepsi"], ["bursa", "Bursa"], ["yakin", "Yakın (≤200 km)"], ["orta", "Orta (≤450 km)"], ["uzak", "Uzak"], ["belirsiz", "Konum yok"]];
   var REGION_TITLE = { bursa: "Bursa", yakin: "Yakın şehirler (≤200 km)", orta: "Orta uzaklık (≤450 km)", uzak: "Uzak şehirler", belirsiz: "Konum belirtilmemiş" };
   var REGION_ORDER = { bursa: 0, yakin: 1, orta: 2, uzak: 3, belirsiz: 4 };
-  var TABS = [["bildirimler", "Bildirim"], ["yurtici", "Yurt içi"], ["yurtdisi", "Yurt dışı"], ["diger", "Diğer"], ["firmalar", "Firmalar"], ["takip", "Takip"], ["duyurular", "Duyuru"], ["cv", "CV"], ["kaynaklar", "Kaynak"]];
+  var TABS = [["bildirimler", "Bildirim"], ["yurtici", "Yurt içi"], ["yurtdisi", "Yurt dışı"], ["diger", "Diğer"], ["firmalar", "Firmalar"], ["takip", "Takip"], ["belgeler", "Belgeler"], ["duyurular", "Duyuru"], ["cv", "CV"], ["kaynaklar", "Kaynak"]];
   var STATUSES = [["saved", "★ Kaydedildi"], ["applied", "Başvurdum"], ["interview", "Mülakat"], ["offer", "Kabul/Teklif"], ["rejected", "Olumsuz"]];
   var ACTIVE_AFTER = ["applied", "interview", "offer", "rejected"];
   var COUNTRY = { DE: "Almanya", GB: "Birleşik Krallık", NL: "Hollanda", AT: "Avusturya", CH: "İsviçre", FR: "Fransa" };
 
-  var state = { farFilter: "all", q3: "", dueOnly: false, firmFilter: "all", cvLang: "tr", cvJob: null, region: "all", q: "", sort: "km", onlyNew: false, country: "all", q2: "", sort2: "score", evFilter: "all", annFilter: "all", showHidden: false };
+  var state = { farFilter: "all", q3: "", dueOnly: false, firmFilter: "all", cvLang: "tr", cvJob: null, region: "all", q: "", sort: "km", onlyNew: false, country: "all", q2: "", sort2: "score", evFilter: "all", annFilter: "all", showHidden: false, open: {}, mailKind: "ilk" };
   var tab = "bildirimler";
   var user = null, jobs = [], meta = {}, events = [], anns = [], marks = {}, checked = {}, lastRead = 0, profile = { cv_tr: "", cv_en: "" };
 
@@ -239,7 +267,7 @@
   function isNew(j) { return Date.now() - new Date(j.first_seen).getTime() < 48 * 3600 * 1000; }
   function isAbroad(j) { return (j.country || "TR") !== "TR"; }
   function isFar(j) { return j.score < ((meta && meta.far_below) || 28); }
-  function status(j) { return marks[j.id] ? marks[j.id].status : null; }
+  function status(j) { var m = marks[j.id]; return m && m.status !== "known" ? m.status : null; }
 
   /* ---------------- giriş ---------------- */
   function showLogin(msg, canLogout) {
@@ -339,17 +367,19 @@
     $("status").textContent = "yükleniyor…";
     Promise.all([
       sb.from("staj_state").select("data").eq("id", 1).maybeSingle(),
-      sb.from("staj_marks").select("job_id,status,note"),
-      sb.from("staj_profile").select("cv_tr,cv_en").maybeSingle()
+      sb.from("staj_marks").select("job_id,status,note,contact,applied_at,person"),
+      sb.from("staj_profile").select("cv_tr,cv_en,checklist").maybeSingle()
     ]).then(function (res) {
       if (res[0].error) { $("status").textContent = "Veri yüklenemedi"; return; }
       var d = (res[0].data && res[0].data.data) || {};
       meta = d.meta || {}; events = d.events || [];
       jobs = Object.keys(d.jobs || {}).map(function (k) { return d.jobs[k]; });
       anns = Object.keys(d.announcements || {}).map(function (k) { return d.announcements[k]; });
-      if (res[2] && res[2].data) { profile = { cv_tr: res[2].data.cv_tr || "", cv_en: res[2].data.cv_en || "" }; }
+      if (res[2] && res[2].data) { profile = { cv_tr: res[2].data.cv_tr || "", cv_en: res[2].data.cv_en || "", checklist: res[2].data.checklist || null }; }
       marks = {};
-      ((res[1].data) || []).forEach(function (m) { marks[m.job_id] = { status: m.status, note: m.note || "" }; });
+      ((res[1].data) || []).forEach(function (m) {
+        marks[m.job_id] = { status: m.status, note: m.note || "", contact: m.contact || "", applied_at: m.applied_at || null, person: m.person || "" };
+      });
       if (!localStorage.getItem("radar.visited")) { lastRead = Date.now(); store("radar.lastRead", lastRead); }
       try { localStorage.setItem("radar.visited", "1"); } catch (e) {}
       renderAll();
@@ -358,15 +388,53 @@
   $("btnRefresh").onclick = refresh;
   setInterval(function () { if (user && !document.hidden) refresh(); }, 10 * 60 * 1000);
 
+  function todayStr() { return new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10); }  // Türkiye tarihi
+  function addDays(iso, n) { var d = new Date(iso + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+  function trDate(iso) { return new Date(iso + "T00:00:00Z").toLocaleDateString("tr-TR", { day: "numeric", month: "short", timeZone: "UTC" }); }
+  function blankMark() { return { status: "known", note: "", contact: "", applied_at: null, person: "" }; }
+  function writeMark(id, fields) {
+    var f = Object.assign({ email: user.email, job_id: id, updated_at: new Date().toISOString() }, fields);
+    sb.from("staj_marks").upsert(f, { onConflict: "email,job_id" }).then(function () {});
+  }
+  function dropMark(id) { delete marks[id]; sb.from("staj_marks").delete().eq("job_id", id).then(function () {}); }
   function saveMark(j, st, note) {
-    var id = j.id || j;
-    if (!st) { delete marks[id]; sb.from("staj_marks").delete().eq("job_id", id).then(function () {}); }
-    else {
-      var n = note != null ? note : (marks[id] ? marks[id].note : "");
-      marks[id] = { status: st, note: n };
-      sb.from("staj_marks").upsert({ email: user.email, job_id: id, status: st, note: n, updated_at: new Date().toISOString() },
-        { onConflict: "email,job_id" }).then(function () {});
+    var id = j.id || j, m = marks[id] || blankMark();
+    if (!st) {
+      // Tanıdık / iletişim bilgisi varsa satırı silme, sadece durumu temizle
+      if (m.person || m.contact) { m.status = "known"; marks[id] = m; writeMark(id, { status: "known" }); }
+      else dropMark(id);
+      return;
     }
+    var f = { status: st, note: note != null ? note : m.note };
+    if (st === "applied" && m.status !== "applied") { f.applied_at = todayStr(); f.fu7 = false; f.fu14 = false; m.applied_at = f.applied_at; }
+    m.status = st; m.note = f.note; marks[id] = m; writeMark(id, f);
+  }
+  function patchMark(j, patch) {
+    var id = j.id || j, m = marks[id] || blankMark();
+    Object.keys(patch).forEach(function (k) { m[k] = patch[k]; });
+    marks[id] = m;
+    if (m.status === "known" && !m.person && !m.contact && !m.note) { dropMark(id); return; }
+    var f = Object.assign({ status: m.status }, patch);
+    if (patch.applied_at !== undefined) { f.fu7 = false; f.fu14 = false; }
+    writeMark(id, f);
+  }
+  function personUi(j, act, body) {
+    var id = j.id, m = marks[id] || {};
+    var b = el("button", "btn" + (m.person ? " on" : ""), "👤 Tanıdık");
+    b.onclick = function () { state.open[id] = !state.open[id]; renderAll(); };
+    act.appendChild(b);
+    if (state.open[id]) {
+      var row = el("div", "fieldrow"), inp = document.createElement("input");
+      inp.type = "text"; inp.className = "field"; inp.value = m.person || "";
+      inp.placeholder = "Tanıdık kim? (ad, firmadaki görevi, nasıl tanışıyorsun)";
+      inp.onchange = function () { patchMark(j, { person: inp.value.trim() }); renderAll(); };
+      row.appendChild(inp); body.appendChild(row);
+    }
+  }
+  function markTags(tags, j) {
+    var m = marks[j.id]; if (!m) return;
+    if (m.person) tags.appendChild(el("span", "tag new", "👤 " + m.person));
+    if (m.status === "applied" && m.applied_at) tags.appendChild(el("span", "tag", "başvuru " + trDate(m.applied_at) + " · takip " + trDate(addDays(m.applied_at, 7))));
   }
   function toggleMark(j, st) { saveMark(j, status(j) === st ? null : st); renderAll(); }
 
@@ -449,6 +517,7 @@
     if ((j.tags || []).indexOf("uzaktan") >= 0) tags.appendChild(el("span", "tag", "uzaktan"));
     if ((j.tags || []).indexOf("almanca") >= 0) tags.appendChild(el("span", "tag soon", "Almanca olabilir"));
     tags.appendChild(el("span", "tag", j.source));
+    markTags(tags, j);
     (j.reasons || []).filter(function (r) { return r !== "staj ilanı"; }).slice(0, 5).forEach(function (r) {
       tags.appendChild(el("span", "tag" + (r.charAt(0) === "-" ? " soon" : ""), r));
     });
@@ -460,7 +529,7 @@
       b.onclick = function () { toggleMark(j, p[0]); }; act.appendChild(b);
     });
     var cvb = el("button", "btn", "CV'yi uyarla"); cvb.onclick = function () { openCv(j); }; act.appendChild(cvb);
-    body.appendChild(act); c.appendChild(body); return c;
+    body.appendChild(act); personUi(j, act, body); c.appendChild(body); return c;
   }
   function sortJobs(arr, how) {
     arr.sort(function (a, b) {
@@ -560,6 +629,17 @@
         });
         sel.onchange = function () { saveMark(j, sel.value || null); renderAll(); };
         m.appendChild(sel);
+        if (st[0] === "applied") {
+          m.appendChild(el("div", "meta", "Başvuru tarihi (7. ve 14. günde takip hatırlatması):"));
+          var di = document.createElement("input"); di.type = "date"; di.className = "field"; di.style.width = "100%"; di.style.marginTop = "4px";
+          di.value = marks[id].applied_at || "";
+          di.onchange = function () { patchMark(j, { applied_at: di.value || null }); renderAll(); };
+          m.appendChild(di);
+        }
+        var ci = document.createElement("input"); ci.type = "text"; ci.className = "field"; ci.style.width = "100%"; ci.style.marginTop = "6px";
+        ci.placeholder = "İletişim (e-posta / telefon)"; ci.value = marks[id].contact || "";
+        ci.onchange = function () { patchMark(j, { contact: ci.value.trim() }); };
+        m.appendChild(ci);
         var ta = document.createElement("textarea"); ta.rows = 2; ta.placeholder = "Not (kişi, tarih, link…)"; ta.value = marks[id].note || "";
         ta.onchange = function () { saveMark(j, st[0], ta.value); };
         m.appendChild(ta); col.appendChild(m);
@@ -634,13 +714,14 @@
   function renderFirms() {
     var list = meta.companies || [];
     $("firmHint").textContent = (meta.companies_source || "Firma listesi yok.") + " İlan çıkmasını beklemeden CV ve ön yazıyla başvurabilirsin.";
-    chips($("firmFilters"), [["all", "Hepsi (" + list.length + ")"], ["todo", "Başvurmadım"], ["applied", "Başvurdum"], ["saved", "İlgileniyorum"]],
+    chips($("firmFilters"), [["all", "Hepsi (" + list.length + ")"], ["todo", "Başvurmadım"], ["applied", "Başvurdum"], ["saved", "İlgileniyorum"], ["known", "👤 Tanıdık var"]],
       function () { return state.firmFilter; }, function (v) { state.firmFilter = v; });
     var box = $("firmList"); box.textContent = "";
     var rows = list.filter(function (c) {
-      var m = marks["firma:" + slug(c.name)]; var st = m ? m.status : null;
+      var fid = "firma:" + slug(c.name), m = marks[fid]; var st = status({ id: fid });
       if (state.firmFilter === "all") return st !== "hidden";
       if (state.firmFilter === "todo") return !st;
+      if (state.firmFilter === "known") return !!(m && m.person);
       return st === state.firmFilter;
     });
     if (!rows.length) box.appendChild(el("div", "empty", "Bu filtrede firma yok."));
@@ -653,6 +734,7 @@
       var tags = el("div", "tags");
       tags.appendChild(el("span", "tag" + (c.verified ? " new" : ""), c.verified ? "kariyer sayfası" : "arama bağlantısı"));
       if (c.note) tags.appendChild(el("span", "tag", c.note));
+      markTags(tags, fj);
       body.appendChild(tags);
       var act = el("div", "actions");
       act.appendChild(ext(el("a", "btn", c.verified ? "Kariyer sayfası" : "Kariyer sayfasını ara"), c.url));
@@ -662,7 +744,13 @@
       });
       var cvb = el("button", "btn", "CV'yi uyarla"); cvb.onclick = function () { openCv({ title: "Staj başvurusu (ilansız)", company: c.name, location: c.city, url: c.url, snippet: c.sector || "", reasons: [], country: "TR" }); };
       act.appendChild(cvb);
-      body.appendChild(act); r.appendChild(body); box.appendChild(r);
+      var mb = el("button", "btn", "✉ E-posta taslağı"); mb.onclick = function () { openMail(c, fj); }; act.appendChild(mb);
+      body.appendChild(act); personUi(fj, act, body);
+      var cr = el("div", "fieldrow"), ci = document.createElement("input");
+      ci.type = "email"; ci.className = "field"; ci.placeholder = "İK / staj e-postası (biliyorsan)"; ci.value = (marks[fj.id] || {}).contact || "";
+      ci.onchange = function () { patchMark(fj, { contact: ci.value.trim() }); };
+      cr.appendChild(ci); body.appendChild(cr);
+      r.appendChild(body); box.appendChild(r);
     });
   }
 
@@ -743,16 +831,146 @@
     if (document.activeElement !== b) b.value = profile.cv_en;
   }
   $("cvSave").onclick = function () {
-    profile = { cv_tr: $("cvTr").value, cv_en: $("cvEn").value };
+    profile.cv_tr = $("cvTr").value; profile.cv_en = $("cvEn").value;
     $("cvMsg").textContent = "Kaydediliyor…";
     sb.from("staj_profile").upsert({ email: user.email, cv_tr: profile.cv_tr, cv_en: profile.cv_en, updated_at: new Date().toISOString() }, { onConflict: "email" })
       .then(function (r) { $("cvMsg").textContent = r && r.error ? "Kaydedilemedi" : "Kaydedildi ✓"; });
   };
 
+  /* ---------------- e-posta taslağı ---------------- */
+  var mailCtx = null;
+  function userName() { var md = (user && user.user_metadata) || {}; return md.full_name || md.name || "[Ad Soyad]"; }
+  function mailTexts(kind) {
+    var c = mailCtx.c, m = marks[mailCtx.fj.id] || {}, ad = userName(), em = (user && user.email) || "";
+    if (kind === "takip") {
+      var when = m.applied_at ? trDate(m.applied_at) + " tarihinde" : "Geçtiğimiz günlerde";
+      return {
+        subject: "Staj başvurusu hakkında bilgi — " + ad,
+        body: "Sayın İnsan Kaynakları Yetkilisi,\n\n" + when + " Bursa Uludağ Üniversitesi Endüstri Mühendisliği öğrencisi olarak yaz stajı için başvuruda bulunmuştum. " +
+          "Başvurumun değerlendirme durumu hakkında bilgi alabilir miyim? Uygun görürseniz özgeçmişimi tekrar paylaşabilirim.\n\n" +
+          "Zaman ayırdığınız için teşekkür ederim.\n\nSaygılarımla,\n" + ad + "\n" + em
+      };
+    }
+    return {
+      subject: "Zorunlu yaz stajı başvurusu — " + ad + " / Uludağ Üniversitesi Endüstri Mühendisliği",
+      body: "Sayın İnsan Kaynakları Yetkilisi,\n\n" +
+        "Bursa Uludağ Üniversitesi Endüstri Mühendisliği 2. sınıf öğrencisiyim. Bu yaz okulumun zorunlu 20 iş günlük stajını yapmak istiyorum ve üretim süreçlerini yerinde görebileceğim bir işletme arıyorum. " +
+        "Firmanız (" + c.name + ") şu an açık bir staj ilanı yayınlamıyor olsa da, stajyer kontenjanınız olursa başvurumun değerlendirilmesini rica ederim.\n\n" +
+        "Üretim planlama, süreç iyileştirme ve veri analizi alanlarında kendimi geliştiriyorum; Excel, SQL ve Power BI kullanıyorum. Özgeçmişim ekte yer almaktadır. Uygun görürseniz kısa bir görüşme için müsaitim.\n\n" +
+        "Zaman ayırdığınız için teşekkür ederim.\n\nSaygılarımla,\n" + ad + "\n" + em
+    };
+  }
+  function openMail(c, fj) { mailCtx = { c: c, fj: fj }; state.mailKind = "ilk"; $("mailModal").hidden = false; renderMail(true); }
+  function syncMailLink() {
+    var to = $("mailTo").value.trim();
+    $("mailOpen").href = "mailto:" + to + "?subject=" + encodeURIComponent($("mailSubject").value) + "&body=" + encodeURIComponent($("mailBody").value);
+  }
+  function renderMail(fill) {
+    if (!mailCtx) return;
+    $("mailSub").textContent = mailCtx.c.name + (mailCtx.c.city ? " · " + mailCtx.c.city : "");
+    $("mailKindIlk").setAttribute("aria-pressed", String(state.mailKind === "ilk"));
+    $("mailKindTakip").setAttribute("aria-pressed", String(state.mailKind === "takip"));
+    if (fill) {
+      var t = mailTexts(state.mailKind);
+      $("mailTo").value = (marks[mailCtx.fj.id] || {}).contact || "";
+      $("mailSubject").value = t.subject; $("mailBody").value = t.body;
+    }
+    syncMailLink();
+  }
+  $("mailKindIlk").onclick = function () { state.mailKind = "ilk"; renderMail(true); };
+  $("mailKindTakip").onclick = function () { state.mailKind = "takip"; renderMail(true); };
+  $("mailTo").oninput = syncMailLink; $("mailSubject").oninput = syncMailLink; $("mailBody").oninput = syncMailLink;
+  $("mailTo").onchange = function () { if (mailCtx) { patchMark(mailCtx.fj, { contact: $("mailTo").value.trim() }); renderFirms(); } };
+  $("mailClose").onclick = function () { $("mailModal").hidden = true; };
+  $("mailCopy").onclick = function () {
+    var v = "Konu: " + $("mailSubject").value + "\n\n" + $("mailBody").value;
+    var done = function () { $("mailCopy").textContent = "Kopyalandı ✓"; setTimeout(function () { $("mailCopy").textContent = "Metni kopyala"; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(done, function () {});
+    else { var b = $("mailBody"); b.select(); document.execCommand("copy"); done(); }
+  };
+  $("mailSent").onclick = function () {
+    if (!mailCtx) return;
+    if (status(mailCtx.fj) !== "applied") saveMark(mailCtx.fj, "applied");
+    $("mailNote").textContent = "İşaretlendi ✓ Bugünden 7 gün sonra takip hatırlatması gelecek.";
+    renderAll();
+  };
+
+  /* ---------------- takvim (.ics) ---------------- */
+  function icsEsc(s) { return String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n"); }
+  function icsFold(l) { var o = []; while (l.length > 70) { o.push(l.slice(0, 70)); l = " " + l.slice(70); } o.push(l); return o.join("\r\n"); }
+  function exportIcs() {
+    var byId = {}; jobs.forEach(function (j) { byId[j.id] = j; });
+    (meta.companies || []).forEach(function (c) { var f = firmJob(c); byId[f.id] = f; });
+    var t0 = todayStr(), ev = [];
+    jobs.forEach(function (j) {
+      if (!j.deadline || j.deadline < t0 || isFar(j) || !visibleBase(j)) return;
+      ev.push({ uid: "dl-" + j.id, date: j.deadline, title: "Son başvuru: " + j.title + (j.company ? " — " + j.company : ""), desc: j.url || "" });
+    });
+    Object.keys(marks).forEach(function (id) {
+      var m = marks[id]; if (m.status !== "applied" || !m.applied_at || !byId[id]) return;
+      [7, 14].forEach(function (n) {
+        var d = addDays(m.applied_at, n);
+        if (d >= t0) ev.push({ uid: "fu" + n + "-" + id, date: d, title: "Takip e-postası: " + byId[id].title.replace(/ \(ilansız başvuru\)$/, ""), desc: m.contact || "" });
+      });
+    });
+    if (!ev.length) { $("status").textContent = "Takvime eklenecek tarih yok"; return; }
+    var stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
+    var L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Staj Radar//TR", "CALSCALE:GREGORIAN"];
+    ev.forEach(function (e) {
+      L.push("BEGIN:VEVENT", "UID:" + e.uid.replace(/[^a-z0-9:_-]/gi, "-") + "@staj-radar", "DTSTAMP:" + stamp,
+        "DTSTART;VALUE=DATE:" + e.date.replace(/-/g, ""), "DTEND;VALUE=DATE:" + addDays(e.date, 1).replace(/-/g, ""),
+        icsFold("SUMMARY:" + icsEsc(e.title)));
+      if (e.desc) L.push(icsFold("DESCRIPTION:" + icsEsc(e.desc)));
+      L.push("BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:Hatırlatma", "TRIGGER:-PT15H", "END:VALARM", "END:VEVENT");  // bir önceki gün 09:00
+    });
+    L.push("END:VCALENDAR");
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([L.join("\r\n")], { type: "text/calendar;charset=utf-8" }));
+    a.download = "staj-radar.ics"; document.body.appendChild(a); a.click(); a.remove();
+    $("status").textContent = ev.length + " tarih takvim dosyasına yazıldı";
+  }
+  $("fIcs").onclick = exportIcs; $("fIcs2").onclick = exportIcs;
+
+  /* ---------------- belgeler / kontrol listesi ---------------- */
+  var DOC_DEFAULT = [
+    "2. sınıf sonunda GANO en az 1,80 olmalı (kontrol et)",
+    "Staj yeri üretim veya hizmet faaliyeti yürütüyor mu?",
+    "İşletmede en az bir mühendis çalışıyor mu? (tercihen Endüstri Müh.)",
+    "20 iş günlük staj tarihlerini belirle, işletmeyle netleştir",
+    "Staj defterini temin et",
+    "Gizli sicil fişini işletmeye ver / doldurt",
+    "Yurt dışında yapacaksan: defter ve sicil fişinin dilini bölümden öğren",
+    "Staj boyunca rapor için not tut: üretim/hizmet süreçleri, ortam, analiz teknikleri, insan etmenleri",
+    "Bölümün güncel staj duyurularını ve başvuru tarihlerini kontrol et"
+  ];
+  function docs() { if (!profile.checklist) profile.checklist = DOC_DEFAULT.map(function (t) { return { t: t, d: false }; }); return profile.checklist; }
+  function saveDocs() {
+    sb.from("staj_profile").upsert({ email: user.email, checklist: profile.checklist, updated_at: new Date().toISOString() }, { onConflict: "email" }).then(function () {});
+  }
+  function renderDocs() {
+    var list = docs(), box = $("docList"); box.textContent = "";
+    var done = list.filter(function (x) { return x.d; }).length;
+    $("docTitle").textContent = "Kontrol listesi · " + done + "/" + list.length + " tamam";
+    list.forEach(function (it, i) {
+      var row = el("div", "chk" + (it.d ? " done" : "")), cb = document.createElement("input");
+      cb.type = "checkbox"; cb.id = "doc" + i; cb.checked = !!it.d;
+      cb.onchange = function () { it.d = cb.checked; saveDocs(); renderDocs(); };
+      var lb = el("label", null, it.t); lb.htmlFor = cb.id;
+      var rm = el("button", "link", "✕"); rm.title = "Maddeyi sil";
+      rm.onclick = function () { list.splice(i, 1); saveDocs(); renderDocs(); };
+      row.appendChild(cb); row.appendChild(lb); row.appendChild(rm); box.appendChild(row);
+    });
+  }
+  $("docAdd").onclick = function () {
+    var v = $("docNew").value.trim(); if (!v) return;
+    docs().push({ t: v, d: false }); $("docNew").value = ""; saveDocs(); renderDocs();
+  };
+  $("docNew").onkeydown = function (e) { if (e.key === "Enter") $("docAdd").onclick(); };
+
   function renderStatus() {
     $("status").textContent = meta.updated ? "Son tarama " + ago(meta.updated) + " · " + jobs.length + " ilan" : "Henüz tarama yok";
   }
-  function renderAll() { renderTabs(); renderStatus(); renderEvents(); renderDomestic(); renderAbroad(); renderFar(); renderFirms(); renderCvTab(); renderBoard(); renderAnns(); renderSources(); renderAccess(); }
+  function renderAll() { renderTabs(); renderStatus(); renderEvents(); renderDomestic(); renderAbroad(); renderFar(); renderFirms(); renderCvTab(); renderBoard(); renderDocs(); renderAnns(); renderSources(); renderAccess(); }
 
   $("q").oninput = function (e) { state.q = e.target.value; renderDomestic(); };
   $("sort").onchange = function (e) { state.sort = e.target.value; renderDomestic(); };

@@ -638,6 +638,63 @@ def save_state(data_path: Path, state: dict) -> None:
     data_path.write_text(json.dumps(state, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8")
 
 
+DEADLINE_STEPS = (7, 3, 1)
+
+
+def firm_slug(name: str) -> str:
+    """Sitedeki slug() ile aynı kural (firma:<slug> anahtarları için)."""
+    return re.sub(r"[^a-z0-9ğüşöçı]+", "-", name.lower()).strip("-")
+
+
+def company_names(jobs: dict, sources: dict) -> dict:
+    out = {j["id"]: j.get("title", j["id"]) for j in jobs.values() if "id" in j}
+    for c in sources.get("companies", []):
+        out[f"firma:{firm_slug(c['name'])}"] = f"{c['name']} (ilansız başvuru)"
+    return out
+
+
+def followups() -> list[dict]:
+    """7. ve 14. günü gelen, hâlâ 'Başvurdum' durumundaki başvurular (Supabase yoksa boş)."""
+    if not use_supabase():
+        return []
+    got = supa_rpc("staj_followups", {"p_token": os.environ["STAJ_INGEST_TOKEN"]})
+    return [x for x in (got or []) if isinstance(x, dict) and x.get("job_id")]
+
+
+def digest_stats() -> dict:
+    if not use_supabase():
+        return {}
+    return supa_rpc("staj_digest_stats", {"p_token": os.environ["STAJ_INGEST_TOKEN"]}) or {}
+
+
+def build_digest(jobs: dict, stats: dict, today: dt.date, far_below: int, now: dt.datetime) -> tuple[str, str]:
+    """Pazar akşamı haftalık özet: yeni ilanlar, yaklaşan son tarihler, başvuru sayıları."""
+    week_ago = now - dt.timedelta(days=7)
+    fit = [j for j in jobs.values() if j.get("score", 0) >= far_below]
+    new_fit = [j for j in fit if parse_dt(j["first_seen"]) >= week_ago]
+    soon = []
+    for j in fit:
+        try:
+            left = (dt.date.fromisoformat(j["deadline"]) - today).days if j.get("deadline") else None
+        except ValueError:
+            left = None
+        if left is not None and 0 <= left <= 7:
+            soon.append((left, j))
+    soon.sort(key=lambda x: x[0])
+    lines = [f"• Bu hafta {len(new_fit)} yeni uygun ilan geldi (toplam {len(fit)} uygun ilan)."]
+    if soon:
+        lines.append("• Son başvurusu bu hafta olanlar:")
+        lines += [f"   {l} gün: {j['title']} — {j.get('company', '')}" for l, j in soon[:5]]
+    else:
+        lines.append("• Önümüzdeki 7 günde son başvurusu dolan ilan yok.")
+    if stats:
+        lines.append(f"• Başvuru: bu hafta {stats.get('applied_week', 0)}, toplam {stats.get('applied_total', 0)}; "
+                     f"cevap bekleyen {stats.get('waiting', 0)}, mülakat {stats.get('interview', 0)}.")
+        if stats.get("known"):
+            lines.append(f"• Tanıdığın olan {stats['known']} yer var; referans istemeyi unutma.")
+    return "Staj Radar haftalık özet", "\n".join(lines)
+
+
 def new_access_requests() -> list[str]:
     """Henüz bildirilmemiş erişim isteklerini alır (Supabase yoksa boş)."""
     if not use_supabase():
@@ -668,8 +725,8 @@ def run(args) -> int:
 
     ev_ids = {e["id"] for e in events}
 
-    def add_event(typ, title, text="", url="", source="", score=None, important=False, ts=None):
-        eid = hashlib.sha1(f"{typ}|{url or title}".encode()).hexdigest()[:12]
+    def add_event(typ, title, text="", url="", source="", score=None, important=False, ts=None, key=None):
+        eid = hashlib.sha1(f"{typ}|{key or url or title}".encode()).hexdigest()[:12]
         if eid in ev_ids:
             return
         ev_ids.add(eid)
@@ -776,20 +833,45 @@ def run(args) -> int:
                   j["url"], j["source"], j["score"], j["score"] >= 50)
     to_push = [a for a in new_anns if a["notify"] == "all" or a["important"]]
 
-    # Son başvuru tarihi yaklaşan ilanlar için bir kez hatırlatma (<= 5 gün)
+    # Son başvuru tarihi yaklaşan ilanlar için 7, 3 ve 1 gün kala hatırlatma (her eşik bir kez)
     due = []
     for j in jobs.values():
-        if j.get("deadline") and not j.get("dl_notified") and j.get("score", 0) >= min_score:
+        if j.get("deadline") and j.get("score", 0) >= min_score:
             try:
                 left = (dt.date.fromisoformat(j["deadline"]) - today).days
             except ValueError:
                 continue
-            if 0 <= left <= 5:
-                j["dl_notified"] = True
+            sent_th = j.setdefault("dl_sent", [])
+            if j.get("dl_notified") and not sent_th:  # eski tek seferlik hatırlatma yapılmışsa 7 ve 3'ü say
+                sent_th.extend([7, 3])
+            pending = [t for t in DEADLINE_STEPS if 0 <= left <= t and t not in sent_th]
+            if pending:
+                sent_th.extend(pending)
                 due.append((left, j))
     for left, j in sorted(due, key=lambda x: x[0]):
         add_event("hatirlatma", f"Son başvuru {left} gün: {j['title']}",
-                  " · ".join(x for x in (j["company"], j["location"]) if x), j["url"], j["source"], j["score"], True)
+                  " · ".join(x for x in (j["company"], j["location"]) if x), j["url"], j["source"], j["score"], True,
+                  key=f"dl{min(t for t in DEADLINE_STEPS if left <= t)}|{j['url'] or j['id']}")
+
+    # Başvuru takibi: 7. ve 14. günde "cevap yok, takip et" hatırlatması (Supabase'teki başvurulardan)
+    if not args.no_notify and not args.dry_run:  # RPC kaydı 'bildirildi' işaretler; kuru çalıştırmada dokunma
+        try:
+            fups = followups()
+        except Exception as e:  # noqa: BLE001
+            print(f"Takip hatırlatmaları okunamadı: {type(e).__name__}", file=sys.stderr)
+            fups = []
+        if fups:
+            names = company_names(jobs, sources)
+            lines = []
+            for f in fups:
+                nm = names.get(f["job_id"], f["job_id"])
+                add_event("hatirlatma", f"Takip zamanı ({f['kind']}. gün): {nm}",
+                          f"{f['days']} gün önce başvurdun, cevap yok" + (f" · {f['contact']}" if f.get("contact") else ""),
+                          "", "başvuru", None, True, key=f"fu{f['kind']}|{f['job_id']}")
+                lines.append(f"• {nm}: {f['days']} gün önce başvurdun, cevap yok."
+                             + (f"\n  İletişim: {f['contact']}" if f.get("contact") else ""))
+            notify(f"Takip zamanı: {len(fups)} başvuru",
+                   "Cevap gelmediyse nazik bir takip e-postası at.\n" + "\n".join(lines), args.dry_run)
 
     if not welcomed and jobs:
         # İlk özet: bir bildirim kanalı gerçekten çalışana kadar bekler (secret'lar sonradan eklenebilir).
@@ -818,8 +900,22 @@ def run(args) -> int:
         if not args.no_notify:
             notify("Staj Radar uyarı", a, args.dry_run)
 
+    # Haftalık özet: Pazar 18:00–23:59 (TR) aralığında, haftada bir
+    tr_now = now.astimezone(dt.timezone(dt.timedelta(hours=3)))
+    week_key = f"{tr_now.isocalendar()[0]}-W{tr_now.isocalendar()[1]:02d}"
+    if not args.no_notify and tr_now.weekday() == 6 and tr_now.hour >= 18 and meta.get("digest_week") != week_key and jobs:
+        try:
+            stats = digest_stats()
+        except Exception as e:  # noqa: BLE001
+            print(f"Özet istatistikleri okunamadı: {type(e).__name__}", file=sys.stderr)
+            stats = {}
+        subj, body = build_digest(jobs, stats, today, int(prof.get("far_below", 28)), now)
+        if notify(subj, body, args.dry_run):
+            meta["digest_week"] = week_key
+            add_event("sistem", "Haftalık özet", body.replace("\n", " ")[:200], key=f"digest|{week_key}")
+
     # Siteye erişim isteyenler (anında bildirim gitmediyse burada yakalanır)
-    if not args.no_notify:
+    if not args.no_notify and not args.dry_run:
         try:
             reqs = new_access_requests()
         except Exception as e:  # noqa: BLE001
