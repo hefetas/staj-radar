@@ -1,0 +1,572 @@
+#!/usr/bin/env python3
+"""Staj Radar: ilanları çeker, profile göre puanlar, yenileri bildirir.
+
+Yalnızca standart kütüphane kullanır (pip install gerekmez).
+Çıktı: docs/data/jobs.json  (site bu dosyayı okur)
+"""
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import functools
+import hashlib
+import html as htmllib
+import json
+import os
+import re
+import smtplib
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+import xml.etree.ElementTree as ET
+from email.message import EmailMessage
+from html.parser import HTMLParser
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+UA = "InternshipRadar/1.0 (personal job alert tool)"
+PAUSE = 0.5  # istekler arası bekleme (sn); testlerde 0 yapılır
+FAIL_ALERT_STREAK = 6  # üst üste bu kadar hata olursa bir kez uyar (~18 saat)
+
+TR_MAP = str.maketrans({"ş": "s", "ğ": "g", "ü": "u", "ö": "o", "ç": "c", "ı": "i",
+                        "â": "a", "î": "i", "û": "u"})
+
+
+# ----------------------------------------------------------------- yardımcılar
+def fold(s: str | None) -> str:
+    """Küçük harfe çevirir ve Türkçe karakterleri ASCII'ye indirger."""
+    s = (s or "").replace("İ", "i").replace("I", "ı").lower()
+    return s.translate(TR_MAP)
+
+
+def ws(s: str | None) -> str:
+    return re.sub(r"\s+", " ", htmllib.unescape(s or "")).strip()
+
+
+def strip_tags(s: str | None) -> str:
+    return ws(re.sub(r"<[^>]+>", " ", s or ""))
+
+
+def safe_url(url: str) -> str:
+    """Hata mesajlarında sorgu parametrelerini (API anahtarı!) saklar."""
+    p = urllib.parse.urlparse(url)
+    return f"{p.scheme}://{p.netloc}{p.path}"
+
+
+def http_get(url: str, headers: dict | None = None, timeout: int = 25, retries: int = 2) -> str:
+    h = {"User-Agent": UA, "Accept": "*/*"}
+    h.update(headers or {})
+    last = None
+    for i in range(retries + 1):
+        try:
+            req = urllib.request.Request(url, headers=h)
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                raw = r.read()
+                charset = r.headers.get_content_charset() or "utf-8"
+                return raw.decode(charset, errors="replace")
+        except Exception as e:  # noqa: BLE001
+            last = e
+            time.sleep(1.5 * (i + 1))
+    raise RuntimeError(f"{safe_url(url)}: {type(last).__name__}: {last}")
+
+
+def canon_url(url: str) -> str:
+    p = urllib.parse.urlparse(url.strip())
+    q = [(k, v) for k, v in urllib.parse.parse_qsl(p.query)
+         if not k.lower().startswith("utm_") and k.lower() not in ("ref", "source")]
+    return urllib.parse.urlunparse((p.scheme, p.netloc, p.path, "", urllib.parse.urlencode(q), ""))
+
+
+def make_job(source, title, url, company="", location="", country="TR", snippet="",
+             posted=None, deadline=None, trusted_intern=False, remote=False) -> dict:
+    url = canon_url(url)
+    return {
+        "id": hashlib.sha1(url.encode()).hexdigest()[:12],
+        "source": source,
+        "title": ws(title)[:200],
+        "company": ws(company)[:120],
+        "location": ws(location)[:120],
+        "country": country,
+        "url": url,
+        "snippet": ws(snippet)[:600],
+        "posted": posted,
+        "deadline": deadline,
+        "trusted_intern": trusted_intern,
+        "remote": remote,
+    }
+
+
+class SkipSource(Exception):
+    """Kaynak bilerek atlandı (anahtar yok, süre dolmadı vb.)."""
+
+
+class AnchorParser(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.links: list[tuple[str, str]] = []
+        self._href = None
+        self._buf: list[str] = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "a":
+            self._href = dict(attrs).get("href") or ""
+            self._buf = []
+
+    def handle_data(self, data):
+        if self._href is not None:
+            self._buf.append(data)
+
+    def handle_endtag(self, tag):
+        if tag == "a" and self._href is not None:
+            self.links.append((self._href, ws(" ".join(self._buf))))
+            self._href = None
+
+
+# -------------------------------------------------------------------- kaynaklar
+def fetch_arbeitnow(cfg: dict) -> list[dict]:
+    """Almanya/Avrupa (ve UK) için ücretsiz, anahtarsız genel API."""
+    out, errors = [], []
+    for base in cfg.get("bases", ["https://www.arbeitnow.com/api/job-board-api"]):
+        country = "UK" if ".co.uk" in base else "DE"
+        try:
+            for page in range(1, int(cfg.get("max_pages", 5)) + 1):
+                data = json.loads(http_get(f"{base}?page={page}"))
+                rows = data.get("data") or []
+                if not rows:
+                    break
+                for r in rows:
+                    posted = None
+                    try:
+                        posted = dt.datetime.fromtimestamp(int(r["created_at"]), dt.timezone.utc).isoformat()
+                    except (KeyError, TypeError, ValueError):
+                        pass
+                    out.append(make_job("Arbeitnow", r.get("title", ""), r.get("url", ""),
+                                        r.get("company_name", ""), r.get("location", ""), country,
+                                        strip_tags(r.get("description", "")), posted,
+                                        remote=bool(r.get("remote"))))
+                time.sleep(PAUSE)
+        except Exception as e:  # noqa: BLE001
+            errors.append(str(e))
+    if not out and errors:
+        raise RuntimeError("; ".join(errors)[:300])
+    return out
+
+
+YOUTHALL_JOB = re.compile(r"/(?:tr|en)/([^/]+)/([^/]+)_(\d+)/?$")
+DATE_TAIL = re.compile(r"(\d{2})\.(\d{2})\.(\d{4})\s+(.+?)\s*$")
+TYPE_TAIL = re.compile(r"\s+(Stajyer|MT Programı|Tam Zamanlı|Yarı Zamanlı|Gönüllü|Sözleşmeli|Dönemsel|"
+                       r"Proje Bazlı|Serbest Zamanlı|Yeni Mezun|Genç Profesyonel|Profesyonel|Burs)\s*$")
+
+
+def humanize_slug(slug: str) -> str:
+    return " ".join(w.capitalize() if w.islower() else w for w in slug.replace("-", " ").split())
+
+
+def parse_youthall(html_text: str, base: str) -> list[dict]:
+    p = AnchorParser()
+    p.feed(html_text)
+    out = []
+    for href, text in p.links:
+        full = urllib.parse.urljoin(base, href)
+        pu = urllib.parse.urlparse(full)
+        if "youthall.com" not in pu.netloc:
+            continue
+        m = YOUTHALL_JOB.search(pu.path)
+        if not m:
+            continue
+        company_slug, slug, _ = m.groups()
+        deadline, city, body = None, "", text
+        dm = DATE_TAIL.search(text)
+        if dm:
+            d, mo, y, city = dm.groups()
+            deadline = f"{y}-{mo}-{d}"
+            body = text[:dm.start()].strip()
+        body = TYPE_TAIL.sub("", body)
+        # Başlık: "Şirket - Başlık…" biçimindeki etiketten; kesilmişse/çok uzunsa slug'dan.
+        head = re.split(r"…|\.\.\.", body)[0].strip()
+        truncated = len(head) < len(body) and body[len(head):len(head) + 1] in ("…", ".")
+        company = ""
+        if " - " in head[:60]:
+            company, head = [x.strip() for x in head.split(" - ", 1)]
+        title = head
+        if truncated or not title or len(title) > 90:
+            title = humanize_slug(slug.rsplit("_", 1)[0])
+        out.append(make_job("Youthall", title, full, company or humanize_slug(company_slug),
+                            city, "TR", body, deadline=deadline, trusted_intern=True,
+                            remote=bool(re.search(r"uzaktan|remote|online", fold(city + " " + slug)))))
+    return out
+
+
+def fetch_youthall(cfg: dict) -> list[dict]:
+    """Youthall'ın herkese açık staj listesi (giriş gerektirmez). En iyi çaba."""
+    out, errors = {}, []
+    for base in cfg.get("urls", ["https://www.youthall.com/tr/is-ilanlari/stajyer/"]):
+        try:
+            for page in range(1, int(cfg.get("max_pages", 3)) + 1):
+                url = base if page == 1 else f"{base}?page={page}"
+                rows = parse_youthall(http_get(url), url)
+                new = [r for r in rows if r["id"] not in out or len(r["snippet"]) > len(out[r["id"]]["snippet"])]
+                if not rows or not new:
+                    break
+                for r in rows:
+                    if r["id"] not in out or len(r["snippet"]) > len(out[r["id"]]["snippet"]):
+                        out[r["id"]] = r
+                time.sleep(PAUSE)
+        except Exception as e:  # noqa: BLE001
+            errors.append(str(e))
+    if not out and errors:
+        raise RuntimeError("; ".join(errors)[:300])
+    return list(out.values())
+
+
+def unwrap_google(link: str) -> str:
+    p = urllib.parse.urlparse(link)
+    if p.netloc.endswith("google.com") and p.path == "/url":
+        q = urllib.parse.parse_qs(p.query)
+        for key in ("url", "q"):
+            if key in q:
+                return q[key][0]
+    return link
+
+
+def parse_feed(xml_text: str) -> list[dict]:
+    root = ET.fromstring(xml_text)
+    items = []
+    for el in root.iter():
+        if el.tag.split("}")[-1] not in ("item", "entry"):
+            continue
+        d = {c.tag.split("}")[-1]: c for c in el}
+        title = strip_tags(d["title"].text) if "title" in d else ""
+        link = ""
+        if "link" in d:
+            link = d["link"].get("href") or (d["link"].text or "")
+        summ = ""
+        for k in ("description", "summary", "content"):
+            if k in d and d[k].text:
+                summ = strip_tags(d[k].text)
+                break
+        items.append({"title": title, "link": unwrap_google(link.strip()), "summary": summ})
+    return items
+
+
+def fetch_rss(cfg: dict) -> list[dict]:
+    """Google Alerts (RSS) veya herhangi bir RSS/Atom akışı."""
+    feeds = cfg.get("feeds", [])
+    if not feeds:
+        raise SkipSource("akış listesi boş")
+    out, errors = [], []
+    for f in feeds:
+        try:
+            for it in parse_feed(http_get(f["url"])):
+                if it["link"]:
+                    out.append(make_job(f.get("name", "RSS"), it["title"], it["link"], "",
+                                        f.get("location", ""), f.get("country", "TR"), it["summary"]))
+            time.sleep(PAUSE)
+        except Exception as e:  # noqa: BLE001
+            errors.append(str(e))
+    if not out and errors:
+        raise RuntimeError("; ".join(errors)[:300])
+    return out
+
+
+CAREER_RE = re.compile(r"(?<![a-z0-9])(staj|stajyer|intern|internship|praktikum|genc yetenek|early career|kariyer baslangic)")
+
+
+def fetch_careers(cfg: dict) -> list[dict]:
+    """Verdiğiniz firma kariyer sayfalarında 'staj/intern' içeren bağlantıları arar."""
+    sites = cfg.get("sites", [])
+    if not sites:
+        raise SkipSource("firma listesi boş")
+    out, errors = [], []
+    for s in sites:
+        try:
+            p = AnchorParser()
+            p.feed(http_get(s["url"]))
+            for href, text in p.links:
+                if not href or href.startswith(("#", "javascript:", "mailto:")):
+                    continue
+                if CAREER_RE.search(fold(text + " " + href)):
+                    out.append(make_job(f"Kariyer: {s['name']}", text or "Staj bağlantısı",
+                                        urllib.parse.urljoin(s["url"], href), s["name"],
+                                        s.get("city", ""), s.get("country", "TR"), text,
+                                        trusted_intern=True))
+            time.sleep(PAUSE)
+        except Exception as e:  # noqa: BLE001
+            errors.append(f"{s.get('name')}: {e}")
+    if not out and errors:
+        raise RuntimeError("; ".join(errors)[:300])
+    return out
+
+
+def fetch_adzuna(cfg: dict) -> list[dict]:
+    """Adzuna ücretsiz API (ADZUNA_APP_ID / ADZUNA_APP_KEY gerekir). Türkiye kapsamı yok."""
+    app_id, app_key = os.environ.get("ADZUNA_APP_ID"), os.environ.get("ADZUNA_APP_KEY")
+    if not app_id or not app_key:
+        raise SkipSource("ADZUNA_APP_ID/ADZUNA_APP_KEY tanımlı değil")
+    out, errors = [], []
+    for c in cfg.get("countries", ["de", "gb"]):
+        for q in cfg.get("queries", ["intern production"]):
+            params = urllib.parse.urlencode({
+                "app_id": app_id, "app_key": app_key, "results_per_page": 50, "what": q,
+                "sort_by": "date", "max_days_old": cfg.get("max_days_old", 30)})
+            try:
+                data = json.loads(http_get(f"https://api.adzuna.com/v1/api/jobs/{c}/search/1?{params}"))
+                for r in data.get("results", []):
+                    out.append(make_job("Adzuna", r.get("title", ""), r.get("redirect_url", ""),
+                                        (r.get("company") or {}).get("display_name", ""),
+                                        (r.get("location") or {}).get("display_name", ""),
+                                        c.upper(), strip_tags(r.get("description", "")),
+                                        r.get("created")))
+                time.sleep(PAUSE)
+            except Exception as e:  # noqa: BLE001
+                errors.append(str(e))
+    if not out and errors:
+        raise RuntimeError("; ".join(errors)[:300])
+    return out
+
+
+FETCHERS = {
+    "youthall": fetch_youthall,
+    "arbeitnow": fetch_arbeitnow,
+    "adzuna": fetch_adzuna,
+    "rss": fetch_rss,
+    "careers": fetch_careers,
+}
+
+
+# ------------------------------------------------------------------- puanlama
+INTERN_RE = re.compile(
+    r"(?<![a-z0-9])(staj\w*|intern(?:s|ship|ships)?(?![a-z0-9])|praktik\w*|werkstudent\w*|apprentice\w*|co-op(?![a-z0-9]))")
+
+
+@functools.lru_cache(maxsize=None)
+def kw_re(kw: str, strict: bool = False) -> re.Pattern:
+    k = re.escape(fold(kw))
+    tail = r"(?![a-z0-9])" if (strict or len(kw) <= 4) else ""
+    return re.compile(r"(?<![a-z0-9])" + k + tail)
+
+
+def classify(job: dict, prof: dict) -> tuple[str, list[str]]:
+    loc = fold(job["location"] + " " + job["title"])
+    cfg = prof.get("location", {})
+    if job["country"] != "TR":
+        region = "yurtdisi"
+    elif any(c in loc for c in map(fold, cfg.get("home_cities", []))):
+        region = "bursa"
+    elif any(c in loc for c in map(fold, cfg.get("near_cities", []))):
+        region = "yakin"
+    else:
+        region = "turkiye"
+    tags = []
+    if job.get("remote") or re.search(r"uzaktan|remote|home ?office|online", loc):
+        tags.append("uzaktan")
+    return region, tags
+
+
+def score_job(job: dict, prof: dict):
+    """(puan, nedenler, bölge, etiketler) döndürür; staj değilse None."""
+    text = fold(" ".join([job["title"], job["company"], job["snippet"]]))
+    title = fold(job["title"])
+    # Staj ifadesi başlıkta ya da açıklamanın başında geçmeli (açıklamanın ortasındaki
+    # "stajyerlere mentorluk yaparsın" gibi cümleler ilanı staj yapmaz).
+    if not (job.get("trusted_intern") or INTERN_RE.search(title + " " + fold(job["snippet"][:200]))):
+        return None
+    reasons, s = ["staj ilanı"], 20.0
+
+    role = 0.0
+    for kw, w in prof.get("role_keywords", {}).items():
+        rx = kw_re(kw)
+        if rx.search(title):
+            role += w * 1.5
+            reasons.append(f"başlıkta: {kw}")
+        elif rx.search(text):
+            role += w
+            reasons.append(kw)
+    s += min(role, 60)
+
+    skills = [k for k in prof.get("skills", []) if kw_re(k, True).search(text)]
+    if skills:
+        s += min(15, 5 * len(skills))
+        reasons.append("beceri: " + ", ".join(skills))
+
+    for kw, w in prof.get("negative", {}).items():
+        if kw_re(kw).search(text):
+            s -= w
+            reasons.append(f"-{w}: {kw}")
+
+    region, tags = classify(job, prof)
+    weights = prof.get("location", {}).get("weights", {})
+    s += weights.get({"bursa": "home", "yakin": "near", "turkiye": "turkey", "yurtdisi": "abroad"}[region], 0)
+    if "uzaktan" in tags:
+        s += weights.get("remote", 0)
+    return max(0, min(100, round(s))), reasons, region, tags
+
+
+# --------------------------------------------------------------------- bildirim
+def post_json(url: str, payload: dict) -> None:
+    data = urllib.parse.urlencode(payload).encode()
+    req = urllib.request.Request(url, data=data, headers={"User-Agent": UA})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        r.read()
+
+
+def notify(subject: str, body: str, dry: bool) -> list[str]:
+    if dry:
+        print(f"--- BİLDİRİM (dry-run) ---\n{subject}\n{body}\n--------------------------")
+        return ["dry-run"]
+    sent = []
+    token, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
+    if token and chat:
+        try:
+            post_json(f"https://api.telegram.org/bot{token}/sendMessage",
+                      {"chat_id": chat, "text": f"{subject}\n\n{body}"[:4000],
+                       "disable_web_page_preview": "true"})
+            sent.append("telegram")
+        except Exception as e:  # noqa: BLE001  (token URL'de; ayrıntı yazdırma)
+            print(f"Telegram gönderilemedi: {type(e).__name__}", file=sys.stderr)
+    user, pw, to = os.environ.get("SMTP_USER"), os.environ.get("SMTP_PASS"), os.environ.get("NOTIFY_EMAIL")
+    if user and pw and to:
+        try:
+            msg = EmailMessage()
+            msg["Subject"], msg["From"], msg["To"] = subject, user, to
+            msg.set_content(body)
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30) as s:
+                s.login(user, pw)
+                s.send_message(msg)
+            sent.append("email")
+        except Exception as e:  # noqa: BLE001
+            print(f"E-posta gönderilemedi: {type(e).__name__}", file=sys.stderr)
+    if not sent:
+        print("Bildirim kanalı tanımlı değil (Telegram/e-posta secret'ları yok); atlandı.")
+    return sent
+
+
+def fmt_jobs(jobs: list[dict], limit: int = 10) -> str:
+    lines = []
+    for j in jobs[:limit]:
+        place = j["location"] or j["country"]
+        who = f" — {j['company']}" if j["company"] else ""
+        dl = f" (son başvuru {j['deadline']})" if j.get("deadline") else ""
+        lines.append(f"• [{j['score']}] {j['title']}{who} · {place}{dl}\n  {j['url']}")
+    if len(jobs) > limit:
+        lines.append(f"… ve {len(jobs) - limit} ilan daha (siteye bak).")
+    return "\n".join(lines)
+
+
+# ------------------------------------------------------------------------ ana akış
+def load_json(path: Path, default=None):
+    if path.exists():
+        return json.loads(path.read_text(encoding="utf-8"))
+    return default
+
+
+def parse_dt(s: str) -> dt.datetime:
+    d = dt.datetime.fromisoformat(s)
+    return d if d.tzinfo else d.replace(tzinfo=dt.timezone.utc)
+
+
+def expired(job: dict, today: dt.date) -> bool:
+    try:
+        return bool(job.get("deadline")) and dt.date.fromisoformat(job["deadline"]) < today
+    except ValueError:
+        return False
+
+
+def run(args) -> int:
+    prof = load_json(ROOT / "config/profile.json")
+    sources = load_json(ROOT / "config/sources.json")
+    data_path = Path(args.data) if args.data else ROOT / "docs/data/jobs.json"
+    state = load_json(data_path, {"meta": {}, "jobs": {}})
+    state.setdefault("meta", {}).setdefault("sources", {})
+    state["meta"].setdefault("last_run", {})
+    jobs = state.setdefault("jobs", {})
+    first_run = not jobs
+    now = dt.datetime.now(dt.timezone.utc)
+    now_iso, today = now.isoformat(timespec="seconds"), now.date()
+    alerts, fresh = [], []
+
+    for name, fn in FETCHERS.items():
+        cfg = sources.get(name, {})
+        st = state["meta"]["sources"].setdefault(name, {"fail_streak": 0})
+        if not cfg.get("enabled"):
+            st.update(status="kapalı", error=None)
+            continue
+        gate = cfg.get("min_interval_hours")
+        last = state["meta"]["last_run"].get(name)
+        if gate and last and (now - parse_dt(last)).total_seconds() < gate * 3600 and not args.force:
+            st.update(status="bekliyor", error=None)
+            continue
+        try:
+            items = fn(cfg)
+            st.update(status="ok", count=len(items), error=None, at=now_iso, fail_streak=0)
+            state["meta"]["last_run"][name] = now_iso
+            fresh += items
+        except SkipSource as e:
+            st.update(status="atlandı", error=str(e), count=0)
+        except Exception as e:  # noqa: BLE001
+            st["fail_streak"] = st.get("fail_streak", 0) + 1
+            st.update(status="hata", error=str(e)[:300], at=now_iso)
+            print(f"[{name}] HATA: {e}", file=sys.stderr)
+            if st["fail_streak"] == FAIL_ALERT_STREAK:
+                alerts.append(f"{name} kaynağı {FAIL_ALERT_STREAK} taramadır hata veriyor: {st['error']}")
+
+    seen, new_jobs = set(), []
+    for j in fresh:
+        if j["id"] in seen or expired(j, today):
+            continue
+        seen.add(j["id"])
+        res = score_job(j, prof)
+        if res is None:
+            continue
+        if res[0] < int(prof.get("min_score_keep", 10)):
+            continue
+        j["score"], j["reasons"], j["region"], j["tags"] = res
+        j.pop("trusted_intern", None)
+        old = jobs.get(j["id"])
+        if old:
+            keep = {k: old[k] for k in ("first_seen", "notified") if k in old}
+            old.update(j)
+            old.update(keep)
+            old["last_seen"] = now_iso
+        else:
+            j.update(first_seen=now_iso, last_seen=now_iso, notified=False)
+            jobs[j["id"]] = j
+            new_jobs.append(j)
+
+    cutoff = now - dt.timedelta(days=int(prof.get("max_age_days", 21)))
+    for jid in [i for i, j in jobs.items() if parse_dt(j["last_seen"]) < cutoff or expired(j, today)]:
+        del jobs[jid]
+
+    min_score = int(prof.get("notify_min_score", 35))
+    to_notify = sorted((j for j in new_jobs if j["score"] >= min_score), key=lambda j: -j["score"])
+    if first_run and jobs:
+        top = sorted(jobs.values(), key=lambda j: -j["score"])
+        notify(f"Staj Radar çalışıyor: ilk taramada {len(jobs)} ilan bulundu",
+               "En iyi eşleşmeler:\n" + fmt_jobs(top), args.dry_run)
+        for j in jobs.values():
+            j["notified"] = True
+    elif to_notify and not args.no_notify:
+        notify(f"Yeni staj ilanı: {len(to_notify)} eşleşme", fmt_jobs(to_notify), args.dry_run)
+        for j in to_notify:
+            jobs[j["id"]]["notified"] = True
+    for a in alerts:
+        if not args.no_notify:
+            notify("Staj Radar uyarı", a, args.dry_run)
+
+    state["meta"]["updated"] = now_iso
+    state["meta"]["total"] = len(jobs)
+    data_path.parent.mkdir(parents=True, exist_ok=True)
+    data_path.write_text(json.dumps(state, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8")
+    print(f"Toplam {len(jobs)} ilan, bu taramada {len(new_jobs)} yeni, {len(to_notify)} bildirim adayı.")
+    return 0
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--dry-run", action="store_true", help="bildirimleri göndermek yerine yazdır")
+    ap.add_argument("--no-notify", action="store_true")
+    ap.add_argument("--force", action="store_true", help="min_interval_hours kapısını yok say")
+    ap.add_argument("--data", help="jobs.json yolu (test için)")
+    sys.exit(run(ap.parse_args()))

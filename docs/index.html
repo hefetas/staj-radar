@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Staj Radar</title>
+<style>
+  :root {
+    --bg: #f6f4ef; --card: #fffdf9; --ink: #2b2a27; --muted: #77746c; --line: #e5e1d8;
+    --accent: #3f6f63; --accent-soft: #e3eee9; --warn: #b4691f; --warn-soft: #f6e8d6; --bad: #a14b4b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1d1f1e; --card: #262928; --ink: #e8e6e0; --muted: #9a978e; --line: #373a38;
+            --accent: #7fb5a5; --accent-soft: #2b3a35; --warn: #e0a560; --warn-soft: #3a3024; --bad: #d08585; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-bottom: 16px; }
+  h1 { font-size: 1.5rem; margin: 0; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: .9rem; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .chip, select, input[type=search] {
+    font: inherit; font-size: .9rem; color: var(--ink); background: var(--card);
+    border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+  input[type=search] { border-radius: 10px; flex: 1 1 200px; cursor: text; }
+  select { border-radius: 10px; }
+  .chip[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: grid; grid-template-columns: 52px 1fr; gap: 12px; }
+  .card.applied { opacity: .6; }
+  .score { width: 52px; height: 52px; border-radius: 12px; display: grid; place-items: center; font-weight: 650; font-size: 1.05rem; background: var(--accent-soft); color: var(--accent); }
+  .score.mid { background: var(--warn-soft); color: var(--warn); }
+  .score.low { background: var(--line); color: var(--muted); }
+  .title { font-weight: 600; margin: 0 0 2px; font-size: 1.02rem; word-break: break-word; }
+  .title a { color: inherit; text-decoration: none; }
+  .title a:hover { text-decoration: underline; }
+  .meta { color: var(--muted); font-size: .88rem; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
+  .tag { font-size: .75rem; padding: 1px 8px; border-radius: 999px; background: var(--line); color: var(--muted); }
+  .tag.new { background: var(--accent-soft); color: var(--accent); }
+  .tag.soon { background: var(--warn-soft); color: var(--warn); }
+  .actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .btn { font: inherit; font-size: .85rem; padding: 4px 12px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; text-decoration: none; }
+  .btn:hover { border-color: var(--accent); }
+  .btn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .empty { text-align: center; color: var(--muted); padding: 48px 0; }
+  footer { margin-top: 28px; color: var(--muted); font-size: .82rem; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; background: var(--muted); }
+  .dot.ok { background: var(--accent); } .dot.hata { background: var(--bad); }
+  @media (max-width: 480px) { .card { grid-template-columns: 44px 1fr; } .score { width: 44px; height: 44px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Staj Radar</h1>
+    <div class="sub" id="status">yükleniyor…</div>
+  </header>
+
+  <div class="bar" id="regions" role="group" aria-label="Bölge"></div>
+  <div class="bar">
+    <input type="search" id="q" placeholder="Ara: firma, başlık, şehir…" aria-label="Ara">
+    <select id="sort" aria-label="Sırala">
+      <option value="score">Puana göre</option>
+      <option value="new">En yeni</option>
+      <option value="deadline">Son başvuru yakın</option>
+    </select>
+    <button class="chip" id="fNew" aria-pressed="false">Yeni (48 saat)</button>
+    <button class="chip" id="fSaved" aria-pressed="false">★ Kaydedilenler</button>
+    <button class="chip" id="fApplied" aria-pressed="false">Başvurduklarım</button>
+  </div>
+
+  <div id="list"></div>
+  <footer id="sources"></footer>
+</div>
+
+<script>
+(function () {
+  var REGIONS = [["all", "Hepsi"], ["bursa", "Bursa"], ["yakin", "Yakın iller"], ["turkiye", "Türkiye"], ["yurtdisi", "Yurt dışı"], ["uzaktan", "Uzaktan"]];
+  var REGION_LABEL = { bursa: "Bursa", yakin: "Yakın il", turkiye: "Türkiye", yurtdisi: "Yurt dışı" };
+  var state = { region: "all", q: "", sort: "score", onlyNew: false, onlySaved: false, onlyApplied: false };
+  var jobs = [], meta = {}, marks = {};
+
+  try { marks = JSON.parse(localStorage.getItem("radar.marks") || "{}"); } catch (e) { marks = {}; }
+  function saveMarks() { try { localStorage.setItem("radar.marks", JSON.stringify(marks)); } catch (e) {} }
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function safeUrl(u) { return /^https?:\/\//i.test(u || "") ? u : "#"; }
+  function ago(iso) {
+    var m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    if (m < 2) return "az önce";
+    if (m < 90) return m + " dk önce";
+    if (m < 60 * 36) return Math.round(m / 60) + " saat önce";
+    return Math.round(m / 1440) + " gün önce";
+  }
+  function daysLeft(d) {
+    if (!d) return null;
+    return Math.ceil((new Date(d + "T23:59:59") - Date.now()) / 86400000);
+  }
+  function isNew(j) { return Date.now() - new Date(j.first_seen).getTime() < 48 * 3600 * 1000; }
+
+  function renderRegions() {
+    var box = document.getElementById("regions");
+    box.textContent = "";
+    REGIONS.forEach(function (r) {
+      var b = el("button", "chip", r[1]);
+      b.setAttribute("aria-pressed", String(state.region === r[0]));
+      b.onclick = function () { state.region = r[0]; renderRegions(); render(); };
+      box.appendChild(b);
+    });
+  }
+
+  function visible() {
+    var q = state.q.trim().toLowerCase();
+    var out = jobs.filter(function (j) {
+      var m = marks[j.id];
+      if (m === "hidden") return false;
+      if (state.onlySaved) return m === "saved";
+      if (state.onlyApplied) return m === "applied";
+      if (m === "applied") return false;
+      if (state.region === "uzaktan") { if ((j.tags || []).indexOf("uzaktan") < 0) return false; }
+      else if (state.region !== "all" && j.region !== state.region) return false;
+      if (state.onlyNew && !isNew(j)) return false;
+      if (q && (j.title + " " + j.company + " " + j.location + " " + j.source).toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
+    out.sort(function (a, b) {
+      if (state.sort === "new") return new Date(b.first_seen) - new Date(a.first_seen);
+      if (state.sort === "deadline") {
+        var da = a.deadline || "9999", db = b.deadline || "9999";
+        return da < db ? -1 : da > db ? 1 : b.score - a.score;
+      }
+      return b.score - a.score || new Date(b.first_seen) - new Date(a.first_seen);
+    });
+    return out;
+  }
+
+  function mark(j, value) {
+    marks[j.id] = marks[j.id] === value ? undefined : value;
+    if (marks[j.id] === undefined) delete marks[j.id];
+    saveMarks(); render();
+  }
+
+  function card(j) {
+    var m = marks[j.id];
+    var c = el("article", "card" + (m === "applied" ? " applied" : ""));
+    c.appendChild(el("div", "score" + (j.score < 35 ? " low" : j.score < 55 ? " mid" : ""), String(j.score)));
+    var body = el("div");
+    var t = el("h2", "title");
+    var a = el("a", null, j.title || "(başlıksız)");
+    a.href = safeUrl(j.url); a.target = "_blank"; a.rel = "noopener noreferrer";
+    t.appendChild(a); body.appendChild(t);
+    body.appendChild(el("div", "meta", [j.company, j.location || j.country].filter(Boolean).join(" · ")));
+
+    var tags = el("div", "tags");
+    if (isNew(j)) tags.appendChild(el("span", "tag new", "yeni"));
+    var dl = daysLeft(j.deadline);
+    if (dl !== null) tags.appendChild(el("span", "tag" + (dl <= 7 ? " soon" : ""), dl <= 0 ? "son gün" : "son başvuru " + dl + " gün"));
+    if (REGION_LABEL[j.region]) tags.appendChild(el("span", "tag", REGION_LABEL[j.region]));
+    if ((j.tags || []).indexOf("uzaktan") >= 0) tags.appendChild(el("span", "tag", "uzaktan"));
+    tags.appendChild(el("span", "tag", j.source));
+    (j.reasons || []).filter(function (r) { return r !== "staj ilanı" && r.charAt(0) !== "-"; }).slice(0, 4)
+      .forEach(function (r) { tags.appendChild(el("span", "tag", r)); });
+    body.appendChild(tags);
+
+    var act = el("div", "actions");
+    var open = el("a", "btn", "İlana git"); open.href = safeUrl(j.url); open.target = "_blank"; open.rel = "noopener noreferrer";
+    act.appendChild(open);
+    [["saved", "★ Kaydet"], ["applied", "✓ Başvurdum"], ["hidden", "Gizle"]].forEach(function (p) {
+      var b = el("button", "btn" + (m === p[0] ? " on" : ""), p[1]);
+      b.onclick = function () { mark(j, p[0]); };
+      act.appendChild(b);
+    });
+    body.appendChild(act);
+    c.appendChild(body);
+    return c;
+  }
+
+  function render() {
+    var list = document.getElementById("list");
+    list.textContent = "";
+    var rows = visible();
+    if (!rows.length) {
+      list.appendChild(el("div", "empty", jobs.length ? "Bu filtreyle ilan yok." : "Henüz ilan yok. İlk tarama çalışınca burada görünecek."));
+    }
+    rows.forEach(function (j) { list.appendChild(card(j)); });
+    document.getElementById("fNew").setAttribute("aria-pressed", String(state.onlyNew));
+    document.getElementById("fSaved").setAttribute("aria-pressed", String(state.onlySaved));
+    document.getElementById("fApplied").setAttribute("aria-pressed", String(state.onlyApplied));
+  }
+
+  function renderMeta() {
+    var s = document.getElementById("status");
+    s.textContent = meta.updated ? "Son tarama " + ago(meta.updated) + " · " + jobs.length + " ilan" : "Henüz tarama yok";
+    var f = document.getElementById("sources");
+    f.textContent = "";
+    var src = meta.sources || {};
+    Object.keys(src).forEach(function (k) {
+      var st = src[k], span = el("span");
+      var d = el("span", "dot " + (st.status === "ok" ? "ok" : st.status === "hata" ? "hata" : ""));
+      span.appendChild(d);
+      var label = k + ": " + st.status + (st.status === "ok" ? " (" + st.count + ")" : "");
+      span.appendChild(document.createTextNode(label));
+      if (st.error) span.title = st.error;
+      f.appendChild(span);
+    });
+  }
+
+  document.getElementById("q").oninput = function (e) { state.q = e.target.value; render(); };
+  document.getElementById("sort").onchange = function (e) { state.sort = e.target.value; render(); };
+  document.getElementById("fNew").onclick = function () { state.onlyNew = !state.onlyNew; render(); };
+  document.getElementById("fSaved").onclick = function () { state.onlySaved = !state.onlySaved; state.onlyApplied = false; render(); };
+  document.getElementById("fApplied").onclick = function () { state.onlyApplied = !state.onlyApplied; state.onlySaved = false; render(); };
+
+  renderRegions();
+  fetch("data/jobs.json?t=" + Date.now(), { cache: "no-store" })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (d) { meta = d.meta || {}; jobs = Object.keys(d.jobs || {}).map(function (k) { return d.jobs[k]; }); renderMeta(); render(); })
+    .catch(function () { document.getElementById("status").textContent = "Veri yüklenemedi (ilk tarama henüz çalışmadı olabilir)"; render(); });
+})();
+</script>
+</body>
+</html>

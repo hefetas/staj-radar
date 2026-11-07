@@ -1,0 +1,33 @@
+{
+  "youthall": {
+    "enabled": true,
+    "urls": [
+      "https://www.youthall.com/tr/is-ilanlari/stajyer/",
+      "https://www.youthall.com/tr/is-ilanlari/bursa-stajyer/"
+    ],
+    "max_pages": 3
+  },
+  "arbeitnow": {
+    "enabled": true,
+    "bases": [
+      "https://www.arbeitnow.com/api/job-board-api",
+      "https://www.arbeitnow.co.uk/api/job-board-api"
+    ],
+    "max_pages": 5
+  },
+  "adzuna": {
+    "enabled": true,
+    "countries": ["de", "gb", "nl", "at"],
+    "queries": ["intern production", "praktikum produktion"],
+    "min_interval_hours": 24,
+    "max_days_old": 30
+  },
+  "rss": {
+    "enabled": true,
+    "feeds": []
+  },
+  "careers": {
+    "enabled": true,
+    "sites": []
+  }
+}
