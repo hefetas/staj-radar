@@ -512,7 +512,7 @@ def run(args) -> int:
     state.setdefault("meta", {}).setdefault("sources", {})
     state["meta"].setdefault("last_run", {})
     jobs = state.setdefault("jobs", {})
-    first_run = not jobs
+    welcomed = bool(state["meta"].get("welcomed"))
     now = dt.datetime.now(dt.timezone.utc)
     now_iso, today = now.isoformat(timespec="seconds"), now.date()
     alerts, fresh = [], []
@@ -571,12 +571,15 @@ def run(args) -> int:
 
     min_score = int(prof.get("notify_min_score", 35))
     to_notify = sorted((j for j in new_jobs if j["score"] >= min_score), key=lambda j: -j["score"])
-    if first_run and jobs:
+    if not welcomed and jobs:
+        # İlk özet: bir bildirim kanalı gerçekten çalışana kadar bekler (secret'lar sonradan eklenebilir).
         top = sorted(jobs.values(), key=lambda j: -j["score"])
-        notify(f"Staj Radar çalışıyor: ilk taramada {len(jobs)} ilan bulundu",
-               "En iyi eşleşmeler:\n" + fmt_jobs(top), args.dry_run)
-        for j in jobs.values():
-            j["notified"] = True
+        sent = notify(f"Staj Radar çalışıyor: {len(jobs)} ilan bulundu",
+                      "En iyi eşleşmeler:\n" + fmt_jobs(top), args.dry_run)
+        if sent:
+            state["meta"]["welcomed"] = True
+            for j in jobs.values():
+                j["notified"] = True
     elif to_notify and not args.no_notify:
         notify(f"Yeni staj ilanı: {len(to_notify)} eşleşme", fmt_jobs(to_notify), args.dry_run)
         for j in to_notify:
