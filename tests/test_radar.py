@@ -192,7 +192,8 @@ class RadarTests(unittest.TestCase):
                 # Senior Software Engineer (staj değil) alınmamış olmalı
                 self.assertFalse(any("Senior" in j["title"] for j in s1["jobs"].values()))
                 # satış stajı düşük puanlı: saklanmamalı
-                self.assertFalse(any("Sales" in j["title"] for j in s1["jobs"].values()))
+                sales = [j for j in s1["jobs"].values() if "Sales" in j["title"]]
+                self.assertTrue(sales and all(j["score"] < s1["meta"]["far_below"] for j in sales))  # silinmez, "uzak" sekmesine düşer
                 self.assertEqual(radar.run(args), 0)
                 s2 = json.loads(data.read_text())
                 self.assertEqual(set(s2["jobs"]), ids1)
@@ -327,6 +328,14 @@ class RadarTests(unittest.TestCase):
                     os.environ.pop(k, None)
                 else:
                     os.environ[k] = v
+
+    def test_german_ads_kept_and_tagged(self):
+        j = radar.make_job("t", "Praktikum Produktionsplanung (m/w/d)", "https://x.test/de", "Werk GmbH", "Stuttgart", "DE",
+                           "Sehr gute Deutschkenntnisse, Lean Manufacturing")
+        score, reasons, region, tags = radar.score_job(j, self.prof)
+        self.assertEqual(region, "yurtdisi")
+        self.assertIn("almanca", tags)
+        self.assertGreaterEqual(score, self.prof["far_below"])  # Almanca cezası yok; üretim planlama puan getirir
 
 
 if __name__ == "__main__":

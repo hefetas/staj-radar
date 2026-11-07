@@ -141,6 +141,13 @@
       <div id="listAbroad"></div>
     </section>
 
+    <section class="pane" id="p-diger" hidden>
+      <p class="hint">Puanı düşük kaldığı için ana listelerden ayırdığım ilanlar: alakasız ya da pek uymayanlar. Hiçbiri silinmez, buradan da bakabilirsin.</p>
+      <div class="bar" id="farFilters" role="group" aria-label="Konum"></div>
+      <div class="bar"><input type="search" id="q3" placeholder="Ara: firma, başlık, şehir…" aria-label="Ara"></div>
+      <div id="listFar"></div>
+    </section>
+
     <section class="pane" id="p-firmalar" hidden>
       <p class="hint" id="firmHint"></p>
       <div class="bar" id="firmFilters"></div>
@@ -197,12 +204,12 @@
   var REGIONS = [["all", "Hepsi"], ["bursa", "Bursa"], ["yakin", "Yakın (≤200 km)"], ["orta", "Orta (≤450 km)"], ["uzak", "Uzak"], ["belirsiz", "Konum yok"]];
   var REGION_TITLE = { bursa: "Bursa", yakin: "Yakın şehirler (≤200 km)", orta: "Orta uzaklık (≤450 km)", uzak: "Uzak şehirler", belirsiz: "Konum belirtilmemiş" };
   var REGION_ORDER = { bursa: 0, yakin: 1, orta: 2, uzak: 3, belirsiz: 4 };
-  var TABS = [["bildirimler", "Bildirim"], ["yurtici", "Yurt içi"], ["yurtdisi", "Yurt dışı"], ["firmalar", "Firmalar"], ["takip", "Takip"], ["duyurular", "Duyuru"], ["cv", "CV"], ["kaynaklar", "Kaynak"]];
+  var TABS = [["bildirimler", "Bildirim"], ["yurtici", "Yurt içi"], ["yurtdisi", "Yurt dışı"], ["diger", "Diğer"], ["firmalar", "Firmalar"], ["takip", "Takip"], ["duyurular", "Duyuru"], ["cv", "CV"], ["kaynaklar", "Kaynak"]];
   var STATUSES = [["saved", "★ Kaydedildi"], ["applied", "Başvurdum"], ["interview", "Mülakat"], ["offer", "Kabul/Teklif"], ["rejected", "Olumsuz"]];
   var ACTIVE_AFTER = ["applied", "interview", "offer", "rejected"];
   var COUNTRY = { DE: "Almanya", GB: "Birleşik Krallık", NL: "Hollanda", AT: "Avusturya", CH: "İsviçre", FR: "Fransa" };
 
-  var state = { dueOnly: false, firmFilter: "all", cvLang: "tr", cvJob: null, region: "all", q: "", sort: "km", onlyNew: false, country: "all", q2: "", sort2: "score", evFilter: "all", annFilter: "all", showHidden: false };
+  var state = { farFilter: "all", q3: "", dueOnly: false, firmFilter: "all", cvLang: "tr", cvJob: null, region: "all", q: "", sort: "km", onlyNew: false, country: "all", q2: "", sort2: "score", evFilter: "all", annFilter: "all", showHidden: false };
   var tab = "bildirimler";
   var user = null, jobs = [], meta = {}, events = [], anns = [], marks = {}, checked = {}, lastRead = 0, profile = { cv_tr: "", cv_en: "" };
 
@@ -222,6 +229,7 @@
   function daysLeft(d) { return d ? Math.round((new Date(d + "T00:00:00") - new Date(new Date().toDateString())) / 86400000) : null; }
   function isNew(j) { return Date.now() - new Date(j.first_seen).getTime() < 48 * 3600 * 1000; }
   function isAbroad(j) { return (j.country || "TR") !== "TR"; }
+  function isFar(j) { return j.score < ((meta && meta.far_below) || 28); }
   function status(j) { return marks[j.id] ? marks[j.id].status : null; }
 
   /* ---------------- giriş ---------------- */
@@ -231,7 +239,7 @@
     $("btnLogout2").hidden = !canLogout;
   }
   $("btnLogin").onclick = function () {
-    sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + location.pathname } });
+    sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin } });
   };
   function logout() { sb.auth.signOut().then(function () { location.reload(); }); }
   $("btnLogout").onclick = logout; $("btnLogout2").onclick = logout;
@@ -358,6 +366,7 @@
     var dl = daysLeft(j.deadline);
     if (dl !== null) tags.appendChild(el("span", "tag" + (dl <= 14 ? " due" : ""), (dl <= 14 ? "⏳ " : "") + (dl <= 0 ? "son gün" : "son başvuru " + dl + " gün")));
     if ((j.tags || []).indexOf("uzaktan") >= 0) tags.appendChild(el("span", "tag", "uzaktan"));
+    if ((j.tags || []).indexOf("almanca") >= 0) tags.appendChild(el("span", "tag soon", "Almanca olabilir"));
     tags.appendChild(el("span", "tag", j.source));
     (j.reasons || []).filter(function (r) { return r !== "staj ilanı"; }).slice(0, 5).forEach(function (r) {
       tags.appendChild(el("span", "tag" + (r.charAt(0) === "-" ? " soon" : ""), r));
@@ -392,7 +401,7 @@
     chips($("regions"), REGIONS, function () { return state.region; }, function (v) { state.region = v; });
     var q = state.q.trim().toLowerCase();
     var rows = jobs.filter(function (j) {
-      if (isAbroad(j) || !visibleBase(j)) return false;
+      if (isAbroad(j) || isFar(j) || !visibleBase(j)) return false;
       if (state.region !== "all" && j.region !== state.region) return false;
       if (state.onlyNew && !isNew(j)) return false;
       if (state.dueOnly && !(daysLeft(j.deadline) !== null && daysLeft(j.deadline) <= 14)) return false;
@@ -415,7 +424,7 @@
   }
 
   function renderAbroad() {
-    var all = jobs.filter(function (j) { return isAbroad(j) && visibleBase(j); });
+    var all = jobs.filter(function (j) { return isAbroad(j) && !isFar(j) && visibleBase(j); });
     var codes = {}; all.forEach(function (j) { codes[j.country] = (codes[j.country] || 0) + 1; });
     var list = [["all", "Hepsi (" + all.length + ")"]].concat(Object.keys(codes).sort().map(function (c) { return [c, (COUNTRY[c] || c) + " (" + codes[c] + ")"]; }));
     chips($("countries"), list, function () { return state.country; }, function (v) { state.country = v; });
@@ -430,6 +439,21 @@
     if (!rows.length) box.appendChild(el("div", "empty", "Yurt dışı için eşleşen ilan yok."));
     rows.forEach(function (j) { box.appendChild(card(j)); });
     $("fDue2").setAttribute("aria-pressed", String(state.dueOnly));
+  }
+
+  function renderFar() {
+    chips($("farFilters"), [["all", "Hepsi"], ["tr", "Yurt içi"], ["abroad", "Yurt dışı"]], function () { return state.farFilter; }, function (v) { state.farFilter = v; });
+    var q = state.q3.trim().toLowerCase();
+    var rows = jobs.filter(function (j) {
+      if (!isFar(j) || !visibleBase(j)) return false;
+      if (state.farFilter === "tr" && isAbroad(j)) return false;
+      if (state.farFilter === "abroad" && !isAbroad(j)) return false;
+      return !q || (j.title + " " + j.company + " " + j.location + " " + j.source).toLowerCase().indexOf(q) >= 0;
+    });
+    sortJobs(rows, "score");
+    var box = $("listFar"); box.textContent = "";
+    if (!rows.length) box.appendChild(el("div", "empty", "Bu bölümde ilan yok."));
+    rows.forEach(function (j) { box.appendChild(card(j)); });
   }
 
   /* ---------------- takip tahtası ---------------- */
@@ -647,7 +671,7 @@
   function renderStatus() {
     $("status").textContent = meta.updated ? "Son tarama " + ago(meta.updated) + " · " + jobs.length + " ilan" : "Henüz tarama yok";
   }
-  function renderAll() { renderTabs(); renderStatus(); renderEvents(); renderDomestic(); renderAbroad(); renderFirms(); renderCvTab(); renderBoard(); renderAnns(); renderSources(); }
+  function renderAll() { renderTabs(); renderStatus(); renderEvents(); renderDomestic(); renderAbroad(); renderFar(); renderFirms(); renderCvTab(); renderBoard(); renderAnns(); renderSources(); }
 
   $("q").oninput = function (e) { state.q = e.target.value; renderDomestic(); };
   $("sort").onchange = function (e) { state.sort = e.target.value; renderDomestic(); };
@@ -656,6 +680,7 @@
   $("fDue2").onclick = function () { state.dueOnly = !state.dueOnly; renderDomestic(); renderAbroad(); };
   $("q2").oninput = function (e) { state.q2 = e.target.value; renderAbroad(); };
   $("sort2").onchange = function (e) { state.sort2 = e.target.value; renderAbroad(); };
+  $("q3").oninput = function (e) { state.q3 = e.target.value; renderFar(); };
   $("fHidden").onclick = function () { state.showHidden = !state.showHidden; renderBoard(); };
 
   var h = (location.hash || "").slice(1);

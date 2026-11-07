@@ -1,6 +1,6 @@
 {
   "notify_min_score": 35,
-  "min_score_keep": 28,
+  "min_score_keep": 0,
   "max_age_days": 21,
   "role_keywords": {
     "üretim": 12,
@@ -88,7 +88,22 @@
     "fabrika": 6,
     "factory": 5,
     "plant": 4,
-    "üretim mühendis": 6
+    "üretim mühendis": 6,
+    "produktion": 12,
+    "fertigung": 10,
+    "qualität": 8,
+    "qualitaet": 8,
+    "logistik": 6,
+    "lieferkette": 8,
+    "produktionsplanung": 6,
+    "instandhaltung": 3,
+    "einkauf": 6,
+    "maschinenbau": 4,
+    "wirtschaftsingenieur": 10,
+    "verfahrenstechnik": 5,
+    "industrial": 5,
+    "prozess": 5,
+    "werk": 2
   },
   "skills": [
     "excel",
@@ -135,11 +150,6 @@
     "graduate program": 12,
     "thesis": 12,
     "tez": 10,
-    "fließend deutsch": 15,
-    "deutschkenntnisse": 8,
-    "fluent german": 15,
-    "c1": 6,
-    "almanca bilen": 10,
     "part time": 6,
     "yarı zamanlı": 6,
     "gönüllü": 15,
@@ -209,5 +219,6 @@
       "20 günlük kısa dönemli yaz stajı aranıyor; uzun dönem, yüksek lisans, mezun, yönetici adayı ilanları puan kaybeder",
       "Konum önceliği: Bursa, sonra Bursa'ya yakınlıktan uzağa (yaklaşık karayolu km)"
     ]
-  }
+  },
+  "far_below": 28
 }

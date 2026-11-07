@@ -465,6 +465,9 @@ def classify(job: dict, prof: dict) -> tuple[str, list[str]]:
     tags = []
     if job.get("remote") or re.search(r"uzaktan|remote|home ?office|online", loc):
         tags.append("uzaktan")
+    full = fold(" ".join([job["title"], job["snippet"]]))
+    if re.search(r"\(m/w/d\)|\(w/m/d\)|\(m/f/d\)|deutsch|almanca|fliessend|german", full):
+        tags.append("almanca")  # ilan Almanca ya da Almanca bilgisi isteniyor olabilir
     return region, tags
 
 
@@ -816,6 +819,7 @@ def run(args) -> int:
     meta["companies_source"] = sources.get("companies_source", "")
     meta["page_sites"] = [{"name": x["name"], "url": x["url"]} for x in sources.get("pages", {}).get("sites", [])]
     meta["criteria"] = prof.get("criteria", {})
+    meta["far_below"] = int(prof.get("far_below", 28))
     save_state(data_path, state)
     print(f"Toplam {len(jobs)} ilan, {len(new_jobs)} yeni ilan, {len(to_notify)} ilan bildirimi, "
           f"{len(new_anns)} yeni duyuru.")
