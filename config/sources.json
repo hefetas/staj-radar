@@ -44,17 +44,66 @@
       {
         "name": "UÜ Endüstri Müh. duyuruları",
         "url": "https://www.uludag.edu.tr/endustri/duyuru",
-        "notify": "all"
+        "notify": "all",
+        "ajax": {
+          "url": "/Home/_TestData",
+          "data": {
+            "Type": "duyuru",
+            "insId": "256",
+            "sortOrder": "ascending",
+            "searchString": "",
+            "firstItem": "0",
+            "langId": "1"
+          }
+        }
       },
       {
         "name": "UÜ Mühendislik Fak. duyuruları",
         "url": "https://www.uludag.edu.tr/mmf/duyuru",
-        "notify": "important"
+        "notify": "important",
+        "ajax": {
+          "url": "/Home/_TestData",
+          "data": {
+            "Type": "duyuru",
+            "insId": "37",
+            "sortOrder": "ascending",
+            "searchString": "",
+            "firstItem": "0",
+            "langId": "1"
+          }
+        }
+      },
+      {
+        "name": "UÜ Öğrenci İşleri duyuruları",
+        "url": "https://www.uludag.edu.tr/oidb/duyuru",
+        "notify": "important",
+        "ajax": {
+          "url": "/Home/_TestData",
+          "data": {
+            "Type": "duyuru",
+            "insId": "40",
+            "sortOrder": "ascending",
+            "searchString": "",
+            "firstItem": "0",
+            "langId": "1"
+          }
+        }
       },
       {
         "name": "Uludağ Üniv. duyuruları",
         "url": "https://www.uludag.edu.tr/duyuru",
-        "notify": "important"
+        "notify": "important",
+        "ajax": {
+          "url": "/Home/_TestData",
+          "data": {
+            "Type": "duyuru",
+            "insId": "475",
+            "sortOrder": "ascending",
+            "searchString": "",
+            "firstItem": "0",
+            "langId": "1"
+          }
+        }
       }
     ]
   },

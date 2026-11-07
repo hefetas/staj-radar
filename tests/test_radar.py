@@ -51,7 +51,7 @@ PAGE_LINKS = ['<a href="/endustri/duyuru/1">Staj Defterlerinin Teslimi Hakkında
               '<a href="/endustri/">Ana sayfa</a>']
 
 
-def fake_get(url, headers=None, timeout=25, retries=2):
+def fake_get(url, headers=None, timeout=25, retries=2, data=None):
     if "pages.test" in url:
         return "<html>" + "".join(PAGE_LINKS) + "</html>"
     if "youthall.com" in url:
@@ -209,7 +209,8 @@ class RadarTests(unittest.TestCase):
             off = {"enabled": False}
             (cdir / "sources.json").write_text(json.dumps({
                 "youthall": off, "arbeitnow": off, "adzuna": off, "rss": off, "careers": off,
-                "pages": {"enabled": True, "sites": [{"name": "Bölüm", "url": "https://pages.test/endustri/duyuru", "notify": "all"}]},
+                "pages": {"enabled": True, "sites": [{"name": "Bölüm", "url": "https://pages.test/endustri/duyuru", "notify": "all",
+                                                    "ajax": {"url": "/Home/_TestData", "data": {"insId": "1"}}}]},
                 "watchlist": [{"name": "X", "url": "https://example.com"}]}))
             data = Path(d) / "jobs.json"
             args = Namespace(dry_run=True, no_notify=False, force=True, data=str(data), config_dir=str(cdir))

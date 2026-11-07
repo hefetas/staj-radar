@@ -55,13 +55,18 @@ def safe_url(url: str) -> str:
     return f"{p.scheme}://{p.netloc}{p.path}"
 
 
-def http_get(url: str, headers: dict | None = None, timeout: int = 25, retries: int = 2) -> str:
+def http_get(url: str, headers: dict | None = None, timeout: int = 25, retries: int = 2, data: dict | None = None) -> str:
     h = {"User-Agent": UA, "Accept": "*/*"}
     h.update(headers or {})
+    body = None
+    if data is not None:  # form POST (bazı duyuru listeleri sayfaya sonradan yükleniyor)
+        body = urllib.parse.urlencode(data).encode("utf-8")
+        h["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
+        h["X-Requested-With"] = "XMLHttpRequest"
     last = None
     for i in range(retries + 1):
         try:
-            req = urllib.request.Request(url, headers=h)
+            req = urllib.request.Request(url, data=body, headers=h)
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 raw = r.read()
                 charset = r.headers.get_content_charset() or "utf-8"
@@ -368,7 +373,12 @@ def fetch_pages(cfg: dict) -> dict:
         try:
             base = s["url"]
             p = AnchorParser()
-            p.feed(http_get(base))
+            if s.get("ajax"):  # liste, sayfaya POST ile sonradan yükleniyor
+                aj = s["ajax"]
+                p.feed(http_get(urllib.parse.urljoin(base, aj["url"]), data=aj["data"],
+                                headers={"Referer": base}))
+            else:
+                p.feed(http_get(base))
             seen = set()
             for href, text in p.links:
                 if not href or href.startswith(("#", "javascript:", "mailto:", "tel:")):
@@ -376,7 +386,7 @@ def fetch_pages(cfg: dict) -> dict:
                 full = canon_url(urllib.parse.urljoin(base, href))
                 if urllib.parse.urlparse(full).scheme not in ("http", "https"):
                     continue
-                if len(text) < 15 or full in seen or full.rstrip("/") == base.rstrip("/"):
+                if len(text) < (8 if s.get("ajax") else 15) or full in seen or full.rstrip("/") == base.rstrip("/"):
                     continue
                 seen.add(full)
                 items.append({"id": hashlib.sha1(full.encode()).hexdigest()[:12], "site": s["name"],
