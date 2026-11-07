@@ -46,7 +46,14 @@ CAREER_HTML = """<a href="/kariyer/staj-programi">Yaz Stajı Programı</a><a hre
 <a href="https://x.com/jobs/1">Senior Manager</a>"""
 
 
+PAGE_LINKS = ['<a href="/endustri/duyuru/1">Staj Defterlerinin Teslimi Hakkında Duyuru</a>',
+              '<a href="/endustri/duyuru/2">Yaz Dönemi Zorunlu Staj Başvuruları</a>',
+              '<a href="/endustri/">Ana sayfa</a>']
+
+
 def fake_get(url, headers=None, timeout=25, retries=2):
+    if "pages.test" in url:
+        return "<html>" + "".join(PAGE_LINKS) + "</html>"
     if "youthall.com" in url:
         return YOUTHALL_HTML if "page=" not in url else "<html></html>"
     if "arbeitnow.co.uk" in url:
@@ -193,6 +200,36 @@ class RadarTests(unittest.TestCase):
                 self.assertEqual(s2["jobs"][first]["first_seen"], s1["jobs"][first]["first_seen"])
             finally:
                 src.write_text(backup)
+
+    def test_pages_seed_silently_then_report_new(self):
+        with tempfile.TemporaryDirectory() as d:
+            cdir = Path(d) / "cfg"
+            cdir.mkdir()
+            (cdir / "profile.json").write_text(json.dumps(self.prof))
+            off = {"enabled": False}
+            (cdir / "sources.json").write_text(json.dumps({
+                "youthall": off, "arbeitnow": off, "adzuna": off, "rss": off, "careers": off,
+                "pages": {"enabled": True, "sites": [{"name": "Bölüm", "url": "https://pages.test/endustri/duyuru", "notify": "all"}]},
+                "watchlist": [{"name": "X", "url": "https://example.com"}]}))
+            data = Path(d) / "jobs.json"
+            args = Namespace(dry_run=True, no_notify=False, force=True, data=str(data), config_dir=str(cdir))
+            self.assertEqual(radar.run(args), 0)
+            s1 = json.loads(data.read_text())
+            self.assertEqual(len(s1["announcements"]), 2)  # kısa/ana sayfa bağlantıları elendi
+            self.assertFalse([e for e in s1["events"] if e["type"] == "duyuru"])  # ilk tarama sessiz
+            PAGE_LINKS.append('<a href="/endustri/duyuru/3">Kariyer Günleri Etkinliği Hakkında</a>')
+            try:
+                self.assertEqual(radar.run(args), 0)
+            finally:
+                PAGE_LINKS.pop()
+            s2 = json.loads(data.read_text())
+            ev = [e for e in s2["events"] if e["type"] == "duyuru"]
+            self.assertEqual(len(ev), 1)
+            self.assertIn("Kariyer Günleri", ev[0]["title"])
+            self.assertTrue(ev[0]["important"])
+            self.assertEqual(s2["meta"]["watchlist"][0]["name"], "X")
+            self.assertEqual(radar.run(args), 0)  # üçüncü tarama: tekrar olay üretmez
+            self.assertEqual(len([e for e in json.loads(data.read_text())["events"] if e["type"] == "duyuru"]), 1)
 
 
 if __name__ == "__main__":

@@ -357,12 +357,46 @@ def fetch_adzuna(cfg: dict) -> list[dict]:
     return out
 
 
+def fetch_pages(cfg: dict) -> dict:
+    """Duyuru sayfalarındaki bağlantıları toplar. Yeni görünen bağlantı = yeni duyuru.
+    Dönüş: {"items": [...], "ok_sites": [başarıyla okunan site adları]}"""
+    sites = cfg.get("sites", [])
+    if not sites:
+        raise SkipSource("sayfa listesi boş")
+    items, ok_sites, errors = [], [], []
+    for s in sites:
+        try:
+            base = s["url"]
+            p = AnchorParser()
+            p.feed(http_get(base))
+            seen = set()
+            for href, text in p.links:
+                if not href or href.startswith(("#", "javascript:", "mailto:", "tel:")):
+                    continue
+                full = canon_url(urllib.parse.urljoin(base, href))
+                if urllib.parse.urlparse(full).scheme not in ("http", "https"):
+                    continue
+                if len(text) < 15 or full in seen or full.rstrip("/") == base.rstrip("/"):
+                    continue
+                seen.add(full)
+                items.append({"id": hashlib.sha1(full.encode()).hexdigest()[:12], "site": s["name"],
+                              "title": text[:200], "url": full, "notify": s.get("notify", "important")})
+            ok_sites.append(s["name"])
+            time.sleep(PAUSE)
+        except Exception as e:  # noqa: BLE001
+            errors.append(f"{s.get('name')}: {e}")
+    if not ok_sites and errors:
+        raise RuntimeError("; ".join(errors)[:300])
+    return {"items": items, "ok_sites": ok_sites}
+
+
 FETCHERS = {
     "youthall": fetch_youthall,
     "arbeitnow": fetch_arbeitnow,
     "adzuna": fetch_adzuna,
     "rss": fetch_rss,
     "careers": fetch_careers,
+    "pages": fetch_pages,
 }
 
 
@@ -447,6 +481,9 @@ def notify(subject: str, body: str, dry: bool) -> list[str]:
         print(f"--- BİLDİRİM (dry-run) ---\n{subject}\n{body}\n--------------------------")
         return ["dry-run"]
     sent = []
+    site = os.environ.get("SITE_URL", "").rstrip("/")
+    if site:
+        body = f"{body}\n\nTüm bildirimler: {site}/#bildirimler"
     token, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
     if token and chat:
         try:
@@ -459,7 +496,10 @@ def notify(subject: str, body: str, dry: bool) -> list[str]:
     topic = os.environ.get("NTFY_TOPIC")
     if topic:
         try:
-            payload = json.dumps({"topic": topic, "title": subject[:200], "message": body[:3500]}).encode("utf-8")
+            msg = {"topic": topic, "title": subject[:200], "message": body[:3500]}
+            if site:
+                msg["click"] = f"{site}/#bildirimler"
+            payload = json.dumps(msg).encode("utf-8")
             req = urllib.request.Request("https://ntfy.sh/", data=payload,
                                          headers={"User-Agent": UA, "Content-Type": "application/json"})
             with urllib.request.urlopen(req, timeout=20) as r:
@@ -516,34 +556,62 @@ def expired(job: dict, today: dt.date) -> bool:
 
 
 def run(args) -> int:
-    prof = load_json(ROOT / "config/profile.json")
-    sources = load_json(ROOT / "config/sources.json")
+    cfg_dir = Path(args.config_dir) if getattr(args, "config_dir", None) else ROOT / "config"
+    prof = load_json(cfg_dir / "profile.json")
+    sources = load_json(cfg_dir / "sources.json")
     data_path = Path(args.data) if args.data else ROOT / "docs/data/jobs.json"
     state = load_json(data_path, {"meta": {}, "jobs": {}})
-    state.setdefault("meta", {}).setdefault("sources", {})
-    state["meta"].setdefault("last_run", {})
+    meta = state.setdefault("meta", {})
+    meta.setdefault("sources", {})
+    meta.setdefault("last_run", {})
     jobs = state.setdefault("jobs", {})
-    welcomed = bool(state["meta"].get("welcomed"))
+    anns = state.setdefault("announcements", {})
+    had_events = "events" in state
+    events = state.setdefault("events", [])
+    welcomed = bool(meta.get("welcomed"))
     now = dt.datetime.now(dt.timezone.utc)
     now_iso, today = now.isoformat(timespec="seconds"), now.date()
-    alerts, fresh = [], []
+    min_score = int(prof.get("notify_min_score", 35))
+    alerts, fresh, fresh_ann, ok_sites = [], [], [], []
+
+    ev_ids = {e["id"] for e in events}
+
+    def add_event(typ, title, text="", url="", source="", score=None, important=False, ts=None):
+        eid = hashlib.sha1(f"{typ}|{url or title}".encode()).hexdigest()[:12]
+        if eid in ev_ids:
+            return
+        ev_ids.add(eid)
+        events.append({"id": eid, "ts": ts or now_iso, "type": typ, "title": title[:200], "text": text[:200],
+                       "url": url, "source": source, "score": score, "important": important})
+
+    if not had_events:  # eski veriden başlangıç akışı oluştur
+        for j in jobs.values():
+            if j.get("score", 0) >= min_score:
+                add_event("ilan", j["title"], " · ".join(x for x in (j["company"], j["location"]) if x),
+                          j["url"], j["source"], j["score"], j["score"] >= 50, ts=j["first_seen"])
 
     for name, fn in FETCHERS.items():
         cfg = sources.get(name, {})
-        st = state["meta"]["sources"].setdefault(name, {"fail_streak": 0})
+        st = meta["sources"].setdefault(name, {"fail_streak": 0})
         if not cfg.get("enabled"):
             st.update(status="kapalı", error=None)
             continue
         gate = cfg.get("min_interval_hours")
-        last = state["meta"]["last_run"].get(name)
+        last = meta["last_run"].get(name)
         if gate and last and (now - parse_dt(last)).total_seconds() < gate * 3600 and not args.force:
             st.update(status="bekliyor", error=None)
             continue
         try:
-            items = fn(cfg)
-            st.update(status="ok", count=len(items), error=None, at=now_iso, fail_streak=0)
-            state["meta"]["last_run"][name] = now_iso
-            fresh += items
+            res = fn(cfg)
+            if name == "pages":
+                fresh_ann += res["items"]
+                ok_sites += res["ok_sites"]
+                count = len(res["items"])
+            else:
+                fresh += res
+                count = len(res)
+            st.update(status="ok", count=count, error=None, at=now_iso, fail_streak=0)
+            meta["last_run"][name] = now_iso
         except SkipSource as e:
             st.update(status="atlandı", error=str(e), count=0)
         except Exception as e:  # noqa: BLE001
@@ -553,6 +621,7 @@ def run(args) -> int:
             if st["fail_streak"] == FAIL_ALERT_STREAK:
                 alerts.append(f"{name} kaynağı {FAIL_ALERT_STREAK} taramadır hata veriyor: {st['error']}")
 
+    # --- ilanlar
     seen, new_jobs = set(), []
     for j in fresh:
         if j["id"] in seen or expired(j, today):
@@ -580,32 +649,70 @@ def run(args) -> int:
     for jid in [i for i, j in jobs.items() if parse_dt(j["last_seen"]) < cutoff or expired(j, today)]:
         del jobs[jid]
 
-    min_score = int(prof.get("notify_min_score", 35))
+    # --- duyurular (okul/kurum sayfaları): ilk görülen site sessizce "tohumlanır"
+    seeded = meta.setdefault("pages_seeded", {})
+    kws = prof.get("announcement_keywords", [])
+    new_anns, seen_a = [], set()
+    for a in fresh_ann:
+        if a["id"] in seen_a:
+            continue
+        seen_a.add(a["id"])
+        if a["id"] in anns:
+            anns[a["id"]]["last_seen"] = now_iso
+            continue
+        imp = any(kw_re(k).search(fold(a["title"])) for k in kws)
+        anns[a["id"]] = {"title": a["title"], "url": a["url"], "site": a["site"],
+                         "first_seen": now_iso, "last_seen": now_iso, "important": imp}
+        if seeded.get(a["site"]):
+            new_anns.append(dict(a, important=imp))
+    for site in ok_sites:
+        seeded[site] = True
+    for aid in [i for i, a in anns.items() if parse_dt(a["last_seen"]) < now - dt.timedelta(days=60)]:
+        del anns[aid]
+    for a in new_anns:
+        add_event("duyuru", a["title"], a["site"], a["url"], a["site"], None, a["important"])
+
+    # --- bildirimler
     to_notify = sorted((j for j in new_jobs if j["score"] >= min_score), key=lambda j: -j["score"])
+    for j in to_notify:
+        add_event("ilan", j["title"], " · ".join(x for x in (j["company"], j["location"]) if x),
+                  j["url"], j["source"], j["score"], j["score"] >= 50)
+    to_push = [a for a in new_anns if a["notify"] == "all" or a["important"]]
+
     if not welcomed and jobs:
         # İlk özet: bir bildirim kanalı gerçekten çalışana kadar bekler (secret'lar sonradan eklenebilir).
         top = sorted(jobs.values(), key=lambda j: -j["score"])
         sent = notify(f"Staj Radar çalışıyor: {len(jobs)} ilan bulundu",
                       "En iyi eşleşmeler:\n" + fmt_jobs(top), args.dry_run)
         if sent:
-            state["meta"]["welcomed"] = True
+            meta["welcomed"] = True
+            add_event("sistem", "Staj Radar çalışıyor", f"{len(jobs)} ilan bulundu", important=False)
             for j in jobs.values():
                 j["notified"] = True
-    elif to_notify and not args.no_notify:
-        notify(f"Yeni staj ilanı: {len(to_notify)} eşleşme", fmt_jobs(to_notify), args.dry_run)
-        for j in to_notify:
-            jobs[j["id"]]["notified"] = True
+    elif not args.no_notify:
+        if to_notify:
+            notify(f"Yeni staj ilanı: {len(to_notify)} eşleşme", fmt_jobs(to_notify), args.dry_run)
+            for j in to_notify:
+                jobs[j["id"]]["notified"] = True
+    if to_push and not args.no_notify:
+        lines = [f"• [{a['site']}] {a['title']}\n  {a['url']}" for a in to_push[:10]]
+        notify(f"Yeni duyuru: {len(to_push)}", "\n".join(lines), args.dry_run)
     for a in alerts:
+        add_event("sistem", a, important=True)
         if not args.no_notify:
             notify("Staj Radar uyarı", a, args.dry_run)
 
-    state["meta"]["updated"] = now_iso
-    state["meta"]["total"] = len(jobs)
+    events.sort(key=lambda e: e["ts"], reverse=True)
+    del events[300:]
+    meta["updated"] = now_iso
+    meta["total"] = len(jobs)
+    meta["watchlist"] = sources.get("watchlist", [])
+    meta["page_sites"] = [{"name": x["name"], "url": x["url"]} for x in sources.get("pages", {}).get("sites", [])]
     data_path.parent.mkdir(parents=True, exist_ok=True)
     data_path.write_text(json.dumps(state, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8")
-    print(f"Toplam {len(jobs)} ilan, bu taramada {len(new_jobs)} yeni, {len(to_notify)} bildirim adayı.")
+    print(f"Toplam {len(jobs)} ilan, {len(new_jobs)} yeni ilan, {len(to_notify)} ilan bildirimi, "
+          f"{len(new_anns)} yeni duyuru.")
     return 0
-
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__)
@@ -613,4 +720,5 @@ if __name__ == "__main__":
     ap.add_argument("--no-notify", action="store_true")
     ap.add_argument("--force", action="store_true", help="min_interval_hours kapısını yok say")
     ap.add_argument("--data", help="jobs.json yolu (test için)")
+    ap.add_argument("--config-dir", help="profile.json ve sources.json klasörü (test için)")
     sys.exit(run(ap.parse_args()))

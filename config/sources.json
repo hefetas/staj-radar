@@ -17,8 +17,16 @@
   },
   "adzuna": {
     "enabled": true,
-    "countries": ["de", "gb", "nl", "at"],
-    "queries": ["intern production", "praktikum produktion"],
+    "countries": [
+      "de",
+      "gb",
+      "nl",
+      "at"
+    ],
+    "queries": [
+      "intern production",
+      "praktikum produktion"
+    ],
     "min_interval_hours": 24,
     "max_days_old": 30
   },
@@ -29,5 +37,26 @@
   "careers": {
     "enabled": true,
     "sites": []
-  }
+  },
+  "pages": {
+    "enabled": true,
+    "sites": [
+      {
+        "name": "UÜ Endüstri Müh. duyuruları",
+        "url": "https://www.uludag.edu.tr/endustri/duyuru",
+        "notify": "all"
+      },
+      {
+        "name": "UÜ Mühendislik Fak. duyuruları",
+        "url": "https://www.uludag.edu.tr/mmf/duyuru",
+        "notify": "important"
+      },
+      {
+        "name": "Uludağ Üniv. duyuruları",
+        "url": "https://www.uludag.edu.tr/duyuru",
+        "notify": "important"
+      }
+    ]
+  },
+  "watchlist": []
 }

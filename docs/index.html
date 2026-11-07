@@ -49,6 +49,29 @@
   footer { margin-top: 28px; color: var(--muted); font-size: .82rem; display: flex; flex-wrap: wrap; gap: 6px 14px; }
   .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; background: var(--muted); }
   .dot.ok { background: var(--accent); } .dot.hata { background: var(--bad); }
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .tab { font: inherit; font-size: .95rem; background: none; border: 0; border-bottom: 2px solid transparent; padding: 8px 14px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+  .tab[aria-selected=true] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .badge { display: inline-block; min-width: 18px; padding: 0 6px; margin-left: 6px; border-radius: 999px; background: var(--accent); color: var(--bg); font-size: .72rem; line-height: 18px; text-align: center; }
+  .pane[hidden] { display: none; }
+  .day { margin: 20px 0 8px; font-size: .8rem; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .ev { display: grid; grid-template-columns: 34px 1fr; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; }
+  .ev.unread { border-left: 4px solid var(--accent); }
+  .ev.imp .ico { background: var(--warn-soft); color: var(--warn); }
+  .ico { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-size: .95rem; }
+  .ev .title { font-size: .98rem; }
+  .ev .meta { font-size: .82rem; }
+  .board { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; align-items: start; }
+  .col { background: var(--accent-soft); border-radius: 12px; padding: 10px; min-height: 80px; }
+  .col h3 { margin: 0 0 8px; font-size: .85rem; color: var(--accent); display: flex; justify-content: space-between; }
+  .mini { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; margin-bottom: 8px; font-size: .88rem; }
+  .mini a { color: inherit; font-weight: 600; text-decoration: none; word-break: break-word; }
+  .mini select { width: 100%; margin-top: 6px; border-radius: 8px; font-size: .8rem; padding: 3px 6px; }
+  .mini textarea { width: 100%; margin-top: 6px; font: inherit; font-size: .8rem; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px; resize: vertical; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; }
+  .row .title { margin: 0; }
+  .hint { color: var(--muted); font-size: .88rem; margin: 0 0 14px; }
+  .hint a, footer a { color: var(--accent); }
   @media (max-width: 480px) { .card { grid-template-columns: 44px 1fr; } .score { width: 44px; height: 44px; } }
 </style>
 </head>
@@ -59,6 +82,14 @@
     <div class="sub" id="status">yükleniyor…</div>
   </header>
 
+  <nav class="tabs" id="tabs" role="tablist"></nav>
+
+  <section class="pane" id="p-bildirimler">
+    <div class="bar" id="evFilters" role="group" aria-label="Bildirim filtresi"></div>
+    <div id="evList"></div>
+  </section>
+
+  <section class="pane" id="p-ilanlar" hidden>
   <div class="bar" id="regions" role="group" aria-label="Bölge"></div>
   <div class="bar">
     <input type="search" id="q" placeholder="Ara: firma, başlık, şehir…" aria-label="Ara">
@@ -73,6 +104,18 @@
   </div>
 
   <div id="list"></div>
+  </section>
+
+  <section class="pane" id="p-takip" hidden>
+    <p class="hint">Kaydettiğin ve başvurduğun ilanlar burada. Bir ilanın durumunu değiştir, not ekle. Bu liste yalnızca bu tarayıcıda saklanır.</p>
+    <div class="board" id="board"></div>
+  </section>
+
+  <section class="pane" id="p-linkler" hidden>
+    <p class="hint">Otomatik taranan duyuru sayfaları ve elle takip ettiklerin. Instagram gibi kapalı kaynaklar otomatik taranamaz: hesabı Instagram'da açıp “Gönderi bildirimleri”ni aç, burada da “bugün baktım” diye işaretle.</p>
+    <div id="linkList"></div>
+  </section>
+
   <footer id="sources"></footer>
 </div>
 
@@ -81,7 +124,14 @@
   var REGIONS = [["all", "Hepsi"], ["bursa", "Bursa"], ["yakin", "Yakın iller"], ["turkiye", "Türkiye"], ["yurtdisi", "Yurt dışı"], ["uzaktan", "Uzaktan"]];
   var REGION_LABEL = { bursa: "Bursa", yakin: "Yakın il", turkiye: "Türkiye", yurtdisi: "Yurt dışı" };
   var state = { region: "all", q: "", sort: "score", onlyNew: false, onlySaved: false, onlyApplied: false };
-  var jobs = [], meta = {}, marks = {};
+  var jobs = [], meta = {}, marks = {}, events = [], notes = {}, checked = {}, lastRead = 0;
+  var TABS = [["bildirimler", "Bildirimler"], ["ilanlar", "İlanlar"], ["takip", "Takip"], ["linkler", "Takip listesi"]];
+  var STATUSES = [["saved", "★ Kaydedildi"], ["applied", "Başvurdum"], ["interview", "Mülakat"], ["offer", "Kabul/Teklif"], ["rejected", "Olumsuz"]];
+  var evState = { filter: "all" };
+  var tab = "bildirimler";
+  function load(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  notes = load("radar.notes", {}); checked = load("radar.checked", {}); lastRead = load("radar.lastRead", 0);
 
   try { marks = JSON.parse(localStorage.getItem("radar.marks") || "{}"); } catch (e) { marks = {}; }
   function saveMarks() { try { localStorage.setItem("radar.marks", JSON.stringify(marks)); } catch (e) {} }
@@ -123,8 +173,8 @@
       var m = marks[j.id];
       if (m === "hidden") return false;
       if (state.onlySaved) return m === "saved";
-      if (state.onlyApplied) return m === "applied";
-      if (m === "applied") return false;
+      if (state.onlyApplied) return m === "applied" || m === "interview" || m === "offer" || m === "rejected";
+      if (m === "applied" || m === "interview" || m === "offer" || m === "rejected") return false;
       if (state.region === "uzaktan") { if ((j.tags || []).indexOf("uzaktan") < 0) return false; }
       else if (state.region !== "all" && j.region !== state.region) return false;
       if (state.onlyNew && !isNew(j)) return false;
@@ -143,9 +193,11 @@
   }
 
   function mark(j, value) {
+    var id = j.id || j;
+    if (typeof j !== "object") { marks[id] = value; saveMarks(); renderAll(); return; }
     marks[j.id] = marks[j.id] === value ? undefined : value;
     if (marks[j.id] === undefined) delete marks[j.id];
-    saveMarks(); render();
+    saveMarks(); renderAll();
   }
 
   function card(j) {
@@ -196,6 +248,133 @@
     document.getElementById("fApplied").setAttribute("aria-pressed", String(state.onlyApplied));
   }
 
+
+  function dayLabel(iso) {
+    var d = new Date(iso), t = new Date(), y = new Date(Date.now() - 86400000);
+    if (d.toDateString() === t.toDateString()) return "Bugün";
+    if (d.toDateString() === y.toDateString()) return "Dün";
+    return d.toLocaleDateString("tr-TR", { day: "numeric", month: "long", weekday: "long" });
+  }
+  function unreadCount() { return events.filter(function (e) { return new Date(e.ts).getTime() > lastRead && e.type !== "sistem"; }).length; }
+
+  function renderTabs() {
+    var box = document.getElementById("tabs");
+    box.textContent = "";
+    TABS.forEach(function (t) {
+      var b = el("button", "tab", t[1]);
+      b.setAttribute("role", "tab");
+      b.setAttribute("aria-selected", String(tab === t[0]));
+      if (t[0] === "bildirimler" && unreadCount()) b.appendChild(el("span", "badge", String(unreadCount())));
+      b.onclick = function () { setTab(t[0]); };
+      box.appendChild(b);
+    });
+    TABS.forEach(function (t) { document.getElementById("p-" + t[0]).hidden = tab !== t[0]; });
+    var n = unreadCount();
+    document.title = (n ? "(" + n + ") " : "") + "Staj Radar";
+  }
+  function setTab(t) { tab = t; try { history.replaceState(null, "", "#" + t); } catch (e) {} renderAll(); }
+
+  function renderEvents() {
+    var bar = document.getElementById("evFilters");
+    bar.textContent = "";
+    [["all", "Hepsi"], ["ilan", "İlanlar"], ["duyuru", "Duyurular"], ["important", "Önemli"], ["sistem", "Sistem"]].forEach(function (f) {
+      var b = el("button", "chip", f[1]);
+      b.setAttribute("aria-pressed", String(evState.filter === f[0]));
+      b.onclick = function () { evState.filter = f[0]; renderEvents(); };
+      bar.appendChild(b);
+    });
+    var rd = el("button", "chip", "Tümünü okundu say");
+    rd.style.marginLeft = "auto";
+    rd.onclick = function () { lastRead = Date.now(); store("radar.lastRead", lastRead); renderAll(); };
+    bar.appendChild(rd);
+
+    var box = document.getElementById("evList");
+    box.textContent = "";
+    var rows = events.filter(function (e) {
+      if (evState.filter === "all") return true;
+      if (evState.filter === "important") return e.important;
+      return e.type === evState.filter;
+    });
+    if (!rows.length) { box.appendChild(el("div", "empty", "Bu filtrede bildirim yok.")); return; }
+    var lastDay = "";
+    rows.forEach(function (e) {
+      var dl = dayLabel(e.ts);
+      if (dl !== lastDay) { box.appendChild(el("div", "day", dl)); lastDay = dl; }
+      var unread = new Date(e.ts).getTime() > lastRead && e.type !== "sistem";
+      var c = el("article", "ev" + (unread ? " unread" : "") + (e.important ? " imp" : ""));
+      c.appendChild(el("div", "ico", e.type === "ilan" ? "💼" : e.type === "duyuru" ? "📢" : "⚙"));
+      var b = el("div");
+      var t = el("h2", "title");
+      if (e.url) { var a = el("a", null, e.title); a.href = safeUrl(e.url); a.target = "_blank"; a.rel = "noopener noreferrer"; t.appendChild(a); }
+      else t.textContent = e.title;
+      b.appendChild(t);
+      var meta2 = [e.type === "ilan" ? "İlan" : e.type === "duyuru" ? "Duyuru" : "Sistem", e.text, e.score != null ? "puan " + e.score : "", new Date(e.ts).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })];
+      b.appendChild(el("div", "meta", meta2.filter(Boolean).join(" · ")));
+      c.appendChild(b);
+      box.appendChild(c);
+    });
+  }
+
+  function renderBoard() {
+    var box = document.getElementById("board");
+    box.textContent = "";
+    var byId = {};
+    jobs.forEach(function (j) { byId[j.id] = j; });
+    var any = false;
+    STATUSES.forEach(function (st) {
+      var col = el("div", "col");
+      var ids = Object.keys(marks).filter(function (id) { return marks[id] === st[0] && byId[id]; });
+      var h = el("h3"); h.appendChild(el("span", null, st[1])); h.appendChild(el("span", null, String(ids.length)));
+      col.appendChild(h);
+      ids.forEach(function (id) {
+        any = true;
+        var j = byId[id], m = el("div", "mini");
+        var a = el("a", null, j.title); a.href = safeUrl(j.url); a.target = "_blank"; a.rel = "noopener noreferrer";
+        m.appendChild(a);
+        m.appendChild(el("div", "meta", [j.company, j.location].filter(Boolean).join(" · ")));
+        var sel = document.createElement("select");
+        STATUSES.concat([["hidden", "Listeden kaldır"]]).forEach(function (o) {
+          var op = el("option", null, o[1]); op.value = o[0]; if (o[0] === st[0]) op.selected = true; sel.appendChild(op);
+        });
+        sel.onchange = function () { marks[id] = sel.value; saveMarks(); renderAll(); };
+        m.appendChild(sel);
+        var ta = document.createElement("textarea");
+        ta.rows = 2; ta.placeholder = "Not (kişi, tarih, link…)"; ta.value = notes[id] || "";
+        ta.onchange = function () { notes[id] = ta.value; store("radar.notes", notes); };
+        m.appendChild(ta);
+        col.appendChild(m);
+      });
+      box.appendChild(col);
+    });
+    if (!any) box.insertBefore(el("div", "empty", "Henüz kayıtlı ilan yok. İlanlar sekmesinde “★ Kaydet” veya “✓ Başvurdum” de."), box.firstChild);
+  }
+
+  function renderLinks() {
+    var box = document.getElementById("linkList");
+    box.textContent = "";
+    var today = new Date().toISOString().slice(0, 10);
+    var items = (meta.page_sites || []).map(function (p) { return { name: p.name, url: p.url, auto: true }; })
+      .concat((meta.watchlist || []).map(function (w) { return { name: w.name, url: w.url, note: w.note, auto: false }; }));
+    if (!items.length) { box.appendChild(el("div", "empty", "Takip listesi boş.")); return; }
+    items.forEach(function (it) {
+      var r = el("div", "row"), left = el("div");
+      var t = el("h2", "title"), a = el("a", null, it.name);
+      a.href = safeUrl(it.url); a.target = "_blank"; a.rel = "noopener noreferrer"; t.appendChild(a);
+      left.appendChild(t);
+      left.appendChild(el("div", "meta", it.auto ? "Otomatik taranıyor — yeni duyuru Bildirimler'e düşer" : (it.note || "Elle takip")));
+      r.appendChild(left);
+      if (!it.auto) {
+        var done = checked[it.url] === today;
+        var b = el("button", "btn" + (done ? " on" : ""), done ? "✓ Bugün baktım" : "Bugün baktım");
+        b.onclick = function () { if (checked[it.url] === today) delete checked[it.url]; else checked[it.url] = today; store("radar.checked", checked); renderLinks(); };
+        r.appendChild(b);
+      }
+      box.appendChild(r);
+    });
+  }
+
+  function renderAll() { renderTabs(); renderEvents(); render(); renderBoard(); renderLinks(); }
+
   function renderMeta() {
     var s = document.getElementById("status");
     s.textContent = meta.updated ? "Son tarama " + ago(meta.updated) + " · " + jobs.length + " ilan" : "Henüz tarama yok";
@@ -219,11 +398,20 @@
   document.getElementById("fSaved").onclick = function () { state.onlySaved = !state.onlySaved; state.onlyApplied = false; render(); };
   document.getElementById("fApplied").onclick = function () { state.onlyApplied = !state.onlyApplied; state.onlySaved = false; render(); };
 
+  var h = (location.hash || "").slice(1);
+  if (TABS.some(function (t) { return t[0] === h; })) tab = h;
   renderRegions();
+  renderTabs();
   fetch("data/jobs.json?t=" + Date.now(), { cache: "no-store" })
     .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-    .then(function (d) { meta = d.meta || {}; jobs = Object.keys(d.jobs || {}).map(function (k) { return d.jobs[k]; }); renderMeta(); render(); })
-    .catch(function () { document.getElementById("status").textContent = "Veri yüklenemedi (ilk tarama henüz çalışmadı olabilir)"; render(); });
+    .then(function (d) {
+      meta = d.meta || {}; events = d.events || [];
+      jobs = Object.keys(d.jobs || {}).map(function (k) { return d.jobs[k]; });
+      if (!load("radar.lastRead", 0) && !localStorage.getItem("radar.visited")) { lastRead = Date.now(); store("radar.lastRead", lastRead); }
+      try { localStorage.setItem("radar.visited", "1"); } catch (e) {}
+      renderMeta(); renderAll();
+    })
+    .catch(function () { document.getElementById("status").textContent = "Veri yüklenemedi (ilk tarama henüz çalışmadı olabilir)"; renderAll(); });
 })();
 </script>
 </body>

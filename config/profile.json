@@ -38,7 +38,13 @@
     "bakım": 3,
     "maintenance": 3
   },
-  "skills": ["excel", "sql", "power bi", "autocad", "inventor"],
+  "skills": [
+    "excel",
+    "sql",
+    "power bi",
+    "autocad",
+    "inventor"
+  ],
   "negative": {
     "satış": 15,
     "sales": 15,
@@ -64,8 +70,46 @@
     "yeni mezun": 30
   },
   "location": {
-    "home_cities": ["bursa"],
-    "near_cities": ["kocaeli", "gebze", "izmit", "istanbul", "sakarya", "yalova", "eskişehir", "balıkesir", "bilecik", "tekirdağ", "çanakkale", "manisa", "izmir"],
-    "weights": {"home": 0, "near": 0, "turkey": 0, "abroad": 0, "remote": 0}
-  }
+    "home_cities": [
+      "bursa"
+    ],
+    "near_cities": [
+      "kocaeli",
+      "gebze",
+      "izmit",
+      "istanbul",
+      "sakarya",
+      "yalova",
+      "eskişehir",
+      "balıkesir",
+      "bilecik",
+      "tekirdağ",
+      "çanakkale",
+      "manisa",
+      "izmir"
+    ],
+    "weights": {
+      "home": 0,
+      "near": 0,
+      "turkey": 0,
+      "abroad": 0,
+      "remote": 0
+    }
+  },
+  "announcement_keywords": [
+    "staj",
+    "kariyer",
+    "ilan",
+    "başvuru",
+    "mülakat",
+    "burs",
+    "fuar",
+    "zirve",
+    "buluşma",
+    "sanayi",
+    "yetenek",
+    "tübitak",
+    "intern",
+    "career"
+  ]
 }
