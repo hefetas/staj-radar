@@ -48,7 +48,7 @@ CAREER_HTML = """<a href="/kariyer/staj-programi">Yaz Stajı Programı</a><a hre
 
 PAGE_LINKS = ['<a href="/endustri/duyuru/1">Staj Defterlerinin Teslimi Hakkında Duyuru</a>',
               '<a href="/endustri/duyuru/2">Yaz Dönemi Zorunlu Staj Başvuruları</a>',
-              '<a href="/endustri/">Ana sayfa</a>']
+              '<a href="/endustri/">Ana</a>']
 
 
 def fake_get(url, headers=None, timeout=25, retries=2, data=None):
