@@ -647,7 +647,8 @@ def run(args) -> int:
     events = state.setdefault("events", [])
     welcomed = bool(meta.get("welcomed"))
     now = dt.datetime.now(dt.timezone.utc)
-    now_iso, today = now.isoformat(timespec="seconds"), now.date()
+    now_iso = now.isoformat(timespec="seconds")
+    today = now.astimezone(dt.timezone(dt.timedelta(hours=3))).date()  # Türkiye saati (UTC+3, yaz saati yok)
     min_score = int(prof.get("notify_min_score", 35))
     alerts, fresh, fresh_ann, ok_sites = [], [], [], []
 
@@ -759,6 +760,21 @@ def run(args) -> int:
                   j["url"], j["source"], j["score"], j["score"] >= 50)
     to_push = [a for a in new_anns if a["notify"] == "all" or a["important"]]
 
+    # Son başvuru tarihi yaklaşan ilanlar için bir kez hatırlatma (<= 5 gün)
+    due = []
+    for j in jobs.values():
+        if j.get("deadline") and not j.get("dl_notified") and j.get("score", 0) >= min_score:
+            try:
+                left = (dt.date.fromisoformat(j["deadline"]) - today).days
+            except ValueError:
+                continue
+            if 0 <= left <= 5:
+                j["dl_notified"] = True
+                due.append((left, j))
+    for left, j in sorted(due, key=lambda x: x[0]):
+        add_event("hatirlatma", f"Son başvuru {left} gün: {j['title']}",
+                  " · ".join(x for x in (j["company"], j["location"]) if x), j["url"], j["source"], j["score"], True)
+
     if not welcomed and jobs:
         # İlk özet: bir bildirim kanalı gerçekten çalışana kadar bekler (secret'lar sonradan eklenebilir).
         top = sorted(jobs.values(), key=lambda j: -j["score"])
@@ -777,6 +793,10 @@ def run(args) -> int:
     if to_push and not args.no_notify:
         lines = [f"• [{a['site']}] {a['title']}\n  {a['url']}" for a in to_push[:10]]
         notify(f"Yeni duyuru: {len(to_push)}", "\n".join(lines), args.dry_run)
+    if due and not args.no_notify:
+        notify(f"Son başvuru yaklaşıyor: {len(due)} ilan",
+               "\n".join(f"• {l} gün kaldı: {j['title']} — {j['company']}\n  {j['url']}" for l, j in sorted(due, key=lambda x: x[0])[:10]),
+               args.dry_run)
     for a in alerts:
         add_event("sistem", a, important=True)
         if not args.no_notify:
@@ -787,6 +807,8 @@ def run(args) -> int:
     meta["updated"] = now_iso
     meta["total"] = len(jobs)
     meta["watchlist"] = sources.get("watchlist", [])
+    meta["companies"] = sources.get("companies", [])
+    meta["companies_source"] = sources.get("companies_source", "")
     meta["page_sites"] = [{"name": x["name"], "url": x["url"]} for x in sources.get("pages", {}).get("sites", [])]
     meta["criteria"] = prof.get("criteria", {})
     save_state(data_path, state)

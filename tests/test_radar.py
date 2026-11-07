@@ -289,6 +289,30 @@ class RadarTests(unittest.TestCase):
                 else:
                     os.environ[k] = v
 
+    def test_deadline_reminder_event_once(self):
+        import datetime as dt
+        d3 = (dt.datetime.now(dt.timezone(dt.timedelta(hours=3))).date() + dt.timedelta(days=3)).strftime("%d.%m.%Y")
+        html = ('<a href="https://www.youthall.com/tr/acme/yaz-staji-uretim-planlama_77/"><div>Acme - Yaz Stajı Üretim Planlama</div>'
+                f'<span>Stajyer</span> <span>{d3}</span> <span>Bursa</span></a>')
+        radar.http_get = lambda url, headers=None, timeout=25, retries=2, data=None: html if "page=" not in url else "<html></html>"
+        with tempfile.TemporaryDirectory() as d:
+            cdir = Path(d) / "cfg"
+            cdir.mkdir()
+            (cdir / "profile.json").write_text(json.dumps(self.prof))
+            off = {"enabled": False}
+            (cdir / "sources.json").write_text(json.dumps({
+                "youthall": {"enabled": True, "urls": ["https://www.youthall.com/tr/is-ilanlari/stajyer/"], "max_pages": 1},
+                "arbeitnow": off, "adzuna": off, "rss": off, "careers": off, "pages": off, "companies": [{"name": "X"}]}))
+            data = Path(d) / "jobs.json"
+            args = Namespace(dry_run=True, no_notify=False, force=True, data=str(data), config_dir=str(cdir))
+            radar.run(args)
+            radar.run(args)
+            s = json.loads(data.read_text())
+            rem = [e for e in s["events"] if e["type"] == "hatirlatma"]
+            self.assertEqual(len(rem), 1)
+            self.assertIn("Son başvuru 3 gün", rem[0]["title"])
+            self.assertEqual(s["meta"]["companies"][0]["name"], "X")
+
 
 if __name__ == "__main__":
     unittest.main()

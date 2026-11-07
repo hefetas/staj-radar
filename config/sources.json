@@ -14,7 +14,9 @@
       "https://www.youthall.com/tr/is-ilanlari/canakkale-stajyer/",
       "https://www.youthall.com/tr/is-ilanlari/manisa-stajyer/",
       "https://www.youthall.com/tr/is-ilanlari/izmir-stajyer/",
-      "https://www.youthall.com/tr/is-ilanlari/ankara-stajyer/"
+      "https://www.youthall.com/tr/is-ilanlari/ankara-stajyer/",
+      "https://www.youthall.com/tr/OyakRenault/",
+      "https://www.youthall.com/tr/bosch"
     ],
     "max_pages": 4
   },
@@ -122,32 +124,255 @@
     {
       "name": "Ulusal Staj Programı (Kariyer Kapısı)",
       "url": "https://kariyerkapisi.cbiko.gov.tr/",
-      "note": "Kamu kurumlarında staj; başvurular genelde Aralık-Ocak aylarında açılır",
-      "kind": "kamu"
+      "kind": "kamu",
+      "note": "Kamu kurumlarında staj. Başvurular genelde Aralık-Ocak aylarında açılır (2025 programı Aralık 2024'te duyuruldu)"
     },
     {
-      "name": "IAESTE Türkiye (yurt dışı staj)",
+      "name": "Instagram: @ulusalstajprg",
+      "url": "https://www.instagram.com/ulusalstajprg/",
+      "kind": "instagram",
+      "note": "Ulusal Staj Programı duyuruları. Profilde zil simgesinden Gönderi bildirimlerini aç"
+    },
+    {
+      "name": "Instagram: @buukariyermerkezi",
+      "url": "https://www.instagram.com/buukariyermerkezi/",
+      "kind": "instagram",
+      "note": "Uludağ Üniv. Kariyer Merkezi. Gönderi bildirimlerini aç"
+    },
+    {
+      "name": "Instagram: @mtstajprogramlari",
+      "url": "https://www.instagram.com/mtstajprogramlari/",
+      "kind": "instagram",
+      "note": "MT ve staj programı duyuruları. Gönderi bildirimlerini aç"
+    },
+    {
+      "name": "IAESTE (yurt dışı staj)",
       "url": "https://youth.europa.eu/go-abroad/traineeships/iaeste-exchange-programme_tr",
-      "note": "Üniversite IAESTE komitesi üzerinden başvuru; teknik öğrenciler için yurt dışı staj",
-      "kind": "yurtdisi"
+      "kind": "yurtdisi",
+      "note": "Teknik öğrenciler için yurt dışı staj değişimi; başvuru üniversitedeki IAESTE komitesi üzerinden"
     },
     {
       "name": "Uludağ Uluslararası Ofis (Erasmus+ staj)",
       "url": "https://uludag.edu.tr/uaik",
-      "note": "Erasmus+ staj hareketliliği: hibe ve başvuru tarihleri",
-      "kind": "yurtdisi"
+      "kind": "yurtdisi",
+      "note": "Erasmus+ staj hareketliliği: başvuru tarihleri ve hibe duyuruları burada"
+    },
+    {
+      "name": "Erasmus+ Ulusal Ajans",
+      "url": "https://www.ua.gov.tr/",
+      "kind": "burs",
+      "note": "Erasmus+ staj hibesi (burs) kuralları ve miktarları resmi kaynaktan"
+    },
+    {
+      "name": "TÜBİTAK 2209-A/B (üniversite öğrencileri)",
+      "url": "https://www.tubitak.gov.tr/tr/destekler/akademik/ulusal-destek-programlari/icerik-2209-a-universite-ogrencileri-arastirma-projeleri-destekleme-programi",
+      "kind": "burs",
+      "note": "Başvurular Kasım 2026'da başladı (okul duyurusu). Güncel tarih için TÜBİTAK sayfasına bak"
+    },
+    {
+      "name": "BTSO – Bursa Organize Sanayi Bölgesi",
+      "url": "https://www.btso.org.tr/projeler/yatirimlar-ve-isbirlikleri/bursa-organize-sanayi-bolgesi",
+      "kind": "firma",
+      "note": "OSB bilgisi; firmalar Firmalar sekmesinde"
     },
     {
       "name": "LinkedIn: Bursa staj (üretim)",
       "url": "https://www.linkedin.com/jobs/search/?keywords=staj%20%C3%BCretim&location=Bursa",
-      "note": "Otomatik taranamaz; kayıtlı arama + e-posta uyarısı kur",
-      "kind": "manuel"
+      "kind": "manuel",
+      "note": "Otomatik taranamaz; kayıtlı arama + e-posta uyarısı kur"
     },
     {
-      "name": "Kariyer.net staj ilanları",
-      "url": "https://www.kariyer.net/is-ilanlari/staj",
-      "note": "Otomatik taranamaz; filtre: Bursa + staj",
-      "kind": "manuel"
+      "name": "Kariyer.net: Bursa staj",
+      "url": "https://www.kariyer.net/is-ilanlari/bursa-staj",
+      "kind": "manuel",
+      "note": "Otomatik taranamaz; her gün bak"
     }
-  ]
+  ],
+  "companies": [
+    {
+      "name": "Tofaş",
+      "sector": "Otomotiv",
+      "city": "Bursa",
+      "url": "https://tofas.com.tr/en/Career/JoinUs/Pages/SummerInternshipProgram.aspx",
+      "verified": true,
+      "note": "Yaz stajı programı sayfası"
+    },
+    {
+      "name": "Oyak Renault",
+      "sector": "Otomotiv",
+      "city": "Bursa",
+      "url": "https://www.youthall.com/tr/OyakRenault/",
+      "verified": true,
+      "note": "ORVILLE yaz stajı programları; ilanlar otomatik taranıyor"
+    },
+    {
+      "name": "Bosch",
+      "sector": "Otomotiv / yan sanayi",
+      "city": "Bursa",
+      "url": "https://www.youthall.com/tr/bosch",
+      "verified": true,
+      "note": "Zorunlu yaz stajı ilanları Youthall'da açılıyor; otomatik taranıyor"
+    },
+    {
+      "name": "TOGG",
+      "sector": "Otomotiv",
+      "city": "Gemlik, Bursa",
+      "url": "https://www.google.com/search?q=TOGG%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": ""
+    },
+    {
+      "name": "Karsan",
+      "sector": "Otomotiv",
+      "city": "Bursa",
+      "url": "https://www.google.com/search?q=Karsan%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": ""
+    },
+    {
+      "name": "Bosch Rexroth",
+      "sector": "Makine / hidrolik",
+      "city": "Bursa",
+      "url": "https://www.google.com/search?q=Bosch%20Rexroth%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": ""
+    },
+    {
+      "name": "Yazaki Wiring Technologies",
+      "sector": "Otomotiv yan sanayi",
+      "city": "Bursa",
+      "url": "https://www.google.com/search?q=Yazaki%20Wiring%20Technologies%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": ""
+    },
+    {
+      "name": "Maysan Mando",
+      "sector": "Otomotiv yan sanayi",
+      "city": "Bursa",
+      "url": "https://www.google.com/search?q=Maysan%20Mando%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": ""
+    },
+    {
+      "name": "Astemo Bursa",
+      "sector": "Otomotiv yan sanayi",
+      "city": "Bursa",
+      "url": "https://www.google.com/search?q=Astemo%20Bursa%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": ""
+    },
+    {
+      "name": "Beyçelik Gestamp",
+      "sector": "Otomotiv yan sanayi",
+      "city": "Bursa",
+      "url": "https://www.google.com/search?q=Bey%C3%A7elik%20Gestamp%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": ""
+    },
+    {
+      "name": "Coşkunöz Metal Form",
+      "sector": "Metal / otomotiv yan sanayi",
+      "city": "Bursa",
+      "url": "https://www.google.com/search?q=Co%C5%9Fkun%C3%B6z%20Metal%20Form%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": ""
+    },
+    {
+      "name": "T.K.G. Otomotiv",
+      "sector": "Otomotiv yan sanayi",
+      "city": "Bursa",
+      "url": "https://www.google.com/search?q=T.K.G.%20Otomotiv%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": ""
+    },
+    {
+      "name": "Feka Otomotiv",
+      "sector": "Otomotiv yan sanayi",
+      "city": "Bursa",
+      "url": "https://www.google.com/search?q=Feka%20Otomotiv%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": ""
+    },
+    {
+      "name": "Oyak Horse Makine Ekipmanları",
+      "sector": "Makine",
+      "city": "Bursa",
+      "url": "https://www.google.com/search?q=Oyak%20Horse%20Makine%20Ekipmanlar%C4%B1%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": ""
+    },
+    {
+      "name": "Faurecia",
+      "sector": "Otomotiv yan sanayi",
+      "city": "Orhangazi, Bursa",
+      "url": "https://www.google.com/search?q=Faurecia%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": "Uzun dönem stajyer ilanları çıkıyor"
+    },
+    {
+      "name": "TI Automotive",
+      "sector": "Otomotiv yan sanayi",
+      "city": "Bursa",
+      "url": "https://www.google.com/search?q=TI%20Automotive%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": "Staj ilanları çıkıyor"
+    },
+    {
+      "name": "Aka Otomotiv",
+      "sector": "Otomotiv yan sanayi",
+      "city": "Bursa",
+      "url": "https://www.google.com/search?q=Aka%20Otomotiv%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": "Üniversite stajyeri ilanları çıkıyor"
+    },
+    {
+      "name": "Asil Çelik",
+      "sector": "Çelik",
+      "city": "Bursa",
+      "url": "https://www.google.com/search?q=Asil%20%C3%87elik%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": ""
+    },
+    {
+      "name": "Sütaş",
+      "sector": "Gıda / süt",
+      "city": "Karacabey, Bursa",
+      "url": "https://www.google.com/search?q=S%C3%BCta%C5%9F%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": ""
+    },
+    {
+      "name": "Eker Süt Ürünleri",
+      "sector": "Gıda / süt",
+      "city": "Bursa",
+      "url": "https://www.google.com/search?q=Eker%20S%C3%BCt%20%C3%9Cr%C3%BCnleri%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": ""
+    },
+    {
+      "name": "Uludağ İçecek",
+      "sector": "Gıda / içecek",
+      "city": "Bursa",
+      "url": "https://www.google.com/search?q=Uluda%C4%9F%20%C4%B0%C3%A7ecek%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": ""
+    },
+    {
+      "name": "Besler / Çopa Isı Sistemleri",
+      "sector": "Isı sistemleri",
+      "city": "Bursa",
+      "url": "https://www.google.com/search?q=Besler%20/%20%C3%87opa%20Is%C4%B1%20Sistemleri%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": "Genç yetenek programı"
+    },
+    {
+      "name": "Yeşilova Holding",
+      "sector": "Holding",
+      "city": "Bursa",
+      "url": "https://www.google.com/search?q=Ye%C5%9Filova%20Holding%20kariyer%20staj%20ba%C5%9Fvuru",
+      "verified": false,
+      "note": "Uludağ Kariyer Fuarı'nda genel başvuru topluyor"
+    }
+  ],
+  "companies_source": "Bursa'nın ISO 500 şirketleri (Ekonomi Gazetesi) ve kariyer.net/Youthall'da staj ilanı çıkaran firmalar. Mavi 'kariyer sayfası' olmayanlar için arama bağlantısı var; resmi kariyer sayfasını oradan bulup kontrol et."
 }
