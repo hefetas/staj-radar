@@ -74,6 +74,10 @@
   .dot.ok { background: var(--accent); } .dot.hata { background: var(--bad); }
   .login { max-width: 360px; margin: 18vh auto 0; text-align: center; }
   .login p { color: var(--muted); }
+  .accrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .accrow:last-child { border-bottom: 0; }
+  .muted { color: var(--muted); font-size: .85rem; }
+  .accmail { flex: 1 1 200px; word-break: break-all; }
   .login .btn { font-size: 1rem; padding: 10px 20px; background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
   .tag.due { background: var(--warn-soft); color: var(--warn); font-weight: 600; }
   .card.dueSoon { border-color: var(--warn); }
@@ -186,6 +190,11 @@
       </div>
     </div>
 
+    <section class="pane" id="p-erisim" hidden>
+      <div class="panel"><h2>Erişim istekleri</h2><div id="reqList"></div></div>
+      <div class="panel"><h2>Erişimi olanlar</h2><div id="allowList"></div></div>
+    </section>
+
     <section class="pane" id="p-kaynaklar" hidden>
       <div class="panel"><h2 id="critTitle">Arama kriterleri</h2><ul id="critList"></ul></div>
       <div class="panel"><h2>Takip listesi</h2><div id="linkList"></div></div>
@@ -237,6 +246,27 @@
     $("appView").hidden = true; $("loginView").hidden = false;
     if (msg) $("loginMsg").textContent = msg;
     $("btnLogout2").hidden = !canLogout;
+    $("btnLogin").hidden = !!canLogout;
+  }
+  var pollTimer = null;
+  function waitForApproval() {
+    clearInterval(pollTimer);
+    pollTimer = setInterval(function () {
+      sb.rpc("staj_my_status").then(function (r) {
+        if (r.data === "izinli") { clearInterval(pollTimer); location.reload(); }
+        else if (r.data === "reddedildi") { clearInterval(pollTimer); showLogin("Erişim isteğin (" + (user.email || "") + ") reddedildi.", true); }
+      });
+    }, 20000);
+  }
+  function requestAccess() {
+    showLogin("Bu hesap (" + (user.email || "") + ") için erişim isteği gönderiliyor…", true);
+    sb.rpc("staj_request_access").then(function (r) {
+      if (r.error) { showLogin("İstek gönderilemedi. Sayfayı yenileyip tekrar dene.", true); return; }
+      if (r.data === "izinli") { location.reload(); return; }
+      if (r.data === "reddedildi") { showLogin("Erişim isteğin (" + (user.email || "") + ") reddedildi.", true); return; }
+      showLogin("İsteğin gönderildi (" + (user.email || "") + "). Onaylanınca bu sayfa kendiliğinden açılır; bekleme.", true);
+      waitForApproval();
+    });
   }
   $("btnLogin").onclick = function () {
     sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + location.pathname.replace(/index\.html$/, "") } });
@@ -248,9 +278,59 @@
     if (!session) { showLogin("Kişisel staj takip sayfası. Devam etmek için giriş yap.", false); return; }
     user = session.user;
     sb.rpc("staj_is_allowed").then(function (r) {
-      if (r.error || r.data !== true) { showLogin("Bu Google hesabı (" + (user.email || "") + ") yetkili değil.", true); return; }
+      if (r.error || r.data !== true) { requestAccess(); return; }
       $("loginView").hidden = true; $("appView").hidden = false;
+      sb.rpc("staj_is_admin").then(function (a) {
+        if (a.data === true) {
+          isAdmin = true; TABS.push(["erisim", "Erişim"]);
+          if (location.hash === "#erisim") tab = "erisim";
+          loadAccess();
+        }
+        renderAll();
+      });
       refresh();
+    });
+  }
+
+  /* ---------------- erişim yönetimi (yalnızca yönetici) ---------------- */
+  var isAdmin = false, access = { requests: [], allowed: [] };
+  function loadAccess() {
+    sb.rpc("staj_admin_list").then(function (r) { if (r.data) { access = r.data; renderAccess(); renderTabs(); } });
+  }
+  function decide(email, ok) { sb.rpc("staj_admin_decide", { p_email: email, p_approve: ok }).then(loadAccess); }
+  function removeAccess(email) {
+    if (!confirm(email + " erişimi kaldırılsın mı?")) return;
+    sb.rpc("staj_admin_remove", { p_email: email }).then(loadAccess);
+  }
+  function accessRow(email, note) {
+    var row = el("div", "accrow"); row.appendChild(el("span", "accmail", email));
+    if (note) row.appendChild(el("span", "muted", note));
+    return row;
+  }
+  function renderAccess() {
+    if (!isAdmin) return;
+    var rl = $("reqList"); rl.textContent = "";
+    var pending = access.requests.filter(function (x) { return x.status === "bekliyor"; });
+    var denied = access.requests.filter(function (x) { return x.status === "reddedildi"; });
+    if (!pending.length) rl.appendChild(el("p", "muted", "Bekleyen istek yok."));
+    pending.forEach(function (x) {
+      var row = accessRow(x.email, ago(x.created_at));
+      var ok = el("button", "btn on", "Onayla"); ok.onclick = function () { decide(x.email, true); };
+      var no = el("button", "btn", "Reddet"); no.onclick = function () { decide(x.email, false); };
+      row.appendChild(ok); row.appendChild(no); rl.appendChild(row);
+    });
+    denied.forEach(function (x) {
+      var row = accessRow(x.email, "reddedildi");
+      var ok = el("button", "btn", "Yine de onayla"); ok.onclick = function () { decide(x.email, true); };
+      row.appendChild(ok); rl.appendChild(row);
+    });
+    var al = $("allowList"); al.textContent = "";
+    access.allowed.forEach(function (x) {
+      var row = accessRow(x.email, x.email === "efetas411@gmail.com" ? "yönetici" : "");
+      if (x.email !== "efetas411@gmail.com") {
+        var rm = el("button", "btn", "Kaldır"); rm.onclick = function () { removeAccess(x.email); }; row.appendChild(rm);
+      }
+      al.appendChild(row);
     });
   }
 
@@ -298,6 +378,7 @@
       var b = el("button", "tab", t[1]);
       b.setAttribute("role", "tab"); b.setAttribute("aria-selected", String(tab === t[0]));
       if (t[0] === "bildirimler" && unreadCount()) b.appendChild(el("span", "badge", String(unreadCount())));
+      if (t[0] === "erisim") { var np = access.requests.filter(function (x) { return x.status === "bekliyor"; }).length; if (np) b.appendChild(el("span", "badge", String(np))); }
       b.onclick = function () { setTab(t[0]); };
       box.appendChild(b);
     });
@@ -671,7 +752,7 @@
   function renderStatus() {
     $("status").textContent = meta.updated ? "Son tarama " + ago(meta.updated) + " · " + jobs.length + " ilan" : "Henüz tarama yok";
   }
-  function renderAll() { renderTabs(); renderStatus(); renderEvents(); renderDomestic(); renderAbroad(); renderFar(); renderFirms(); renderCvTab(); renderBoard(); renderAnns(); renderSources(); }
+  function renderAll() { renderTabs(); renderStatus(); renderEvents(); renderDomestic(); renderAbroad(); renderFar(); renderFirms(); renderCvTab(); renderBoard(); renderAnns(); renderSources(); renderAccess(); }
 
   $("q").oninput = function (e) { state.q = e.target.value; renderDomestic(); };
   $("sort").onchange = function (e) { state.sort = e.target.value; renderDomestic(); };

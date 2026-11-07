@@ -314,6 +314,33 @@ class RadarTests(unittest.TestCase):
             self.assertIn("Son başvuru 3 gün", rem[0]["title"])
             self.assertEqual(s["meta"]["companies"][0]["name"], "X")
 
+    def test_new_access_requests(self):
+        import os
+        keys = ("SUPABASE_URL", "SUPABASE_ANON_KEY", "STAJ_INGEST_TOKEN")
+        old = {k: os.environ.get(k) for k in keys}
+        orig = radar.supa_rpc
+        try:
+            for k in keys:
+                os.environ.pop(k, None)
+            self.assertEqual(radar.new_access_requests(), [])  # Supabase yoksa boş
+            os.environ.update({"SUPABASE_URL": "https://x.supabase.co", "SUPABASE_ANON_KEY": "anon", "STAJ_INGEST_TOKEN": "tok"})
+            seen = []
+
+            def fake_rpc(name, payload):
+                seen.append((name, payload))
+                return ["a@b.com", "c@d.com"]
+
+            radar.supa_rpc = fake_rpc
+            self.assertEqual(radar.new_access_requests(), ["a@b.com", "c@d.com"])
+            self.assertEqual(seen[0], ("staj_take_new_requests", {"p_token": "tok"}))
+        finally:
+            radar.supa_rpc = orig
+            for k, v in old.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+
     def test_missing_token_fails_loudly(self):
         import os
         old = {k: os.environ.get(k) for k in ("SUPABASE_URL", "STAJ_INGEST_TOKEN")}

@@ -638,6 +638,14 @@ def save_state(data_path: Path, state: dict) -> None:
     data_path.write_text(json.dumps(state, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8")
 
 
+def new_access_requests() -> list[str]:
+    """Henüz bildirilmemiş erişim isteklerini alır (Supabase yoksa boş)."""
+    if not use_supabase():
+        return []
+    got = supa_rpc("staj_take_new_requests", {"p_token": os.environ["STAJ_INGEST_TOKEN"]})
+    return [str(x) for x in (got or [])]
+
+
 def run(args) -> int:
     cfg_dir = Path(args.config_dir) if getattr(args, "config_dir", None) else ROOT / "config"
     prof = load_json(cfg_dir / "profile.json")
@@ -809,6 +817,18 @@ def run(args) -> int:
         add_event("sistem", a, important=True)
         if not args.no_notify:
             notify("Staj Radar uyarı", a, args.dry_run)
+
+    # Siteye erişim isteyenler (anında bildirim gitmediyse burada yakalanır)
+    if not args.no_notify:
+        try:
+            reqs = new_access_requests()
+        except Exception as e:  # noqa: BLE001
+            print(f"Erişim istekleri okunamadı: {type(e).__name__}", file=sys.stderr)
+            reqs = []
+        if reqs:
+            add_event("sistem", f"Erişim isteği: {', '.join(reqs)}", important=True)
+            notify("Staj Radar: erişim isteği",
+                   "\n".join(f"• {m}" for m in reqs) + "\nOnaylamak için siteyi aç → Erişim sekmesi.", args.dry_run)
 
     events.sort(key=lambda e: e["ts"], reverse=True)
     del events[300:]
