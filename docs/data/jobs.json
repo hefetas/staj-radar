@@ -1,4 +1,1201 @@
 {
+ "announcements": {
+  "01fa64ff0b5e": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Öğrenci İşleri ve Eğitimi Yürütme Kurulu",
+   "url": "https://www.uludag.edu.tr/kurul/ogrenci-isleri-ve-egitimi-yurutme-kurulu"
+  },
+  "0692378f34b8": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "ATATÜRK İLKELERİ VE İNKILAP TARİHİ BÖLÜMÜ",
+   "url": "https://www.uludag.edu.tr/atabolum"
+  },
+  "08e9e2e1c715": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Endüstri Müh. duyuruları",
+   "title": "ENDÜSTRİ MÜHENDİSLİĞİ BÖLÜMÜ",
+   "url": "https://www.uludag.edu.tr/tr/endustri"
+  },
+  "0a94c555e80b": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Dilekçe ve Formlar",
+   "url": "https://kalite.uludag.edu.tr/kiksis/dokuman_main.php"
+  },
+  "0b5646e4e0a1": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "KALİTE KOORDİNATÖRLÜĞÜ",
+   "url": "https://www.uludag.edu.tr/kalite"
+  },
+  "0efea2f5c3f5": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Akademik Takvim",
+   "url": "https://www.uludag.edu.tr/oidb/akademik-takvim-69873"
+  },
+  "12190ad6f6d3": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "VETERİNER FAKÜLTESİ",
+   "url": "https://www.uludag.edu.tr/veteriner"
+  },
+  "1432483fbecf": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "DAİRE BAŞKANLIKLARI",
+   "url": "https://www.uludag.edu.tr/daire-baskanliklari-69763"
+  },
+  "1433be00d667": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "BAP KOORDİNATÖRLÜĞÜ",
+   "url": "https://www.uludag.edu.tr/bap"
+  },
+  "15a121f0a94a": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "İLAHİYAT FAKÜLTESİ",
+   "url": "https://www.uludag.edu.tr/ilahiyat"
+  },
+  "16c48b74df55": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "SAĞLIK KÜLTÜR VE SPOR DAİRE BAŞKANLIĞI",
+   "url": "https://www.uludag.edu.tr/saglikkultur"
+  },
+  "177c3a6586b4": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "YENİŞEHİR İBRAHİM ORHAN MYO",
+   "url": "https://www.uludag.edu.tr/ysehirmyo"
+  },
+  "17e6580351f7": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Kurullar ve Komisyonlar",
+   "url": "https://www.uludag.edu.tr/mmf/kurul-ve-komisyonlar-82796"
+  },
+  "197406ec78d4": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Yayın Komisyonu",
+   "url": "https://www.uludag.edu.tr/komisyon/yayin-komisyonu"
+  },
+  "1a663a87d8c9": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "GÜZEL SANATLAR BÖLÜMÜ",
+   "url": "https://www.uludag.edu.tr/rbgsb"
+  },
+  "1c82848ccd6a": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "İNEGÖL İŞLETME FAKÜLTESİ",
+   "url": "https://www.uludag.edu.tr/inif"
+  },
+  "1d0b3b23b0e4": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Öğrenci Etkinlikleri Komisyonu",
+   "url": "https://www.uludag.edu.tr/komisyon/ogrenci-etkinlikleri-komisyonu"
+  },
+  "1f39b160be2f": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Fakülte Dergisi",
+   "url": "https://dergipark.org.tr/tr/pub/uumfd"
+  },
+  "24b86c0c0ce2": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Kurumsal Kimlik Kılavuzu",
+   "url": "https://www.uludag.edu.tr/kurumsal-kimlik-kilavuzu-84994"
+  },
+  "252f36c8d22c": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Akademik Teşvik ATOSİS",
+   "url": "https://www.uludag.edu.tr/akademiktesvik"
+  },
+  "253f528d3110": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "SAĞLIK BİLİMLERİ ENSTİTÜSÜ",
+   "url": "https://www.uludag.edu.tr/saglikbilimleri"
+  },
+  "286102fbe76f": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "STRATEJİ GELİŞTİRME DAİRE BAŞKANLIĞI",
+   "url": "https://www.uludag.edu.tr/sgdb"
+  },
+  "28b5b47d3b8a": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "MEDİKO SOSYAL VE GENÇLİK DANIŞMA MERKEZİ",
+   "url": "https://www.uludag.edu.tr/saglik-ulasim-50480"
+  },
+  "29fc90238d00": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Organizasyon Şeması",
+   "url": "https://www.uludag.edu.tr/mmf/organizasyon-semasi-8137"
+  },
+  "2ab649b39088": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "SAĞLIK HİZMETLERİ MYO",
+   "url": "https://www.uludag.edu.tr/shmyo"
+  },
+  "2b20adf2d922": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Fakülte Yönetim Kurulu",
+   "url": "https://www.uludag.edu.tr/mmf/kurul/fakulte-yonetim-kurulu"
+  },
+  "2cfe6ac3f3d1": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "SOSYAL BİLİMLER ENSTİTÜSÜ",
+   "url": "https://www.uludag.edu.tr/sosyalbilimler"
+  },
+  "2df37e23bbc4": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "MUSTAFAKEMALPAŞA MYO",
+   "url": "https://www.uludag.edu.tr/mkpasa"
+  },
+  "3152ad3d5df5": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Endüstri Müh. duyuruları",
+   "title": "Aramızdan Ayrılanlar",
+   "url": "https://www.uludag.edu.tr/endustri/aramizdan-ayrilanlar-97508"
+  },
+  "3154db9543b3": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Çerez Politikası",
+   "url": "https://www.uludag.edu.tr/kvkk-bilgilendirme-ve-cerez-politikasi-6077"
+  },
+  "33bafc7cbc59": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Mevzuat İnceleme ve Değerlendirme Komisyonu",
+   "url": "https://www.uludag.edu.tr/komisyon/mevzuat-inceleme-ve-degerlendirme-komisyonu"
+  },
+  "35957b7daef9": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Birim Sekreterlikleri",
+   "url": "https://www.uludag.edu.tr/birim-sekreterleri-69764"
+  },
+  "37139a66dd37": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Toplumsal Katkı",
+   "url": "https://www.uludag.edu.tr/bursa-uludag-universitesi-toplimsal-katki-69719"
+  },
+  "3aa48c40fe55": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Vizyon-Misyon-Temel Değerler",
+   "url": "https://www.uludag.edu.tr/misyon-ve-vizyon-temel-degerler-69584"
+  },
+  "3afcbd2e6027": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Öğrenci Oto. İdari",
+   "url": "https://ogis4.uludag.edu.tr/NoktaNewDesign.aspx"
+  },
+  "3cfb8539a3fe": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "OTOMOTİV MÜHENDİSLİĞİ",
+   "url": "https://uludag.edu.tr/otomuh"
+  },
+  "3ef34f884c5f": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "YABANCI DİLLER YÜKSEKOKULU",
+   "url": "https://www.uludag.edu.tr/ydyo"
+  },
+  "41527512c0bf": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "EĞİTİM FAKÜLTESİ",
+   "url": "https://www.uludag.edu.tr/egitim"
+  },
+  "416953b39623": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "MAKİNE MÜHENDİSLİĞİ",
+   "url": "https://uludag.edu.tr/makine"
+  },
+  "4214cce487d5": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "TEKNİK BİLİMLER MYO",
+   "url": "https://www.uludag.edu.tr/tby"
+  },
+  "431b22a932b5": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "PERSONEL DAİRE BAŞKANLIĞI",
+   "url": "https://www.uludag.edu.tr/personel"
+  },
+  "43bd4cd5276f": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "NİLÜFER HATUN KONUKEVİ",
+   "url": "https://www.uludag.edu.tr/nilufer-hatun-konukevi-69549"
+  },
+  "44aeddcdc821": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Sürekli İşci Personel Oto.",
+   "url": "https://uludagimid.kamutech.com/uye-giris"
+  },
+  "4600d330c88a": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Endüstri Müh. duyuruları",
+   "title": "Bilgi İşlem Daire Başkanlığı",
+   "url": "https://www.uludag.edu.tr/bilgiislem"
+  },
+  "4a6c478a2934": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Öğrenci Toplulukları",
+   "url": "https://uludag.edu.tr/saglikkultur/ogrenci-topluluklarimiz-69557"
+  },
+  "4b0927d420a6": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Merkez Laboratuvar",
+   "url": "https://www.uludag.edu.tr/bituam"
+  },
+  "4be528459c3d": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "TEKSTİL MÜHENDİSLİĞİ",
+   "url": "https://uludag.edu.tr/tekstil"
+  },
+  "4c0f8405d83c": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Nanoteknoloji ve Malzeme Karakterizasyonu Laboratuvarı",
+   "url": "https://www.uludag.edu.tr/dosyalar/arge/NAMAK_katalog.pdf"
+  },
+  "4c3c8bc095be": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Vizyon-Misyon-Temel Değerler",
+   "url": "https://www.uludag.edu.tr/mmf/vizyon-misyon-temel-degerler-8108"
+  },
+  "4c62e6e69974": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "ÖĞRENCİ İŞLERİ DAİRE BAŞKANLIĞI",
+   "url": "https://www.uludag.edu.tr/oidb"
+  },
+  "5028c104fc87": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "İKTİSADİ VE İDARİ BİLİMLER FAKÜLTESİ",
+   "url": "https://www.uludag.edu.tr/iibf"
+  },
+  "5097bca6260c": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Kalite Komisyonu",
+   "url": "https://www.uludag.edu.tr/komisyon/kalite-komisyonu"
+  },
+  "528d6b9c5129": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Rektör'ün Mesajı",
+   "url": "https://www.uludag.edu.tr/rektorun-mesaji-69715"
+  },
+  "52f4593bcc8a": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "2024 Faaliyet Raporu",
+   "url": "https://www.uludag.edu.tr/mmf/\\dosyalar\\mmf\\2025\\2024-Mühendislik Fak. 2024 İdare Faaliyet Raporu.pdf"
+  },
+  "557181b9b876": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Endüstri Müh. duyuruları",
+   "title": "Bölüm Yönetim Süreçleri",
+   "url": "https://www.uludag.edu.tr/endustri/bolum-yonetim-surecleri-97505"
+  },
+  "56a2f3c83aa8": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "FEN-EDEBİYAT FAKÜLTESİ TEST VE ANALİZ HİZMETLERİ",
+   "url": "https://www.uludag.edu.tr/dosyalar/fenedebiyat/test/FEN%20EDEB%C4%B0YAT%20FAK%C3%9CLTES%C4%B0%202026%20YILI%20TEST%20VE%20ANAL%C4%B0Z%20KATALO%C4%9EU%2016.02.2026.pdf?_t=1771307888"
+  },
+  "5a1f950ce6a3": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "AR-GE KOORDİNATÖRLÜĞÜ",
+   "url": "https://www.uludag.edu.tr/arge"
+  },
+  "5c02375acbe7": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Endüstri Müh. duyuruları",
+   "title": "Yönetmelik ve Yönergeler",
+   "url": "https://kms.kaysis.gov.tr/Home/Kurum/92662996"
+  },
+  "5ef29b0bb63b": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "SPOR BİLİMLERİ FAKÜLTESİ",
+   "url": "https://www.uludag.edu.tr/sporbilimleri"
+  },
+  "646e1c50dfc9": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "KÜTÜPHANE VE DÖKÜMANTASYON DAİRE BAŞKANLIĞI",
+   "url": "https://www.uludag.edu.tr/kutuphane"
+  },
+  "652d2b0a19c4": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "GÜZEL SANATLAR FAKÜLTESİ",
+   "url": "https://www.uludag.edu.tr/gsf"
+  },
+  "66b6738e7242": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Endüstri Müh. duyuruları",
+   "title": "Fen Bilimleri Enstitüsü",
+   "url": "https://www.uludag.edu.tr/fenbilimleri"
+  },
+  "6ae9cdd9bf27": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Hukuk Müşavirliği",
+   "url": "https://www.uludag.edu.tr/hukukmusavirligi"
+  },
+  "6d0b74ece181": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Veteriner Fakültesi Hayvan Hastanesi",
+   "url": "https://www.uludag.edu.tr/hayvanhastanesi"
+  },
+  "7027d2a8ba00": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Endüstri Müh. duyuruları",
+   "title": "0 (224) 294 20 81",
+   "url": "https://www.uludag.edu.tr/telefon"
+  },
+  "722f07dd458f": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "TÜRK DİLİ BÖLÜMÜ",
+   "url": "https://www.uludag.edu.tr/turkdili"
+  },
+  "72add746c17e": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Akademik Performans Değerlendirme Komisyonu",
+   "url": "https://www.uludag.edu.tr/komisyon/akademik-performans-degerlendirme-komisyonu"
+  },
+  "72f7bc673547": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Öğrenci Toplulukları",
+   "url": "https://www.uludag.edu.tr/mmf/ogrenci-topluluklarimiz-69557"
+  },
+  "75a55a93f47f": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "AÇIK ERİŞİM KAYNAKLAR",
+   "url": "https://www.uludag.edu.tr/acik-erisim-dergiler-kitaplar-ve-e-kaynaklar-78150"
+  },
+  "772daa9468df": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "KALİTE VE İÇ KONTROL KOMİSYONU",
+   "url": "https://www.uludag.edu.tr/mmf/birim-kalite-komisyonlari-8144"
+  },
+  "773cae0143a3": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Organizasyon Şeması",
+   "url": "https://www.uludag.edu.tr/dosyalar/anasayfa/BUU%CC%88_ORGANI%CC%87ZASYON_SEMASI.pdf"
+  },
+  "77706355a877": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "CİHAZ VE HİZMET BEDELLERİ",
+   "url": "https://www.uludag.edu.tr/bituam/analiz-ve-hizmet-fiyat-listesi-93678"
+  },
+  "78241239bc6c": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Akademik Takvim",
+   "url": "https://www.uludag.edu.tr/mmf/akademik-takvim-69873"
+  },
+  "794aaf604b20": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "PROF. DR. METE CENGİZ KÜLTÜR MERKEZİ",
+   "url": "https://www.uludag.edu.tr/prof-dr-m-mete-cengiz-kultur-merkezi-69553"
+  },
+  "79ac1102311b": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "MÜHENDİSLİK FAKÜLTESİ",
+   "url": "https://www.uludag.edu.tr/tr/mmf"
+  },
+  "802a5b1da028": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Bilimsel araştırma Projeleri Komisyonu",
+   "url": "https://www.uludag.edu.tr/komisyon/bilimsel-arastirma-komisyonu"
+  },
+  "80d81cf2fb61": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "DEVLET KONSERVATUVARI",
+   "url": "https://www.uludag.edu.tr/konservatuvar"
+  },
+  "8543f041e6b8": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Akıllı Yoklama Sistemi",
+   "url": "https://yoklama.uludag.edu.tr"
+  },
+  "8563bdf039a1": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Engelsiz Fakülte",
+   "url": "https://www.uludag.edu.tr/mmf/engelsiz-fakulte-8145"
+  },
+  "86d6f3714853": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "GÖRÜKLE YERLEŞKESİ",
+   "url": "https://www.uludag.edu.tr/gorukle-yerleskesi-85514"
+  },
+  "89a5c195ab9c": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Yabancı Uyrukluların Çalıştırması veya Bir Üst Ünvana Yükseltilmeleri Komisyonu",
+   "url": "https://www.uludag.edu.tr/komisyon/yabanci-uyruklularin-calistirmasi-veya-bir-ust-unvana-yukseltilmeleri-komisyonu"
+  },
+  "8aeb006b6776": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Bilgisayar Mühendisliği",
+   "url": "https://www.uludag.edu.tr/bm"
+  },
+  "8db776760f74": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Akademik Personel",
+   "url": "https://uludag.edu.tr/mmf/akademikpersonel"
+  },
+  "8f60afcef652": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "MERKEZİ BİRİMLER",
+   "url": "https://www.uludag.edu.tr/merkezi-birimler-69765"
+  },
+  "909b99b7a466": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "MÜDEK Belgeleri",
+   "url": "https://www.uludag.edu.tr/mmf/2025-mudek-85777"
+  },
+  "910c2fbae1e6": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "YAPI İŞLERİ VE TEKNİK DAİRE BAŞKANLIĞI",
+   "url": "https://www.uludag.edu.tr/yapiisleri"
+  },
+  "920a36c55222": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Sosyal Transkript",
+   "url": "https://sosyaltranskript.uludag.edu.tr/giris"
+  },
+  "92f98c0b3f8d": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "TÜRKÇE BASILI DERGİLER",
+   "url": "https://www.uludag.edu.tr/turkce-abone-dergiler-78141"
+  },
+  "93fabee894a7": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": true,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "LABSİS-ONLİNE BAŞVURU",
+   "url": "https://www.uludag.edu.tr/bituam/labsis-95052"
+  },
+  "9834e9117a8f": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "ZİRAAT FAKÜLTESİ",
+   "url": "https://www.uludag.edu.tr/ziraat"
+  },
+  "98acb141b460": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Endüstri Mühendisliği",
+   "url": "https://uludag.edu.tr/tr/endustri"
+  },
+  "9a6a77a48cd4": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "SÜREKLİ EĞİTİM UYGULAMA VE ARAŞTIRMA MERKEZİ",
+   "url": "https://ulusem.uludag.edu.tr/"
+  },
+  "9f9b1a35b7f3": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Uluslararası Ofis",
+   "url": "https://uludag.edu.tr/uaik"
+  },
+  "a26c50a6c705": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "SAĞLIK BİLİMLERİ FAKÜLTESİ",
+   "url": "https://www.uludag.edu.tr/sbf"
+  },
+  "a39eda869887": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Mühendislik Fakültesi Telefon Rehberi",
+   "url": "https://uludag.edu.tr/telefon/liste/151/muhendislik--fakultesi"
+  },
+  "a3ff76c17c8e": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Davranış Etik Kurulu",
+   "url": "https://www.uludag.edu.tr/buuetikkurulu"
+  },
+  "a5c5d9a8bdc6": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Araştırma ve Geliştirme Koordinatörlüğü Danışma Kurulu",
+   "url": "https://www.uludag.edu.tr/kurul/arastirma-ve-gelistirme-koordinatorlugu-danisma-kurulu"
+  },
+  "a66a118ce336": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Bölüm Tanıtımları",
+   "url": "https://www.uludag.edu.tr/mmf/bolum-tanitim-76806"
+  },
+  "a930f1d77f12": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "TÜRKÇE ÖĞRETİMİ UYGULAMA VE ARAŞTIRMA MERKEZİ",
+   "url": "https://www.uludag.edu.tr/ulutomer"
+  },
+  "aa8c818d70db": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Bologna Veri Girişi",
+   "url": "https://ogrotomasyon.uludag.edu.tr/"
+  },
+  "ac67e4676840": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "ONLINE KÜTÜPHANE",
+   "url": "https://uludag.edu.tr/kutuphane"
+  },
+  "ac7850876296": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "KVKK Bilgilendirme ve Çerez Politikasi",
+   "url": "https://uludag.edu.tr/konu/kvkk-bilgilendirme-ve-cerez-politikasi-6077"
+  },
+  "aca5d75cfe0e": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Akademik Takvim",
+   "url": "https://uludag.edu.tr/oidb/akademik-takvim-69873"
+  },
+  "ad78461b0196": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "DİŞ HEKİMLİĞİ FAKÜLTESİ",
+   "url": "https://www.uludag.edu.tr/dis"
+  },
+  "af4b330e5f3f": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "İç Denetim Birimi Başkanlığı",
+   "url": "https://www.uludag.edu.tr/icdenetim"
+  },
+  "b0b995f325c8": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Bursa Uludağ Üniversitesi Hastanesi",
+   "url": "https://hastane.uludag.edu.tr/randevu"
+  },
+  "b2d78eee88f8": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Yönetmelik ve Yönergeler",
+   "url": "https://www.uludag.edu.tr/mmf/uludag-universitesi-yonetmelik-ve-yonergeleri-6047"
+  },
+  "b745f8b338a6": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "GEMLİK ASIM KOCABIYIK MYO",
+   "url": "https://www.uludag.edu.tr/gemlik"
+  },
+  "c08955c61eaa": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Çevre Mühendisliği",
+   "url": "https://www.uludag.edu.tr/cevre"
+  },
+  "c1f11ef90a43": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "İDARİ VE MALİ İŞLER DAİRE BAŞKANLIĞI",
+   "url": "https://www.uludag.edu.tr/idarimali"
+  },
+  "c20fc2fcec42": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Endüstri Müh. duyuruları",
+   "title": "Mühendislik Fakültesi",
+   "url": "https://www.uludag.edu.tr/mmf"
+  },
+  "c228c4c329fc": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "TEKNOLOJİ TRANSFER OFİSİ",
+   "url": "https://www.bursauludagtto.com/"
+  },
+  "c9064011f418": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Genel Sekreterlik",
+   "url": "https://www.uludag.edu.tr/genelsekreterlik"
+  },
+  "ca83935bda00": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "POLİS MEMURU HÜSEYİN AKYÜZ KÜLTÜR MERKEZİ",
+   "url": "https://www.uludag.edu.tr/polis-memuru-huseyin-akyuz-kultur-merkezi-69658"
+  },
+  "cc40cb4d7c9c": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Fakülte Tarihçesi",
+   "url": "https://www.uludag.edu.tr/mmf/tarihcemiz-8134"
+  },
+  "cda1d241fca9": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "GEMLİK ASIM KOCABIYIK KÜLTÜR MERKEZİ",
+   "url": "https://www.uludag.edu.tr/gemlik-asim-kocabiyik-kultur-merkezi-69560"
+  },
+  "d357186f0984": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Fakülte Logomuz",
+   "url": "https://www.uludag.edu.tr/mmf/fakulte-logomuz-8133"
+  },
+  "d3695be514de": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "İnşaat Mühendisliği",
+   "url": "https://uludag.edu.tr/insaat"
+  },
+  "d51f23051e75": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Ölçme ve Değerlendirme Komisyonu",
+   "url": "https://www.uludag.edu.tr/komisyon/olcme-ve-degerlendirme-komisyonu"
+  },
+  "d7e3ed9b9397": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Downloand Arşivi (Personel)",
+   "url": "https://filelocal.uludag.edu.tr/"
+  },
+  "d82500e0c737": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "SOSYAL BİLİMLER MYO",
+   "url": "https://www.uludag.edu.tr/sbmyo"
+  },
+  "d9dccb10c9fe": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "İç Kontrol İzleme ve Yönlendirme Kurulu",
+   "url": "https://www.uludag.edu.tr/kurul/ic-kontrol-izleme-ve-yonlendirme-kurulu"
+  },
+  "db04c128ce2e": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "FEN-EDEBİYAT FAKÜLTESİ",
+   "url": "https://www.uludag.edu.tr/fenedebiyat"
+  },
+  "dc3b0c885d4e": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "ORHANGAZİ YENİKÖY ASİL ÇELİK MYO",
+   "url": "https://www.uludag.edu.tr/orhangazi"
+  },
+  "dc66ba0446bc": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Şifre İşlemleri",
+   "url": "https://parola.uludag.edu.tr/"
+  },
+  "ded81b82864f": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Endüstri Müh. duyuruları",
+   "title": "Akademik Takvim",
+   "url": "https://www.uludag.edu.tr/akademik-takvim-69873"
+  },
+  "dfb48c1f3962": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Elektrik-Elektronik Mühendisliği",
+   "url": "https://www.uludag.edu.tr/eem"
+  },
+  "e171909aa0f2": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "ULUTEK TEKNOPARK",
+   "url": "https://www.ulutek.com.tr"
+  },
+  "e43e7a7d69cd": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "BUÜ Stratejik Plan",
+   "url": "https://uludag.edu.tr/dosyalar/anasayfa/stratejikPlan2024-2028.pdf"
+  },
+  "e46395ede19f": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "KOORDİNATÖRLÜKLER",
+   "url": "https://www.uludag.edu.tr/organizasyon/koordinatorlukler"
+  },
+  "e5718f470390": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "MİMARLIK FAKÜLTESİ",
+   "url": "https://www.uludag.edu.tr/mimarlik"
+  },
+  "e6c052cd15f1": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "EĞİTİM BİLİMLERİ ENSTİTÜSÜ",
+   "url": "https://www.uludag.edu.tr/egitimbilimleri"
+  },
+  "e77bd39d668f": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "SAĞLIK, KÜLTÜR VE SPOR",
+   "url": "https://uludag.edu.tr/saglikkultur"
+  },
+  "e7c7a12cecb3": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "AİLE SAĞLIK MERKEZİ",
+   "url": "https://www.uludag.edu.tr/hasta-rehberi-66003"
+  },
+  "eb8e7167f39c": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "BEDEN EĞİTİMİ BÖLÜMÜ",
+   "url": "https://www.uludag.edu.tr/bedenegitimi"
+  },
+  "f102a825a46c": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "MEB Sosyal Etkinlik",
+   "url": "https://www.uludag.edu.tr/meb-ortaogretim-gezi-basvurusu-88874"
+  },
+  "f2664945ba79": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Akademik Teşvik Değerlendirme Komisyonu",
+   "url": "https://www.uludag.edu.tr/komisyon/akademik-tesvik-degerlendirme-komisyonu"
+  },
+  "f2d26a0a7dff": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "Atama Kriter Komisyonu",
+   "url": "https://www.uludag.edu.tr/komisyon/atama-kriter-komisyonu"
+  },
+  "f336a35b53a1": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "MENNAN PASİNLİ ATÇILIK MYO",
+   "url": "https://www.uludag.edu.tr/mennanpasinli"
+  },
+  "f44d4923f2b4": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Endüstri Müh. duyuruları",
+   "title": "Akademik Personel",
+   "url": "https://www.uludag.edu.tr/endustri/akademikpersonel"
+  },
+  "f4f79f0e2289": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "HUKUK FAKÜLTESİ",
+   "url": "https://www.uludag.edu.tr/hukuk"
+  },
+  "fc1594b8ea65": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "ÖĞRENCİ TOPLULUKLARI",
+   "url": "https://www.uludag.edu.tr/ogrenci-topluluklari-deneme-76647"
+  },
+  "fc1f5b83a135": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Öğrenci Otomasyon",
+   "url": "https://ogrotomasyon.uludag.edu.tr/Default.aspx"
+  },
+  "fec4182a45e0": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "Uludağ Üniv. duyuruları",
+   "title": "ENGELLİ ÖĞRENCİ BİRİMİ",
+   "url": "https://www.uludag.edu.tr/engelsiz"
+  },
+  "ffe48618daf9": {
+   "first_seen": "2026-11-07T20:11:36+00:00",
+   "important": false,
+   "last_seen": "2026-11-07T20:11:36+00:00",
+   "site": "UÜ Mühendislik Fak. duyuruları",
+   "title": "Birim Görev Tanımları",
+   "url": "https://www.uludag.edu.tr/mmf/birim-gorev-tanimlari-8146"
+  }
+ },
+ "events": [
+  {
+   "id": "087ec3d8591f",
+   "important": false,
+   "score": 38,
+   "source": "Youthall",
+   "text": "BAT Türkiye · Samsun",
+   "title": "Production Intern",
+   "ts": "2026-11-07T19:52:10+00:00",
+   "type": "ilan",
+   "url": "https://www.youthall.com/en/batturkeycareers/production-intern_173/"
+  },
+  {
+   "id": "ee235d88a3aa",
+   "important": false,
+   "score": 48,
+   "source": "Youthall",
+   "text": "Oyak Renault · Bursa",
+   "title": "4 Seasons Proje Stajyerliği",
+   "ts": "2026-11-07T19:52:10+00:00",
+   "type": "ilan",
+   "url": "https://www.youthall.com/tr/OyakRenault/4-seasons-proje-stajyerligi_61/"
+  },
+  {
+   "id": "a5f6c8489a12",
+   "important": false,
+   "score": 38,
+   "source": "Youthall",
+   "text": "P&G · Kocaeli",
+   "title": "Summer Internship 2027: Manufacturing | Gebze Plant",
+   "ts": "2026-11-07T19:52:10+00:00",
+   "type": "ilan",
+   "url": "https://www.youthall.com/en/pgcareersturkey/summer-internship-2027-manufacturing-gebze-plant_117/"
+  }
+ ],
  "jobs": {
   "03db11109924": {
    "company": "P&G",
@@ -6,7 +1203,7 @@
    "deadline": "2026-12-16",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "03db11109924",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "İstanbul",
    "notified": true,
    "posted": null,
@@ -28,7 +1225,7 @@
    "deadline": "2026-11-17",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "043e18e6e8b0",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Tekirdağ",
    "notified": true,
    "posted": null,
@@ -50,7 +1247,7 @@
    "deadline": "2026-11-17",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "05db37451476",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "İstanbul",
    "notified": true,
    "posted": null,
@@ -72,7 +1269,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "0e361a03776d",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Paris",
    "notified": true,
    "posted": "2026-11-07T03:40:30+00:00",
@@ -95,7 +1292,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "1a48427a81ae",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Paris",
    "notified": true,
    "posted": "2026-11-06T15:40:20+00:00",
@@ -117,7 +1314,7 @@
    "deadline": "2026-11-09",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "1a5649a825e0",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "İstanbul",
    "notified": true,
    "posted": null,
@@ -139,7 +1336,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "1c4f1b7ab72f",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Paris, France",
    "notified": true,
    "posted": "2026-11-06T18:40:13+00:00",
@@ -161,7 +1358,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "241e027b9865",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Berlin, Berlin, Deutschland",
    "notified": true,
    "posted": "2026-11-06T18:31:20+00:00",
@@ -183,7 +1380,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "288d741ef917",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "London",
    "notified": true,
    "posted": "2026-11-07T00:40:11+00:00",
@@ -206,7 +1403,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "419f00957fc4",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Zürich",
    "notified": true,
    "posted": "2026-11-04T12:02:28+00:00",
@@ -228,7 +1425,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "43e5708ac691",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Berlin",
    "notified": true,
    "posted": "2026-11-06T15:40:19+00:00",
@@ -250,7 +1447,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "4463fda7dac3",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Paris",
    "notified": true,
    "posted": "2026-11-07T03:40:30+00:00",
@@ -272,7 +1469,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "46ce1a9d29b9",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Homeoffice",
    "notified": true,
    "posted": "2026-11-06T18:31:20+00:00",
@@ -297,7 +1494,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "4a4c7f47a9f6",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Delft",
    "notified": true,
    "posted": "2026-11-05T09:40:27+00:00",
@@ -320,7 +1517,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "4c4da68663ab",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Paris, France",
    "notified": true,
    "posted": "2026-11-07T00:40:15+00:00",
@@ -342,7 +1539,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "5128ca939246",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Kassel, Hesse",
    "notified": true,
    "posted": "2026-11-07T06:55:15+00:00",
@@ -365,7 +1562,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "52f525492920",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Delft",
    "notified": true,
    "posted": "2026-11-07T00:40:11+00:00",
@@ -388,7 +1585,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "54575a14e854",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Bad Salzungen, Thüringen, Deutschland",
    "notified": true,
    "posted": "2026-11-06T18:31:19+00:00",
@@ -410,7 +1607,7 @@
    "deadline": "2026-11-25",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "5e055810757f",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Hibrit",
    "notified": true,
    "posted": null,
@@ -432,7 +1629,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "6070066b6d35",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Leipzig, Sachsen-Anhalt, Duitsland",
    "notified": true,
    "posted": "2026-11-06T12:31:15+00:00",
@@ -454,7 +1651,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "67f7df659132",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Amsterdam, Noord-Holland, Nederland",
    "notified": true,
    "posted": "2026-11-03T12:31:41+00:00",
@@ -476,7 +1673,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "68116974e7b5",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "London",
    "notified": true,
    "posted": "2026-11-07T00:40:11+00:00",
@@ -499,7 +1696,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "6f34edee5292",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Berlin",
    "notified": true,
    "posted": "2026-11-07T00:40:12+00:00",
@@ -521,7 +1718,7 @@
    "deadline": "2026-12-16",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "728708dadc5b",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "İstanbul",
    "notified": true,
    "posted": null,
@@ -543,7 +1740,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "730aaf4e1354",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "33100, Nordrhein-Westfalen, Deutschland",
    "notified": true,
    "posted": "2026-11-06T12:31:13+00:00",
@@ -565,7 +1762,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "7367910f6619",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Paris",
    "notified": true,
    "posted": "2026-11-07T00:40:13+00:00",
@@ -588,7 +1785,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "74f8635c303c",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Paris",
    "notified": true,
    "posted": "2026-11-07T06:40:26+00:00",
@@ -612,7 +1809,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "7c6d180e4c45",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Berlin",
    "notified": true,
    "posted": "2026-11-06T14:01:19+00:00",
@@ -636,7 +1833,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "8626dcd2c3a6",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Bochum",
    "notified": true,
    "posted": "2026-11-06T16:20:11+00:00",
@@ -658,7 +1855,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "8721a4850225",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Munich",
    "notified": true,
    "posted": "2026-11-07T12:08:24+00:00",
@@ -680,7 +1877,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "89433ed3e2b2",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Leipzig",
    "notified": true,
    "posted": "2026-11-06T18:30:43+00:00",
@@ -704,7 +1901,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "8d3bcf2c11d7",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Satigny, Switzerland",
    "notified": true,
    "posted": "2026-10-31T21:20:16+00:00",
@@ -726,7 +1923,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "8de66844d64c",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Rotterdam , Zuid-Holland, Netherlands",
    "notified": true,
    "posted": "2026-11-06T09:31:06+00:00",
@@ -748,7 +1945,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "8e6444eb1310",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Amsterdam, The Netherlands",
    "notified": true,
    "posted": "2026-11-07T00:08:41+00:00",
@@ -772,7 +1969,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "8e65e51d2409",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Rotterdam, Zuid-Holland, Netherlands",
    "notified": true,
    "posted": "2026-11-06T18:31:19+00:00",
@@ -794,7 +1991,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "9082a3e3894f",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Weinheim",
    "notified": true,
    "posted": "2026-11-06T17:30:55+00:00",
@@ -816,7 +2013,7 @@
    "deadline": "2026-11-15",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "9836e6fcc711",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "İstanbul",
    "notified": true,
    "posted": null,
@@ -838,7 +2035,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "9a320f76bbc1",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Jena",
    "notified": true,
    "posted": "2026-11-06T13:01:19+00:00",
@@ -861,7 +2058,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "9b28a0fd4244",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Épalinges, Switzerland",
    "notified": true,
    "posted": "2026-11-06T03:20:14+00:00",
@@ -884,7 +2081,7 @@
    "deadline": "2026-12-02",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "9f21217c4467",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Samsun",
    "notified": true,
    "posted": null,
@@ -907,7 +2104,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "a1135c7ed0a4",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Berlin",
    "notified": true,
    "posted": "2026-11-07T11:30:51+00:00",
@@ -931,7 +2128,7 @@
    "deadline": "2026-11-20",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "a27f566801a1",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Bursa",
    "notified": true,
    "posted": null,
@@ -956,7 +2153,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "aeaa884cf1ad",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "London",
    "notified": true,
    "posted": "2026-11-06T06:55:22+00:00",
@@ -978,7 +2175,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "aef4a547d4ec",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Cologne",
    "notified": true,
    "posted": "2026-11-06T11:31:42+00:00",
@@ -1000,7 +2197,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "b3893f69d776",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "London",
    "notified": true,
    "posted": "2026-11-07T03:40:24+00:00",
@@ -1023,7 +2220,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "b3c1e5a3d18a",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Zürich",
    "notified": true,
    "posted": "2026-11-02T14:47:39+00:00",
@@ -1045,7 +2242,7 @@
    "deadline": "2026-12-16",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "b5ee7aa5d5c0",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Kocaeli",
    "notified": true,
    "posted": null,
@@ -1068,7 +2265,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "b6ce868e88df",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Bremgarten",
    "notified": true,
    "posted": "2026-11-03T16:47:31+00:00",
@@ -1090,7 +2287,7 @@
    "deadline": "2026-12-16",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "bc897313c209",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "İstanbul",
    "notified": true,
    "posted": null,
@@ -1113,7 +2310,7 @@
    "deadline": "2026-11-14",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "c0e7387105a6",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "İstanbul",
    "notified": true,
    "posted": null,
@@ -1135,7 +2332,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "cfee53a6a2b2",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Alkmaar",
    "notified": true,
    "posted": "2026-11-04T09:40:16+00:00",
@@ -1157,7 +2354,7 @@
    "deadline": "2026-11-27",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "d2e6353f10db",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Yalova",
    "notified": true,
    "posted": null,
@@ -1179,7 +2376,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "d322cd27fe07",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Zülpich, Nordrhein-Westfalen, Deutschland",
    "notified": true,
    "posted": "2026-11-07T03:31:29+00:00",
@@ -1201,7 +2398,7 @@
    "deadline": "2027-01-09",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "d5aa090ec99b",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Sakarya",
    "notified": true,
    "posted": null,
@@ -1223,7 +2420,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "d81acea60ea7",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Amsterdam, The Netherlands",
    "notified": true,
    "posted": "2026-11-07T00:08:41+00:00",
@@ -1246,7 +2443,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "dcac2f5b72a8",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Erlenbach",
    "notified": true,
    "posted": "2026-11-03T13:01:19+00:00",
@@ -1268,7 +2465,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "dd4412a7a41d",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Paris",
    "notified": true,
    "posted": "2026-11-07T06:40:26+00:00",
@@ -1291,7 +2488,7 @@
    "deadline": "2026-11-30",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "dd74c273e571",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "İstanbul",
    "notified": true,
    "posted": null,
@@ -1313,7 +2510,7 @@
    "deadline": "2026-12-16",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "dff9df8dc706",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "İstanbul",
    "notified": true,
    "posted": null,
@@ -1336,7 +2533,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "e124d271bf4b",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Bad Salzungen, Thüringen, Deutschland",
    "notified": true,
    "posted": "2026-11-06T18:31:19+00:00",
@@ -1358,7 +2555,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "e187b1fc1d8e",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Zurich",
    "notified": true,
    "posted": "2026-11-03T18:40:31+00:00",
@@ -1380,7 +2577,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "e1cf03bd37b4",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Karben",
    "notified": true,
    "posted": "2026-11-06T12:01:00+00:00",
@@ -1402,7 +2599,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "e4531809ade9",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Bochum",
    "notified": true,
    "posted": "2026-11-06T16:20:11+00:00",
@@ -1424,7 +2621,7 @@
    "deadline": "2026-11-30",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "e7c087432d80",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Tekirdağ",
    "notified": true,
    "posted": null,
@@ -1446,7 +2643,7 @@
    "deadline": "2026-12-10",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "eb38b6dca223",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "İstanbul +",
    "notified": true,
    "posted": null,
@@ -1468,7 +2665,7 @@
    "deadline": "2026-12-16",
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "f121d364ffa8",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "İstanbul",
    "notified": true,
    "posted": null,
@@ -1491,7 +2688,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "fd859fdc6a5e",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Berlin",
    "notified": true,
    "posted": "2026-11-07T12:01:12+00:00",
@@ -1515,7 +2712,7 @@
    "deadline": null,
    "first_seen": "2026-11-07T19:52:10+00:00",
    "id": "fe27d4e4d321",
-   "last_seen": "2026-11-07T20:00:37+00:00",
+   "last_seen": "2026-11-07T20:11:36+00:00",
    "location": "Heidelberg, Baden-Württemberg, Deutschland",
    "notified": true,
    "posted": "2026-11-07T18:31:09+00:00",
@@ -1535,8 +2732,28 @@
  },
  "meta": {
   "last_run": {
-   "arbeitnow": "2026-11-07T20:00:37+00:00",
-   "youthall": "2026-11-07T20:00:37+00:00"
+   "arbeitnow": "2026-11-07T20:11:36+00:00",
+   "pages": "2026-11-07T20:11:36+00:00",
+   "youthall": "2026-11-07T20:11:36+00:00"
+  },
+  "page_sites": [
+   {
+    "name": "UÜ Endüstri Müh. duyuruları",
+    "url": "https://www.uludag.edu.tr/endustri/duyuru"
+   },
+   {
+    "name": "UÜ Mühendislik Fak. duyuruları",
+    "url": "https://www.uludag.edu.tr/mmf/duyuru"
+   },
+   {
+    "name": "Uludağ Üniv. duyuruları",
+    "url": "https://www.uludag.edu.tr/duyuru"
+   }
+  ],
+  "pages_seeded": {
+   "Uludağ Üniv. duyuruları": true,
+   "UÜ Endüstri Müh. duyuruları": true,
+   "UÜ Mühendislik Fak. duyuruları": true
   },
   "sources": {
    "adzuna": {
@@ -1546,7 +2763,7 @@
     "status": "atlandı"
    },
    "arbeitnow": {
-    "at": "2026-11-07T20:00:37+00:00",
+    "at": "2026-11-07T20:11:36+00:00",
     "count": 2000,
     "error": null,
     "fail_streak": 0,
@@ -1558,6 +2775,13 @@
     "fail_streak": 0,
     "status": "atlandı"
    },
+   "pages": {
+    "at": "2026-11-07T20:11:36+00:00",
+    "count": 151,
+    "error": null,
+    "fail_streak": 0,
+    "status": "ok"
+   },
    "rss": {
     "count": 0,
     "error": "akış listesi boş",
@@ -1565,7 +2789,7 @@
     "status": "atlandı"
    },
    "youthall": {
-    "at": "2026-11-07T20:00:37+00:00",
+    "at": "2026-11-07T20:11:36+00:00",
     "count": 25,
     "error": null,
     "fail_streak": 0,
@@ -1573,7 +2797,8 @@
    }
   },
   "total": 68,
-  "updated": "2026-11-07T20:00:37+00:00",
+  "updated": "2026-11-07T20:11:36+00:00",
+  "watchlist": [],
   "welcomed": true
  }
 }
