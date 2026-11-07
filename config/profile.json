@@ -1,6 +1,6 @@
 {
   "notify_min_score": 35,
-  "min_score_keep": 20,
+  "min_score_keep": 30,
   "max_age_days": 21,
   "role_keywords": {
     "üretim": 12,

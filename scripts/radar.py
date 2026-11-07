@@ -727,7 +727,9 @@ def run(args) -> int:
             new_jobs.append(j)
 
     cutoff = now - dt.timedelta(days=int(prof.get("max_age_days", 21)))
-    for jid in [i for i, j in jobs.items() if parse_dt(j["last_seen"]) < cutoff or expired(j, today)]:
+    keep_min = int(prof.get("min_score_keep", 10))
+    for jid in [i for i, j in jobs.items()
+                if parse_dt(j["last_seen"]) < cutoff or expired(j, today) or j.get("score", 0) < keep_min]:
         del jobs[jid]
 
     # --- duyurular (okul/kurum sayfaları): ilk görülen site sessizce "tohumlanır"
