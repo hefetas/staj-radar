@@ -98,6 +98,32 @@ class RadarTests(unittest.TestCase):
         c = jobs["commencis-cloud-camp-2027_50"]
         self.assertEqual((c["company"], c["title"]), ("Commencis", "Commencis Cloud Camp 2027"))
 
+    def test_ntfy_payload_utf8(self):
+        import os
+        seen = {}
+
+        class R:
+            def read(self): return b""
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+
+        def fake_open(req, timeout=0):
+            seen["url"], seen["body"] = req.full_url, json.loads(req.data.decode("utf-8"))
+            return R()
+
+        orig = radar.urllib.request.urlopen
+        radar.urllib.request.urlopen = fake_open
+        os.environ["NTFY_TOPIC"] = "test-konu-123"
+        try:
+            sent = radar.notify("Yeni staj ilanı: 1 eşleşme", "• [48] Üretim Stajyeri — Şirket", dry=False)
+        finally:
+            radar.urllib.request.urlopen = orig
+            del os.environ["NTFY_TOPIC"]
+        self.assertEqual(sent, ["ntfy"])
+        self.assertEqual(seen["url"], "https://ntfy.sh/")
+        self.assertEqual(seen["body"]["topic"], "test-konu-123")
+        self.assertIn("Üretim", seen["body"]["message"])
+
     def test_scoring_order(self):
         jobs = {j["url"].split("/")[-2]: j for j in radar.parse_youthall(YOUTHALL_HTML, "https://www.youthall.com/")}
         gebze = radar.score_job(jobs["summer-internship-2027-manufacturing-gebze-plant_117"], self.prof)

@@ -26,7 +26,8 @@ LinkedIn, Kariyer.net, Indeed gibi siteler otomatik taramaya izin vermediği iç
 3. **Settings → Pages**: Source "Deploy from a branch", Branch `main`, klasör `/docs`.
 4. **Settings → Actions → General → Workflow permissions**: "Read and write permissions".
 5. **Bildirim** için **Settings → Secrets and variables → Actions** altına secret ekle:
-   - **Telegram (önerilen, anlık):** Telegram'da @BotFather → `/newbot` → verdiği token'ı `TELEGRAM_BOT_TOKEN` olarak kaydet. Botuna bir mesaj yaz, sonra tarayıcıda `https://api.telegram.org/bot<TOKEN>/getUpdates` aç, `chat` → `id` değerini `TELEGRAM_CHAT_ID` olarak kaydet. (Token'ı kimseyle paylaşma.)
+   - **ntfy (en kolayı, hesap/token yok):** Telefona ücretsiz **ntfy** uygulamasını kur, uygulamada **+** → "Subscribe to topic" ile kendi uydurduğun uzun, tahmin edilmesi zor bir kanal adına abone ol (örn. `staj-radar-` + rastgele harf/rakam). Aynı adı `NTFY_TOPIC` secret'ı olarak kaydet.
+   - **Telegram (anlık):** Telegram'da @BotFather → `/newbot` → verdiği token'ı `TELEGRAM_BOT_TOKEN` olarak kaydet. Botuna bir mesaj yaz, sonra tarayıcıda `https://api.telegram.org/bot<TOKEN>/getUpdates` aç, `chat` → `id` değerini `TELEGRAM_CHAT_ID` olarak kaydet. (Token'ı kimseyle paylaşma.)
    - **E-posta (Gmail):** Google hesabında 2 adımlı doğrulama açık olsun, "Uygulama şifresi" oluştur. `SMTP_USER` (gmail adresin), `SMTP_PASS` (uygulama şifresi), `NOTIFY_EMAIL` (bildirimin geleceği adres).
    - **Adzuna (isteğe bağlı):** `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`.
 6. **Actions → Staj Radar → Run workflow** ile ilk taramayı elle başlat. İlk çalışmada tek bir özet bildirim gelir (bulunan ilan sayısı + en iyi 10); sonrasında sadece yeni ve puanı yeterli ilanlar bildirilir.

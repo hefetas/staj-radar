@@ -456,6 +456,17 @@ def notify(subject: str, body: str, dry: bool) -> list[str]:
             sent.append("telegram")
         except Exception as e:  # noqa: BLE001  (token URL'de; ayrıntı yazdırma)
             print(f"Telegram gönderilemedi: {type(e).__name__}", file=sys.stderr)
+    topic = os.environ.get("NTFY_TOPIC")
+    if topic:
+        try:
+            payload = json.dumps({"topic": topic, "title": subject[:200], "message": body[:3500]}).encode("utf-8")
+            req = urllib.request.Request("https://ntfy.sh/", data=payload,
+                                         headers={"User-Agent": UA, "Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=20) as r:
+                r.read()
+            sent.append("ntfy")
+        except Exception as e:  # noqa: BLE001  (kanal adı gizli; ayrıntı yazdırma)
+            print(f"ntfy gönderilemedi: {type(e).__name__}", file=sys.stderr)
     user, pw, to = os.environ.get("SMTP_USER"), os.environ.get("SMTP_PASS"), os.environ.get("NOTIFY_EMAIL")
     if user and pw and to:
         try:
@@ -469,7 +480,7 @@ def notify(subject: str, body: str, dry: bool) -> list[str]:
         except Exception as e:  # noqa: BLE001
             print(f"E-posta gönderilemedi: {type(e).__name__}", file=sys.stderr)
     if not sent:
-        print("Bildirim kanalı tanımlı değil (Telegram/e-posta secret'ları yok); atlandı.")
+        print("Bildirim kanalı tanımlı değil (ntfy/Telegram/e-posta secret'ları yok); atlandı.")
     return sent
 
 
