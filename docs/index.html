@@ -3,415 +3,690 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#15191a">
 <title>Staj Radar</title>
 <style>
   :root {
-    --bg: #f6f4ef; --card: #fffdf9; --ink: #2b2a27; --muted: #77746c; --line: #e5e1d8;
-    --accent: #3f6f63; --accent-soft: #e3eee9; --warn: #b4691f; --warn-soft: #f6e8d6; --bad: #a14b4b;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #1d1f1e; --card: #262928; --ink: #e8e6e0; --muted: #9a978e; --line: #373a38;
-            --accent: #7fb5a5; --accent-soft: #2b3a35; --warn: #e0a560; --warn-soft: #3a3024; --bad: #d08585; }
+    --bg: #15191a; --card: #1d2224; --card2: #232a2c; --ink: #e3e1db; --muted: #8e9692; --line: #2d3436;
+    --accent: #8fb8a7; --accent-soft: #24332e; --warn: #d8a669; --warn-soft: #382f22; --bad: #cf8888;
   }
   * { box-sizing: border-box; }
+  html { color-scheme: dark; }
   body { margin: 0; background: var(--bg); color: var(--ink);
          font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .wrap { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
-  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-bottom: 16px; }
-  h1 { font-size: 1.5rem; margin: 0; letter-spacing: -0.01em; }
-  .sub { color: var(--muted); font-size: .9rem; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 22px 16px 72px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-bottom: 14px; }
+  h1 { font-size: 1.45rem; margin: 0; letter-spacing: -0.01em; font-weight: 650; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--muted); font-size: .88rem; display: flex; gap: 10px; align-items: center; }
+  .link { background: none; border: 0; color: var(--muted); font: inherit; font-size: .85rem; cursor: pointer; text-decoration: underline; padding: 0; }
+  .tabs { display: flex; gap: 2px; margin-bottom: 16px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { font: inherit; font-size: .93rem; background: none; border: 0; border-bottom: 2px solid transparent; padding: 9px 13px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+  .tab[aria-selected=true] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .badge { display: inline-block; min-width: 18px; padding: 0 6px; margin-left: 6px; border-radius: 999px; background: var(--accent); color: #11201a; font-size: .72rem; line-height: 18px; text-align: center; font-weight: 650; }
+  .pane[hidden] { display: none; }
   .bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-  .chip, select, input[type=search] {
-    font: inherit; font-size: .9rem; color: var(--ink); background: var(--card);
-    border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+  .chip, select, input[type=search] { font: inherit; font-size: .88rem; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 6px 13px; cursor: pointer; }
   input[type=search] { border-radius: 10px; flex: 1 1 200px; cursor: text; }
   select { border-radius: 10px; }
   .chip[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: grid; grid-template-columns: 52px 1fr; gap: 12px; }
-  .card.applied { opacity: .6; }
-  .score { width: 52px; height: 52px; border-radius: 12px; display: grid; place-items: center; font-weight: 650; font-size: 1.05rem; background: var(--accent-soft); color: var(--accent); }
+  .group { margin: 22px 0 8px; font-size: .78rem; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; display: flex; justify-content: space-between; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: grid; grid-template-columns: 50px 1fr; gap: 12px; }
+  .score { width: 50px; height: 50px; border-radius: 12px; display: grid; place-items: center; font-weight: 650; background: var(--accent-soft); color: var(--accent); }
   .score.mid { background: var(--warn-soft); color: var(--warn); }
-  .score.low { background: var(--line); color: var(--muted); }
-  .title { font-weight: 600; margin: 0 0 2px; font-size: 1.02rem; word-break: break-word; }
+  .score.low { background: var(--card2); color: var(--muted); }
+  .title { font-weight: 600; margin: 0 0 2px; font-size: 1rem; word-break: break-word; }
   .title a { color: inherit; text-decoration: none; }
   .title a:hover { text-decoration: underline; }
-  .meta { color: var(--muted); font-size: .88rem; }
+  .meta { color: var(--muted); font-size: .86rem; }
   .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
-  .tag { font-size: .75rem; padding: 1px 8px; border-radius: 999px; background: var(--line); color: var(--muted); }
+  .tag { font-size: .74rem; padding: 1px 8px; border-radius: 999px; background: var(--card2); color: var(--muted); }
   .tag.new { background: var(--accent-soft); color: var(--accent); }
   .tag.soon { background: var(--warn-soft); color: var(--warn); }
   .actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-  .btn { font: inherit; font-size: .85rem; padding: 4px 12px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; text-decoration: none; }
+  .btn { font: inherit; font-size: .84rem; padding: 4px 12px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; text-decoration: none; }
   .btn:hover { border-color: var(--accent); }
   .btn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-  .empty { text-align: center; color: var(--muted); padding: 48px 0; }
-  footer { margin-top: 28px; color: var(--muted); font-size: .82rem; display: flex; flex-wrap: wrap; gap: 6px 14px; }
-  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; background: var(--muted); }
-  .dot.ok { background: var(--accent); } .dot.hata { background: var(--bad); }
-  .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--line); overflow-x: auto; }
-  .tab { font: inherit; font-size: .95rem; background: none; border: 0; border-bottom: 2px solid transparent; padding: 8px 14px; color: var(--muted); cursor: pointer; white-space: nowrap; }
-  .tab[aria-selected=true] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
-  .badge { display: inline-block; min-width: 18px; padding: 0 6px; margin-left: 6px; border-radius: 999px; background: var(--accent); color: var(--bg); font-size: .72rem; line-height: 18px; text-align: center; }
-  .pane[hidden] { display: none; }
-  .day { margin: 20px 0 8px; font-size: .8rem; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .empty { text-align: center; color: var(--muted); padding: 44px 0; }
   .ev { display: grid; grid-template-columns: 34px 1fr; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; }
-  .ev.unread { border-left: 4px solid var(--accent); }
+  .ev.unread { border-left: 3px solid var(--accent); }
+  .ico { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-size: .85rem; font-weight: 650; }
   .ev.imp .ico { background: var(--warn-soft); color: var(--warn); }
-  .ico { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-size: .95rem; }
-  .ev .title { font-size: .98rem; }
-  .ev .meta { font-size: .82rem; }
+  .ev .title { font-size: .96rem; }
   .board { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; align-items: start; }
   .col { background: var(--accent-soft); border-radius: 12px; padding: 10px; min-height: 80px; }
-  .col h3 { margin: 0 0 8px; font-size: .85rem; color: var(--accent); display: flex; justify-content: space-between; }
+  .col h3 { margin: 0 0 8px; font-size: .84rem; color: var(--accent); display: flex; justify-content: space-between; }
   .mini { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; margin-bottom: 8px; font-size: .88rem; }
   .mini a { color: inherit; font-weight: 600; text-decoration: none; word-break: break-word; }
   .mini select { width: 100%; margin-top: 6px; border-radius: 8px; font-size: .8rem; padding: 3px 6px; }
   .mini textarea { width: 100%; margin-top: 6px; font: inherit; font-size: .8rem; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px; resize: vertical; }
   .row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; }
   .row .title { margin: 0; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin-bottom: 14px; }
+  .panel h2 { font-size: .95rem; margin: 0 0 8px; }
+  .panel ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: .9rem; }
+  .panel li { margin: 3px 0; }
   .hint { color: var(--muted); font-size: .88rem; margin: 0 0 14px; }
-  .hint a, footer a { color: var(--accent); }
-  @media (max-width: 480px) { .card { grid-template-columns: 44px 1fr; } .score { width: 44px; height: 44px; } }
+  .dots { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font-size: .82rem; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; background: var(--muted); }
+  .dot.ok { background: var(--accent); } .dot.hata { background: var(--bad); }
+  .login { max-width: 360px; margin: 18vh auto 0; text-align: center; }
+  .login p { color: var(--muted); }
+  .login .btn { font-size: 1rem; padding: 10px 20px; background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .tag.due { background: var(--warn-soft); color: var(--warn); font-weight: 600; }
+  .card.dueSoon { border-color: var(--warn); }
+  .group.sub { margin-top: 16px; }
+  textarea.big { width: 100%; min-height: 200px; font: inherit; font-size: .86rem; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; resize: vertical; }
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: grid; place-items: center; padding: 14px; z-index: 10; overflow-y: auto; }
+  .sheet { background: var(--card); border: 1px solid var(--line); border-radius: 16px; max-width: 640px; width: 100%; max-height: 92vh; overflow-y: auto; padding: 16px 18px; }
+  .sheet h2 { margin: 0 0 4px; font-size: 1.05rem; }
+  .kw { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+  .kw .tag.ok { background: var(--accent-soft); color: var(--accent); }
+  .kw .tag.miss { background: var(--warn-soft); color: var(--warn); }
+  [hidden] { display: none !important; }
+  @media (max-width: 480px) { .card { grid-template-columns: 42px 1fr; } .score { width: 42px; height: 42px; } }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>Staj Radar</h1>
-    <div class="sub" id="status">yükleniyor…</div>
-  </header>
 
-  <nav class="tabs" id="tabs" role="tablist"></nav>
-
-  <section class="pane" id="p-bildirimler">
-    <div class="bar" id="evFilters" role="group" aria-label="Bildirim filtresi"></div>
-    <div id="evList"></div>
-  </section>
-
-  <section class="pane" id="p-ilanlar" hidden>
-  <div class="bar" id="regions" role="group" aria-label="Bölge"></div>
-  <div class="bar">
-    <input type="search" id="q" placeholder="Ara: firma, başlık, şehir…" aria-label="Ara">
-    <select id="sort" aria-label="Sırala">
-      <option value="score">Puana göre</option>
-      <option value="new">En yeni</option>
-      <option value="deadline">Son başvuru yakın</option>
-    </select>
-    <button class="chip" id="fNew" aria-pressed="false">Yeni (48 saat)</button>
-    <button class="chip" id="fSaved" aria-pressed="false">★ Kaydedilenler</button>
-    <button class="chip" id="fApplied" aria-pressed="false">Başvurduklarım</button>
+  <div id="loginView" class="login" hidden>
+    <h1>Staj <span>Radar</span></h1>
+    <p id="loginMsg">Kişisel staj takip sayfası. Devam etmek için giriş yap.</p>
+    <button class="btn" id="btnLogin">Google ile giriş</button>
+    <p><button class="link" id="btnLogout2" hidden>Çıkış yap</button></p>
   </div>
 
-  <div id="list"></div>
-  </section>
+  <div id="appView" hidden>
+    <header>
+      <h1>Staj <span>Radar</span></h1>
+      <div class="sub"><span id="status">yükleniyor…</span><button class="link" id="btnRefresh">Yenile</button><button class="link" id="btnLogout">Çıkış</button></div>
+    </header>
+    <nav class="tabs" id="tabs" role="tablist"></nav>
 
-  <section class="pane" id="p-takip" hidden>
-    <p class="hint">Kaydettiğin ve başvurduğun ilanlar burada. Bir ilanın durumunu değiştir, not ekle. Bu liste yalnızca bu tarayıcıda saklanır.</p>
-    <div class="board" id="board"></div>
-  </section>
+    <section class="pane" id="p-bildirimler">
+      <div class="bar" id="evFilters" role="group" aria-label="Bildirim filtresi"></div>
+      <div id="evList"></div>
+    </section>
 
-  <section class="pane" id="p-linkler" hidden>
-    <p class="hint">Otomatik taranan duyuru sayfaları ve elle takip ettiklerin. Instagram gibi kapalı kaynaklar otomatik taranamaz: hesabı Instagram'da açıp “Gönderi bildirimleri”ni aç, burada da “bugün baktım” diye işaretle.</p>
-    <div id="linkList"></div>
-  </section>
+    <section class="pane" id="p-yurtici" hidden>
+      <div class="bar" id="regions" role="group" aria-label="Uzaklık"></div>
+      <div class="bar">
+        <input type="search" id="q" placeholder="Ara: firma, başlık, şehir…" aria-label="Ara">
+        <select id="sort" aria-label="Sırala">
+          <option value="km">Bursa'ya yakınlık</option>
+          <option value="score">Puana göre</option>
+          <option value="new">En yeni</option>
+          <option value="deadline">Son başvuru yakın</option>
+        </select>
+        <button class="chip" id="fNew" aria-pressed="false">Yeni (48 saat)</button>
+        <button class="chip" id="fDue" aria-pressed="false">⏳ Yaklaşan</button>
+      </div>
+      <div id="list"></div>
+    </section>
 
-  <footer id="sources"></footer>
+    <section class="pane" id="p-yurtdisi" hidden>
+      <div class="bar" id="countries" role="group" aria-label="Ülke"></div>
+      <div class="bar">
+        <input type="search" id="q2" placeholder="Ara: firma, başlık, şehir…" aria-label="Ara">
+        <select id="sort2" aria-label="Sırala">
+          <option value="score">Puana göre</option>
+          <option value="new">En yeni</option>
+          <option value="deadline">Son başvuru yakın</option>
+        </select>
+        <button class="chip" id="fDue2" aria-pressed="false">⏳ Yaklaşan</button>
+      </div>
+      <div id="listAbroad"></div>
+    </section>
+
+    <section class="pane" id="p-diger" hidden>
+      <p class="hint">Puanı düşük kaldığı için ana listelerden ayırdığım ilanlar: alakasız ya da pek uymayanlar. Hiçbiri silinmez, buradan da bakabilirsin.</p>
+      <div class="bar" id="farFilters" role="group" aria-label="Konum"></div>
+      <div class="bar"><input type="search" id="q3" placeholder="Ara: firma, başlık, şehir…" aria-label="Ara"></div>
+      <div id="listFar"></div>
+    </section>
+
+    <section class="pane" id="p-firmalar" hidden>
+      <p class="hint" id="firmHint"></p>
+      <div class="bar" id="firmFilters"></div>
+      <div id="firmList"></div>
+    </section>
+
+    <section class="pane" id="p-cv" hidden>
+      <p class="hint">CV metinlerini buraya yapıştır (yalnızca sen görürsün). İlan kartlarındaki “CV'yi uyarla” düğmesi bu metinlerle Claude için hazır bir istem oluşturur. Para harcamaz: istemi kopyalayıp Claude'a yapıştırırsın.</p>
+      <div class="panel"><h2>Türkçe CV</h2><textarea class="big" id="cvTr" placeholder="Türkçe CV metnini buraya yapıştır"></textarea></div>
+      <div class="panel"><h2>English CV</h2><textarea class="big" id="cvEn" placeholder="Paste your English CV here"></textarea></div>
+      <div class="bar"><button class="btn on" id="cvSave">Kaydet</button><span class="meta" id="cvMsg"></span></div>
+    </section>
+
+    <section class="pane" id="p-takip" hidden>
+      <p class="hint">Kaydettiğin ve başvurduğun ilanlar. Durumu değiştir, not ekle. Telefon ve bilgisayar arasında eşitlenir.</p>
+      <div class="bar"><button class="chip" id="fHidden" aria-pressed="false">Gizlediklerimi göster</button></div>
+      <div class="board" id="board"></div>
+    </section>
+
+    <section class="pane" id="p-duyurular" hidden>
+      <p class="hint">Okul ve bölüm duyuru sayfalarında görülen son duyurular. Staj, kariyer, burs gibi kelime geçenler öne çıkar.</p>
+      <div class="bar" id="annFilters"></div>
+      <div id="annList"></div>
+    </section>
+
+    <div class="modal" id="cvModal" hidden>
+      <div class="sheet">
+        <h2 id="cvTitle">CV'yi bu ilana uyarla</h2>
+        <div class="meta" id="cvSub"></div>
+        <div class="bar" style="margin-top:10px"><button class="chip" id="cvLangTr" aria-pressed="true">Türkçe</button><button class="chip" id="cvLangEn" aria-pressed="false">English</button></div>
+        <div class="meta">İlandaki anahtar kelimeler ve CV'nde geçip geçmediği:</div>
+        <div class="kw" id="cvKw"></div>
+        <textarea class="big" id="cvPrompt" readonly></textarea>
+        <div class="actions"><button class="btn on" id="cvCopy">İstemi kopyala</button><a class="btn" id="cvOpen" target="_blank" rel="noopener noreferrer" href="https://claude.ai/new">Claude'u aç</a><button class="btn" id="cvClose">Kapat</button></div>
+        <p class="meta" id="cvNote"></p>
+      </div>
+    </div>
+
+    <section class="pane" id="p-kaynaklar" hidden>
+      <div class="panel"><h2 id="critTitle">Arama kriterleri</h2><ul id="critList"></ul></div>
+      <div class="panel"><h2>Takip listesi</h2><div id="linkList"></div></div>
+      <div class="panel"><h2>Kaynak durumu</h2><div class="dots" id="sources"></div></div>
+    </section>
+  </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 (function () {
-  var REGIONS = [["all", "Hepsi"], ["bursa", "Bursa"], ["yakin", "Yakın iller"], ["turkiye", "Türkiye"], ["yurtdisi", "Yurt dışı"], ["uzaktan", "Uzaktan"]];
-  var REGION_LABEL = { bursa: "Bursa", yakin: "Yakın il", turkiye: "Türkiye", yurtdisi: "Yurt dışı" };
-  var state = { region: "all", q: "", sort: "score", onlyNew: false, onlySaved: false, onlyApplied: false };
-  var jobs = [], meta = {}, marks = {}, events = [], notes = {}, checked = {}, lastRead = 0;
-  var TABS = [["bildirimler", "Bildirimler"], ["ilanlar", "İlanlar"], ["takip", "Takip"], ["linkler", "Takip listesi"]];
+  var SB_URL = "https://plaoulgdbgtpqhemfqix.supabase.co";
+  var SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYW91bGdkYmd0cHFoZW1mcWl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM5OTQxMTgsImV4cCI6MjEwOTU3MDExOH0.M8qGu503nnnHGEvIwJN1a2tBcfXVDAvvVVxviB2vVF8";
+  var sb = window.supabase.createClient(SB_URL, SB_KEY);
+
+  var REGIONS = [["all", "Hepsi"], ["bursa", "Bursa"], ["yakin", "Yakın (≤200 km)"], ["orta", "Orta (≤450 km)"], ["uzak", "Uzak"], ["belirsiz", "Konum yok"]];
+  var REGION_TITLE = { bursa: "Bursa", yakin: "Yakın şehirler (≤200 km)", orta: "Orta uzaklık (≤450 km)", uzak: "Uzak şehirler", belirsiz: "Konum belirtilmemiş" };
+  var REGION_ORDER = { bursa: 0, yakin: 1, orta: 2, uzak: 3, belirsiz: 4 };
+  var TABS = [["bildirimler", "Bildirim"], ["yurtici", "Yurt içi"], ["yurtdisi", "Yurt dışı"], ["diger", "Diğer"], ["firmalar", "Firmalar"], ["takip", "Takip"], ["duyurular", "Duyuru"], ["cv", "CV"], ["kaynaklar", "Kaynak"]];
   var STATUSES = [["saved", "★ Kaydedildi"], ["applied", "Başvurdum"], ["interview", "Mülakat"], ["offer", "Kabul/Teklif"], ["rejected", "Olumsuz"]];
-  var evState = { filter: "all" };
+  var ACTIVE_AFTER = ["applied", "interview", "offer", "rejected"];
+  var COUNTRY = { DE: "Almanya", GB: "Birleşik Krallık", NL: "Hollanda", AT: "Avusturya", CH: "İsviçre", FR: "Fransa" };
+
+  var state = { farFilter: "all", q3: "", dueOnly: false, firmFilter: "all", cvLang: "tr", cvJob: null, region: "all", q: "", sort: "km", onlyNew: false, country: "all", q2: "", sort2: "score", evFilter: "all", annFilter: "all", showHidden: false };
   var tab = "bildirimler";
+  var user = null, jobs = [], meta = {}, events = [], anns = [], marks = {}, checked = {}, lastRead = 0, profile = { cv_tr: "", cv_en: "" };
+
   function load(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
   function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
-  notes = load("radar.notes", {}); checked = load("radar.checked", {}); lastRead = load("radar.lastRead", 0);
+  checked = load("radar.checked", {}); lastRead = load("radar.lastRead", 0);
 
-  try { marks = JSON.parse(localStorage.getItem("radar.marks") || "{}"); } catch (e) { marks = {}; }
-  function saveMarks() { try { localStorage.setItem("radar.marks", JSON.stringify(marks)); } catch (e) {} }
-
-  function el(tag, cls, text) {
-    var n = document.createElement(tag);
-    if (cls) n.className = cls;
-    if (text != null) n.textContent = text;
-    return n;
-  }
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
   function safeUrl(u) { return /^https?:\/\//i.test(u || "") ? u : "#"; }
+  function ext(a, u) { a.href = safeUrl(u); a.target = "_blank"; a.rel = "noopener noreferrer"; return a; }
   function ago(iso) {
     var m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
-    if (m < 2) return "az önce";
-    if (m < 90) return m + " dk önce";
-    if (m < 60 * 36) return Math.round(m / 60) + " saat önce";
-    return Math.round(m / 1440) + " gün önce";
+    if (m < 2) return "az önce"; if (m < 90) return m + " dk önce";
+    if (m < 60 * 36) return Math.round(m / 60) + " saat önce"; return Math.round(m / 1440) + " gün önce";
   }
-  function daysLeft(d) {
-    if (!d) return null;
-    return Math.ceil((new Date(d + "T23:59:59") - Date.now()) / 86400000);
-  }
+  function daysLeft(d) { return d ? Math.round((new Date(d + "T00:00:00") - new Date(new Date().toDateString())) / 86400000) : null; }
   function isNew(j) { return Date.now() - new Date(j.first_seen).getTime() < 48 * 3600 * 1000; }
+  function isAbroad(j) { return (j.country || "TR") !== "TR"; }
+  function isFar(j) { return j.score < ((meta && meta.far_below) || 28); }
+  function status(j) { return marks[j.id] ? marks[j.id].status : null; }
 
-  function renderRegions() {
-    var box = document.getElementById("regions");
-    box.textContent = "";
-    REGIONS.forEach(function (r) {
-      var b = el("button", "chip", r[1]);
-      b.setAttribute("aria-pressed", String(state.region === r[0]));
-      b.onclick = function () { state.region = r[0]; renderRegions(); render(); };
+  /* ---------------- giriş ---------------- */
+  function showLogin(msg, canLogout) {
+    $("appView").hidden = true; $("loginView").hidden = false;
+    if (msg) $("loginMsg").textContent = msg;
+    $("btnLogout2").hidden = !canLogout;
+  }
+  $("btnLogin").onclick = function () {
+    sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + location.pathname.replace(/index\.html$/, "") } });
+  };
+  function logout() { sb.auth.signOut().then(function () { location.reload(); }); }
+  $("btnLogout").onclick = logout; $("btnLogout2").onclick = logout;
+
+  function boot(session) {
+    if (!session) { showLogin("Kişisel staj takip sayfası. Devam etmek için giriş yap.", false); return; }
+    user = session.user;
+    sb.rpc("staj_is_allowed").then(function (r) {
+      if (r.error || r.data !== true) { showLogin("Bu Google hesabı (" + (user.email || "") + ") yetkili değil.", true); return; }
+      $("loginView").hidden = true; $("appView").hidden = false;
+      refresh();
+    });
+  }
+
+  /* ---------------- veri ---------------- */
+  function refresh() {
+    $("status").textContent = "yükleniyor…";
+    Promise.all([
+      sb.from("staj_state").select("data").eq("id", 1).maybeSingle(),
+      sb.from("staj_marks").select("job_id,status,note"),
+      sb.from("staj_profile").select("cv_tr,cv_en").maybeSingle()
+    ]).then(function (res) {
+      if (res[0].error) { $("status").textContent = "Veri yüklenemedi"; return; }
+      var d = (res[0].data && res[0].data.data) || {};
+      meta = d.meta || {}; events = d.events || [];
+      jobs = Object.keys(d.jobs || {}).map(function (k) { return d.jobs[k]; });
+      anns = Object.keys(d.announcements || {}).map(function (k) { return d.announcements[k]; });
+      if (res[2] && res[2].data) { profile = { cv_tr: res[2].data.cv_tr || "", cv_en: res[2].data.cv_en || "" }; }
+      marks = {};
+      ((res[1].data) || []).forEach(function (m) { marks[m.job_id] = { status: m.status, note: m.note || "" }; });
+      if (!localStorage.getItem("radar.visited")) { lastRead = Date.now(); store("radar.lastRead", lastRead); }
+      try { localStorage.setItem("radar.visited", "1"); } catch (e) {}
+      renderAll();
+    });
+  }
+  $("btnRefresh").onclick = refresh;
+  setInterval(function () { if (user && !document.hidden) refresh(); }, 10 * 60 * 1000);
+
+  function saveMark(j, st, note) {
+    var id = j.id || j;
+    if (!st) { delete marks[id]; sb.from("staj_marks").delete().eq("job_id", id).then(function () {}); }
+    else {
+      var n = note != null ? note : (marks[id] ? marks[id].note : "");
+      marks[id] = { status: st, note: n };
+      sb.from("staj_marks").upsert({ email: user.email, job_id: id, status: st, note: n, updated_at: new Date().toISOString() },
+        { onConflict: "email,job_id" }).then(function () {});
+    }
+  }
+  function toggleMark(j, st) { saveMark(j, status(j) === st ? null : st); renderAll(); }
+
+  /* ---------------- sekmeler ---------------- */
+  function unreadCount() { return events.filter(function (e) { return new Date(e.ts).getTime() > lastRead && e.type !== "sistem"; }).length; }
+  function renderTabs() {
+    var box = $("tabs"); box.textContent = "";
+    TABS.forEach(function (t) {
+      var b = el("button", "tab", t[1]);
+      b.setAttribute("role", "tab"); b.setAttribute("aria-selected", String(tab === t[0]));
+      if (t[0] === "bildirimler" && unreadCount()) b.appendChild(el("span", "badge", String(unreadCount())));
+      b.onclick = function () { setTab(t[0]); };
       box.appendChild(b);
     });
+    TABS.forEach(function (t) { $("p-" + t[0]).hidden = tab !== t[0]; });
+    var n = unreadCount(); document.title = (n ? "(" + n + ") " : "") + "Staj Radar";
   }
+  function setTab(t) { tab = t; try { history.replaceState(null, "", "#" + t); } catch (e) {} renderAll(); }
 
-  function visible() {
-    var q = state.q.trim().toLowerCase();
-    var out = jobs.filter(function (j) {
-      var m = marks[j.id];
-      if (m === "hidden") return false;
-      if (state.onlySaved) return m === "saved";
-      if (state.onlyApplied) return m === "applied" || m === "interview" || m === "offer" || m === "rejected";
-      if (m === "applied" || m === "interview" || m === "offer" || m === "rejected") return false;
-      if (state.region === "uzaktan") { if ((j.tags || []).indexOf("uzaktan") < 0) return false; }
-      else if (state.region !== "all" && j.region !== state.region) return false;
-      if (state.onlyNew && !isNew(j)) return false;
-      if (q && (j.title + " " + j.company + " " + j.location + " " + j.source).toLowerCase().indexOf(q) < 0) return false;
-      return true;
-    });
-    out.sort(function (a, b) {
-      if (state.sort === "new") return new Date(b.first_seen) - new Date(a.first_seen);
-      if (state.sort === "deadline") {
-        var da = a.deadline || "9999", db = b.deadline || "9999";
-        return da < db ? -1 : da > db ? 1 : b.score - a.score;
-      }
-      return b.score - a.score || new Date(b.first_seen) - new Date(a.first_seen);
-    });
-    return out;
-  }
-
-  function mark(j, value) {
-    var id = j.id || j;
-    if (typeof j !== "object") { marks[id] = value; saveMarks(); renderAll(); return; }
-    marks[j.id] = marks[j.id] === value ? undefined : value;
-    if (marks[j.id] === undefined) delete marks[j.id];
-    saveMarks(); renderAll();
-  }
-
-  function card(j) {
-    var m = marks[j.id];
-    var c = el("article", "card" + (m === "applied" ? " applied" : ""));
-    c.appendChild(el("div", "score" + (j.score < 35 ? " low" : j.score < 55 ? " mid" : ""), String(j.score)));
-    var body = el("div");
-    var t = el("h2", "title");
-    var a = el("a", null, j.title || "(başlıksız)");
-    a.href = safeUrl(j.url); a.target = "_blank"; a.rel = "noopener noreferrer";
-    t.appendChild(a); body.appendChild(t);
-    body.appendChild(el("div", "meta", [j.company, j.location || j.country].filter(Boolean).join(" · ")));
-
-    var tags = el("div", "tags");
-    if (isNew(j)) tags.appendChild(el("span", "tag new", "yeni"));
-    var dl = daysLeft(j.deadline);
-    if (dl !== null) tags.appendChild(el("span", "tag" + (dl <= 7 ? " soon" : ""), dl <= 0 ? "son gün" : "son başvuru " + dl + " gün"));
-    if (REGION_LABEL[j.region]) tags.appendChild(el("span", "tag", REGION_LABEL[j.region]));
-    if ((j.tags || []).indexOf("uzaktan") >= 0) tags.appendChild(el("span", "tag", "uzaktan"));
-    tags.appendChild(el("span", "tag", j.source));
-    (j.reasons || []).filter(function (r) { return r !== "staj ilanı" && r.charAt(0) !== "-"; }).slice(0, 4)
-      .forEach(function (r) { tags.appendChild(el("span", "tag", r)); });
-    body.appendChild(tags);
-
-    var act = el("div", "actions");
-    var open = el("a", "btn", "İlana git"); open.href = safeUrl(j.url); open.target = "_blank"; open.rel = "noopener noreferrer";
-    act.appendChild(open);
-    [["saved", "★ Kaydet"], ["applied", "✓ Başvurdum"], ["hidden", "Gizle"]].forEach(function (p) {
-      var b = el("button", "btn" + (m === p[0] ? " on" : ""), p[1]);
-      b.onclick = function () { mark(j, p[0]); };
-      act.appendChild(b);
-    });
-    body.appendChild(act);
-    c.appendChild(body);
-    return c;
-  }
-
-  function render() {
-    var list = document.getElementById("list");
-    list.textContent = "";
-    var rows = visible();
-    if (!rows.length) {
-      list.appendChild(el("div", "empty", jobs.length ? "Bu filtreyle ilan yok." : "Henüz ilan yok. İlk tarama çalışınca burada görünecek."));
-    }
-    rows.forEach(function (j) { list.appendChild(card(j)); });
-    document.getElementById("fNew").setAttribute("aria-pressed", String(state.onlyNew));
-    document.getElementById("fSaved").setAttribute("aria-pressed", String(state.onlySaved));
-    document.getElementById("fApplied").setAttribute("aria-pressed", String(state.onlyApplied));
-  }
-
-
+  /* ---------------- bildirimler ---------------- */
   function dayLabel(iso) {
     var d = new Date(iso), t = new Date(), y = new Date(Date.now() - 86400000);
     if (d.toDateString() === t.toDateString()) return "Bugün";
     if (d.toDateString() === y.toDateString()) return "Dün";
     return d.toLocaleDateString("tr-TR", { day: "numeric", month: "long", weekday: "long" });
   }
-  function unreadCount() { return events.filter(function (e) { return new Date(e.ts).getTime() > lastRead && e.type !== "sistem"; }).length; }
-
-  function renderTabs() {
-    var box = document.getElementById("tabs");
+  function chips(box, list, get, set) {
     box.textContent = "";
-    TABS.forEach(function (t) {
-      var b = el("button", "tab", t[1]);
-      b.setAttribute("role", "tab");
-      b.setAttribute("aria-selected", String(tab === t[0]));
-      if (t[0] === "bildirimler" && unreadCount()) b.appendChild(el("span", "badge", String(unreadCount())));
-      b.onclick = function () { setTab(t[0]); };
-      box.appendChild(b);
+    list.forEach(function (f) {
+      var b = el("button", "chip", f[1]); b.setAttribute("aria-pressed", String(get() === f[0]));
+      b.onclick = function () { set(f[0]); renderAll(); }; box.appendChild(b);
     });
-    TABS.forEach(function (t) { document.getElementById("p-" + t[0]).hidden = tab !== t[0]; });
-    var n = unreadCount();
-    document.title = (n ? "(" + n + ") " : "") + "Staj Radar";
   }
-  function setTab(t) { tab = t; try { history.replaceState(null, "", "#" + t); } catch (e) {} renderAll(); }
-
   function renderEvents() {
-    var bar = document.getElementById("evFilters");
-    bar.textContent = "";
-    [["all", "Hepsi"], ["ilan", "İlanlar"], ["duyuru", "Duyurular"], ["important", "Önemli"], ["sistem", "Sistem"]].forEach(function (f) {
-      var b = el("button", "chip", f[1]);
-      b.setAttribute("aria-pressed", String(evState.filter === f[0]));
-      b.onclick = function () { evState.filter = f[0]; renderEvents(); };
-      bar.appendChild(b);
-    });
-    var rd = el("button", "chip", "Tümünü okundu say");
-    rd.style.marginLeft = "auto";
+    var bar = $("evFilters");
+    chips(bar, [["all", "Hepsi"], ["ilan", "İlanlar"], ["duyuru", "Duyurular"], ["hatirlatma", "⏳ Son başvuru"], ["important", "Önemli"], ["sistem", "Sistem"]],
+      function () { return state.evFilter; }, function (v) { state.evFilter = v; });
+    var rd = el("button", "chip", "Tümünü okundu say"); rd.style.marginLeft = "auto";
     rd.onclick = function () { lastRead = Date.now(); store("radar.lastRead", lastRead); renderAll(); };
     bar.appendChild(rd);
-
-    var box = document.getElementById("evList");
-    box.textContent = "";
+    var box = $("evList"); box.textContent = "";
     var rows = events.filter(function (e) {
-      if (evState.filter === "all") return true;
-      if (evState.filter === "important") return e.important;
-      return e.type === evState.filter;
+      if (state.evFilter === "all") return true;
+      if (state.evFilter === "important") return e.important;
+      return e.type === state.evFilter;
     });
     if (!rows.length) { box.appendChild(el("div", "empty", "Bu filtrede bildirim yok.")); return; }
-    var lastDay = "";
+    var last = "";
     rows.forEach(function (e) {
       var dl = dayLabel(e.ts);
-      if (dl !== lastDay) { box.appendChild(el("div", "day", dl)); lastDay = dl; }
+      if (dl !== last) { box.appendChild(el("div", "group", dl)); last = dl; }
       var unread = new Date(e.ts).getTime() > lastRead && e.type !== "sistem";
       var c = el("article", "ev" + (unread ? " unread" : "") + (e.important ? " imp" : ""));
-      c.appendChild(el("div", "ico", e.type === "ilan" ? "💼" : e.type === "duyuru" ? "📢" : "⚙"));
-      var b = el("div");
-      var t = el("h2", "title");
-      if (e.url) { var a = el("a", null, e.title); a.href = safeUrl(e.url); a.target = "_blank"; a.rel = "noopener noreferrer"; t.appendChild(a); }
-      else t.textContent = e.title;
+      c.appendChild(el("div", "ico", e.type === "ilan" ? "İlan" : e.type === "duyuru" ? "Duy." : e.type === "hatirlatma" ? "⏳" : "Sis."));
+      var b = el("div"), t = el("h2", "title");
+      if (e.url) t.appendChild(ext(el("a", null, e.title), e.url)); else t.textContent = e.title;
       b.appendChild(t);
-      var meta2 = [e.type === "ilan" ? "İlan" : e.type === "duyuru" ? "Duyuru" : "Sistem", e.text, e.score != null ? "puan " + e.score : "", new Date(e.ts).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })];
-      b.appendChild(el("div", "meta", meta2.filter(Boolean).join(" · ")));
-      c.appendChild(b);
-      box.appendChild(c);
+      b.appendChild(el("div", "meta", [e.text, e.score != null ? "puan " + e.score : "",
+        new Date(e.ts).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })].filter(Boolean).join(" · ")));
+      c.appendChild(b); box.appendChild(c);
     });
   }
 
+  /* ---------------- ilan kartı ---------------- */
+  function card(j) {
+    var st = status(j);
+    var dlc = daysLeft(j.deadline);
+    var c = el("article", "card" + (dlc !== null && dlc <= 14 ? " dueSoon" : ""));
+    c.appendChild(el("div", "score" + (j.score < 35 ? " low" : j.score < 55 ? " mid" : ""), String(j.score)));
+    var body = el("div"), t = el("h2", "title");
+    t.appendChild(ext(el("a", null, j.title || "(başlıksız)"), j.url)); body.appendChild(t);
+    var where = j.location || (COUNTRY[j.country] || j.country);
+    if (!isAbroad(j) && j.km) where += " · ~" + j.km + " km";
+    body.appendChild(el("div", "meta", [j.company, where].filter(Boolean).join(" · ")));
+    var tags = el("div", "tags");
+    if (isNew(j)) tags.appendChild(el("span", "tag new", "yeni"));
+    var dl = daysLeft(j.deadline);
+    if (dl !== null) tags.appendChild(el("span", "tag" + (dl <= 14 ? " due" : ""), (dl <= 14 ? "⏳ " : "") + (dl <= 0 ? "son gün" : "son başvuru " + dl + " gün")));
+    if ((j.tags || []).indexOf("uzaktan") >= 0) tags.appendChild(el("span", "tag", "uzaktan"));
+    if ((j.tags || []).indexOf("almanca") >= 0) tags.appendChild(el("span", "tag soon", "Almanca olabilir"));
+    tags.appendChild(el("span", "tag", j.source));
+    (j.reasons || []).filter(function (r) { return r !== "staj ilanı"; }).slice(0, 5).forEach(function (r) {
+      tags.appendChild(el("span", "tag" + (r.charAt(0) === "-" ? " soon" : ""), r));
+    });
+    body.appendChild(tags);
+    var act = el("div", "actions");
+    act.appendChild(ext(el("a", "btn", "İlana git"), j.url));
+    [["saved", "★ Kaydet"], ["applied", "✓ Başvurdum"], ["hidden", "Gizle"]].forEach(function (p) {
+      var b = el("button", "btn" + (st === p[0] ? " on" : ""), p[1]);
+      b.onclick = function () { toggleMark(j, p[0]); }; act.appendChild(b);
+    });
+    var cvb = el("button", "btn", "CV'yi uyarla"); cvb.onclick = function () { openCv(j); }; act.appendChild(cvb);
+    body.appendChild(act); c.appendChild(body); return c;
+  }
+  function sortJobs(arr, how) {
+    arr.sort(function (a, b) {
+      if (how === "km") {
+        var ra = REGION_ORDER[a.region] != null ? REGION_ORDER[a.region] : 9, rb = REGION_ORDER[b.region] != null ? REGION_ORDER[b.region] : 9;
+        if (ra !== rb) return ra - rb;
+        var ka = a.km == null ? 9999 : a.km, kb = b.km == null ? 9999 : b.km;
+        return ka - kb || b.score - a.score;
+      }
+      if (how === "new") return new Date(b.first_seen) - new Date(a.first_seen);
+      if (how === "deadline") { var da = a.deadline || "9999", db = b.deadline || "9999"; return da < db ? -1 : da > db ? 1 : b.score - a.score; }
+      return b.score - a.score || new Date(b.first_seen) - new Date(a.first_seen);
+    });
+    return arr;
+  }
+  function visibleBase(j) { var s = status(j); return s !== "hidden" && ACTIVE_AFTER.indexOf(s) < 0; }
+
+  function renderDomestic() {
+    chips($("regions"), REGIONS, function () { return state.region; }, function (v) { state.region = v; });
+    var q = state.q.trim().toLowerCase();
+    var rows = jobs.filter(function (j) {
+      if (isAbroad(j) || isFar(j) || !visibleBase(j)) return false;
+      if (state.region !== "all" && j.region !== state.region) return false;
+      if (state.onlyNew && !isNew(j)) return false;
+      if (state.dueOnly && !(daysLeft(j.deadline) !== null && daysLeft(j.deadline) <= 14)) return false;
+      return !q || (j.title + " " + j.company + " " + j.location + " " + j.source).toLowerCase().indexOf(q) >= 0;
+    });
+    sortJobs(rows, state.sort);
+    var box = $("list"); box.textContent = "";
+    if (!rows.length) { box.appendChild(el("div", "empty", jobs.length ? "Bu filtreyle ilan yok." : "Henüz ilan yok. İlk tarama çalışınca burada görünecek.")); }
+    var last = null;
+    rows.forEach(function (j) {
+      if (state.sort === "km" && j.region !== last) {
+        var n = rows.filter(function (x) { return x.region === j.region; }).length;
+        var g = el("div", "group"); g.appendChild(el("span", null, REGION_TITLE[j.region] || j.region)); g.appendChild(el("span", null, String(n)));
+        box.appendChild(g); last = j.region;
+      }
+      box.appendChild(card(j));
+    });
+    $("fNew").setAttribute("aria-pressed", String(state.onlyNew));
+    $("fDue").setAttribute("aria-pressed", String(state.dueOnly));
+  }
+
+  function renderAbroad() {
+    var all = jobs.filter(function (j) { return isAbroad(j) && !isFar(j) && visibleBase(j); });
+    var codes = {}; all.forEach(function (j) { codes[j.country] = (codes[j.country] || 0) + 1; });
+    var list = [["all", "Hepsi (" + all.length + ")"]].concat(Object.keys(codes).sort().map(function (c) { return [c, (COUNTRY[c] || c) + " (" + codes[c] + ")"]; }));
+    chips($("countries"), list, function () { return state.country; }, function (v) { state.country = v; });
+    var q = state.q2.trim().toLowerCase();
+    var rows = all.filter(function (j) {
+      if (state.country !== "all" && j.country !== state.country) return false;
+      if (state.dueOnly && !(daysLeft(j.deadline) !== null && daysLeft(j.deadline) <= 14)) return false;
+      return !q || (j.title + " " + j.company + " " + j.location + " " + j.source).toLowerCase().indexOf(q) >= 0;
+    });
+    sortJobs(rows, state.sort2);
+    var box = $("listAbroad"); box.textContent = "";
+    if (!rows.length) box.appendChild(el("div", "empty", "Yurt dışı için eşleşen ilan yok."));
+    rows.forEach(function (j) { box.appendChild(card(j)); });
+    $("fDue2").setAttribute("aria-pressed", String(state.dueOnly));
+  }
+
+  function renderFar() {
+    chips($("farFilters"), [["all", "Hepsi"], ["tr", "Yurt içi"], ["abroad", "Yurt dışı"]], function () { return state.farFilter; }, function (v) { state.farFilter = v; });
+    var q = state.q3.trim().toLowerCase();
+    var rows = jobs.filter(function (j) {
+      if (!isFar(j) || !visibleBase(j)) return false;
+      if (state.farFilter === "tr" && isAbroad(j)) return false;
+      if (state.farFilter === "abroad" && !isAbroad(j)) return false;
+      return !q || (j.title + " " + j.company + " " + j.location + " " + j.source).toLowerCase().indexOf(q) >= 0;
+    });
+    sortJobs(rows, "score");
+    var box = $("listFar"); box.textContent = "";
+    if (!rows.length) box.appendChild(el("div", "empty", "Bu bölümde ilan yok."));
+    rows.forEach(function (j) { box.appendChild(card(j)); });
+  }
+
+  /* ---------------- takip tahtası ---------------- */
   function renderBoard() {
-    var box = document.getElementById("board");
-    box.textContent = "";
-    var byId = {};
-    jobs.forEach(function (j) { byId[j.id] = j; });
+    var box = $("board"); box.textContent = "";
+    var byId = {}; jobs.forEach(function (j) { byId[j.id] = j; });
+    (meta.companies || []).forEach(function (c) { var f = firmJob(c); byId[f.id] = f; });
+    var cols = STATUSES.slice(); if (state.showHidden) cols.push(["hidden", "Gizlenenler"]);
     var any = false;
-    STATUSES.forEach(function (st) {
+    cols.forEach(function (st) {
       var col = el("div", "col");
-      var ids = Object.keys(marks).filter(function (id) { return marks[id] === st[0] && byId[id]; });
-      var h = el("h3"); h.appendChild(el("span", null, st[1])); h.appendChild(el("span", null, String(ids.length)));
-      col.appendChild(h);
+      var ids = Object.keys(marks).filter(function (id) { return marks[id].status === st[0] && byId[id]; });
+      var h = el("h3"); h.appendChild(el("span", null, st[1])); h.appendChild(el("span", null, String(ids.length))); col.appendChild(h);
       ids.forEach(function (id) {
         any = true;
         var j = byId[id], m = el("div", "mini");
-        var a = el("a", null, j.title); a.href = safeUrl(j.url); a.target = "_blank"; a.rel = "noopener noreferrer";
-        m.appendChild(a);
+        m.appendChild(ext(el("a", null, j.title), j.url));
         m.appendChild(el("div", "meta", [j.company, j.location].filter(Boolean).join(" · ")));
         var sel = document.createElement("select");
-        STATUSES.concat([["hidden", "Listeden kaldır"]]).forEach(function (o) {
+        cols.concat([["", "Listeden kaldır"]]).forEach(function (o) {
+          if (o[0] === "hidden" && st[0] !== "hidden") return;
           var op = el("option", null, o[1]); op.value = o[0]; if (o[0] === st[0]) op.selected = true; sel.appendChild(op);
         });
-        sel.onchange = function () { marks[id] = sel.value; saveMarks(); renderAll(); };
+        sel.onchange = function () { saveMark(j, sel.value || null); renderAll(); };
         m.appendChild(sel);
-        var ta = document.createElement("textarea");
-        ta.rows = 2; ta.placeholder = "Not (kişi, tarih, link…)"; ta.value = notes[id] || "";
-        ta.onchange = function () { notes[id] = ta.value; store("radar.notes", notes); };
-        m.appendChild(ta);
-        col.appendChild(m);
+        var ta = document.createElement("textarea"); ta.rows = 2; ta.placeholder = "Not (kişi, tarih, link…)"; ta.value = marks[id].note || "";
+        ta.onchange = function () { saveMark(j, st[0], ta.value); };
+        m.appendChild(ta); col.appendChild(m);
       });
       box.appendChild(col);
     });
-    if (!any) box.insertBefore(el("div", "empty", "Henüz kayıtlı ilan yok. İlanlar sekmesinde “★ Kaydet” veya “✓ Başvurdum” de."), box.firstChild);
+    if (!any) box.insertBefore(el("div", "empty", "Henüz kayıtlı ilan yok. Yurt içi veya yurt dışı sekmesinde “★ Kaydet” ya da “✓ Başvurdum” de."), box.firstChild);
+    $("fHidden").setAttribute("aria-pressed", String(state.showHidden));
   }
 
-  function renderLinks() {
-    var box = document.getElementById("linkList");
-    box.textContent = "";
-    var today = new Date().toISOString().slice(0, 10);
-    var items = (meta.page_sites || []).map(function (p) { return { name: p.name, url: p.url, auto: true }; })
-      .concat((meta.watchlist || []).map(function (w) { return { name: w.name, url: w.url, note: w.note, auto: false }; }));
-    if (!items.length) { box.appendChild(el("div", "empty", "Takip listesi boş.")); return; }
-    items.forEach(function (it) {
-      var r = el("div", "row"), left = el("div");
-      var t = el("h2", "title"), a = el("a", null, it.name);
-      a.href = safeUrl(it.url); a.target = "_blank"; a.rel = "noopener noreferrer"; t.appendChild(a);
-      left.appendChild(t);
-      left.appendChild(el("div", "meta", it.auto ? "Otomatik taranıyor — yeni duyuru Bildirimler'e düşer" : (it.note || "Elle takip")));
-      r.appendChild(left);
-      if (!it.auto) {
-        var done = checked[it.url] === today;
-        var b = el("button", "btn" + (done ? " on" : ""), done ? "✓ Bugün baktım" : "Bugün baktım");
-        b.onclick = function () { if (checked[it.url] === today) delete checked[it.url]; else checked[it.url] = today; store("radar.checked", checked); renderLinks(); };
-        r.appendChild(b);
-      }
+  /* ---------------- duyurular ---------------- */
+  function renderAnns() {
+    chips($("annFilters"), [["all", "Hepsi"], ["important", "Önemli"]], function () { return state.annFilter; }, function (v) { state.annFilter = v; });
+    var rows = anns.filter(function (a) { return state.annFilter === "all" || a.important; })
+      .sort(function (a, b) { return new Date(b.first_seen) - new Date(a.first_seen); });
+    var box = $("annList"); box.textContent = "";
+    if (!rows.length) { box.appendChild(el("div", "empty", "Duyuru yok.")); return; }
+    rows.slice(0, 80).forEach(function (a) {
+      var r = el("div", "row"), left = el("div"), t = el("h2", "title");
+      t.appendChild(ext(el("a", null, a.title), a.url)); left.appendChild(t);
+      left.appendChild(el("div", "meta", a.site)); r.appendChild(left);
+      if (a.important) r.appendChild(el("span", "tag soon", "önemli"));
       box.appendChild(r);
     });
   }
 
-  function renderAll() { renderTabs(); renderEvents(); render(); renderBoard(); renderLinks(); }
-
-  function renderMeta() {
-    var s = document.getElementById("status");
-    s.textContent = meta.updated ? "Son tarama " + ago(meta.updated) + " · " + jobs.length + " ilan" : "Henüz tarama yok";
-    var f = document.getElementById("sources");
-    f.textContent = "";
+  /* ---------------- kaynaklar ---------------- */
+  function renderSources() {
+    var crit = meta.criteria || {};
+    $("critTitle").textContent = "Arama kriterleri" + (crit["kaynak"] ? " — " + crit["kaynak"] : "");
+    var ul = $("critList"); ul.textContent = "";
+    (crit["özet"] || []).forEach(function (t) { ul.appendChild(el("li", null, t)); });
+    var box = $("linkList"); box.textContent = "";
+    var today = new Date().toISOString().slice(0, 10);
+    var KIND = { kamu: "Kamu stajı", yurtdisi: "Yurt dışı programları", burs: "Burs ve hibeler", instagram: "Instagram (elle takip)", firma: "Firma", manuel: "Manuel kaynaklar" };
+    var groups = [{ key: "okul", title: "Okul sayfaları (otomatik taranıyor)", items: (meta.page_sites || []).map(function (p) { return { name: p.name, url: p.url, auto: true }; }) }];
+    Object.keys(KIND).forEach(function (k) {
+      groups.push({ key: k, title: KIND[k], items: (meta.watchlist || []).filter(function (w) { return (w.kind || "manuel") === k; })
+        .map(function (w) { return { name: w.name, url: w.url, note: w.note, auto: false }; }) });
+    });
+    groups.forEach(function (g) {
+      if (!g.items.length) return;
+      box.appendChild(el("div", "group sub", g.title));
+      g.items.forEach(function (it) {
+        var r = el("div", "row"), left = el("div"), t = el("h2", "title");
+        t.appendChild(ext(el("a", null, it.name), it.url)); left.appendChild(t);
+        left.appendChild(el("div", "meta", it.auto ? "Otomatik taranıyor; yeni duyuru Bildirimler'e düşer" : (it.note || "Elle takip")));
+        r.appendChild(left);
+        if (!it.auto) {
+          var done = checked[it.url] === today;
+          var b = el("button", "btn" + (done ? " on" : ""), done ? "✓ Bugün baktım" : "Bugün baktım");
+          b.onclick = function () { if (checked[it.url] === today) delete checked[it.url]; else checked[it.url] = today; store("radar.checked", checked); renderSources(); };
+          r.appendChild(b);
+        }
+        box.appendChild(r);
+      });
+    });
+    var f = $("sources"); f.textContent = "";
     var src = meta.sources || {};
     Object.keys(src).forEach(function (k) {
       var st = src[k], span = el("span");
-      var d = el("span", "dot " + (st.status === "ok" ? "ok" : st.status === "hata" ? "hata" : ""));
-      span.appendChild(d);
-      var label = k + ": " + st.status + (st.status === "ok" ? " (" + st.count + ")" : "");
-      span.appendChild(document.createTextNode(label));
-      if (st.error) span.title = st.error;
-      f.appendChild(span);
+      span.appendChild(el("span", "dot " + (st.status === "ok" ? "ok" : st.status === "hata" ? "hata" : "")));
+      span.appendChild(document.createTextNode(k + ": " + st.status + (st.status === "ok" ? " (" + st.count + ")" : "")));
+      if (st.error) span.title = st.error; f.appendChild(span);
     });
   }
 
-  document.getElementById("q").oninput = function (e) { state.q = e.target.value; render(); };
-  document.getElementById("sort").onchange = function (e) { state.sort = e.target.value; render(); };
-  document.getElementById("fNew").onclick = function () { state.onlyNew = !state.onlyNew; render(); };
-  document.getElementById("fSaved").onclick = function () { state.onlySaved = !state.onlySaved; state.onlyApplied = false; render(); };
-  document.getElementById("fApplied").onclick = function () { state.onlyApplied = !state.onlyApplied; state.onlySaved = false; render(); };
+
+  /* ---------------- firmalar ---------------- */
+  function slug(s) { return String(s).toLowerCase().replace(/[^a-z0-9ğüşöçı]+/g, "-").replace(/^-|-$/g, ""); }
+  function firmJob(c) { return { id: "firma:" + slug(c.name), title: c.name + " (ilansız başvuru)", company: c.sector || "", location: c.city || "", url: c.url }; }
+  function renderFirms() {
+    var list = meta.companies || [];
+    $("firmHint").textContent = (meta.companies_source || "Firma listesi yok.") + " İlan çıkmasını beklemeden CV ve ön yazıyla başvurabilirsin.";
+    chips($("firmFilters"), [["all", "Hepsi (" + list.length + ")"], ["todo", "Başvurmadım"], ["applied", "Başvurdum"], ["saved", "İlgileniyorum"]],
+      function () { return state.firmFilter; }, function (v) { state.firmFilter = v; });
+    var box = $("firmList"); box.textContent = "";
+    var rows = list.filter(function (c) {
+      var m = marks["firma:" + slug(c.name)]; var st = m ? m.status : null;
+      if (state.firmFilter === "all") return st !== "hidden";
+      if (state.firmFilter === "todo") return !st;
+      return st === state.firmFilter;
+    });
+    if (!rows.length) box.appendChild(el("div", "empty", "Bu filtrede firma yok."));
+    rows.forEach(function (c) {
+      var fj = firmJob(c), st = status(fj);
+      var r = el("div", "card"); r.style.gridTemplateColumns = "1fr";
+      var body = el("div"), t = el("h2", "title");
+      t.appendChild(ext(el("a", null, c.name), c.url)); body.appendChild(t);
+      body.appendChild(el("div", "meta", [c.sector, c.city].filter(Boolean).join(" · ")));
+      var tags = el("div", "tags");
+      tags.appendChild(el("span", "tag" + (c.verified ? " new" : ""), c.verified ? "kariyer sayfası" : "arama bağlantısı"));
+      if (c.note) tags.appendChild(el("span", "tag", c.note));
+      body.appendChild(tags);
+      var act = el("div", "actions");
+      act.appendChild(ext(el("a", "btn", c.verified ? "Kariyer sayfası" : "Kariyer sayfasını ara"), c.url));
+      [["saved", "İlgileniyorum"], ["applied", "✓ Başvurdum"], ["hidden", "Gizle"]].forEach(function (p) {
+        var b = el("button", "btn" + (st === p[0] ? " on" : ""), p[1]);
+        b.onclick = function () { toggleMark(fj, p[0]); }; act.appendChild(b);
+      });
+      var cvb = el("button", "btn", "CV'yi uyarla"); cvb.onclick = function () { openCv({ title: "Staj başvurusu (ilansız)", company: c.name, location: c.city, url: c.url, snippet: c.sector || "", reasons: [], country: "TR" }); };
+      act.appendChild(cvb);
+      body.appendChild(act); r.appendChild(body); box.appendChild(r);
+    });
+  }
+
+  /* ---------------- CV asistanı ---------------- */
+  function foldTr(s) { return String(s || "").toLowerCase().replace(/ş/g, "s").replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ö/g, "o").replace(/ç/g, "c").replace(/ı/g, "i").replace(/İ/gi, "i"); }
+  function jobKeywords(j) {
+    var out = [];
+    (j.reasons || []).forEach(function (r) {
+      if (r === "staj ilanı" || r.charAt(0) === "-") return;
+      r = r.replace(/^başlıkta:\s*/, "").replace(/^beceri:\s*/, "");
+      r.split(",").forEach(function (k) { k = k.trim(); if (k && out.indexOf(k) < 0) out.push(k); });
+    });
+    return out;
+  }
+  function cvText(lang) { return lang === "en" ? profile.cv_en : profile.cv_tr; }
+  function buildPrompt(j, lang) {
+    var cv = cvText(lang).trim();
+    var kws = jobKeywords(j);
+    var L = [];
+    L.push("Aşağıdaki staj ilanı için CV'mi uyarla. Dil: " + (lang === "en" ? "İngilizce" : "Türkçe") + ".");
+    L.push("");
+    L.push("KİM: Bursa Uludağ Üniversitesi Endüstri Mühendisliği 2. sınıf öğrencisi. 20 iş günlük I. yaz stajı arıyorum (üretim veya hizmet işletmesi, işletmede en az bir mühendis olmalı).");
+    L.push("");
+    L.push("İLAN:");
+    L.push("- Pozisyon: " + (j.title || ""));
+    L.push("- Firma: " + (j.company || ""));
+    L.push("- Konum: " + (j.location || j.country || ""));
+    L.push("- Bağlantı: " + (j.url || ""));
+    if (j.snippet) L.push("- Özet: " + j.snippet);
+    if (kws.length) L.push("- Radar'ın bulduğu anahtar kelimeler: " + kws.join(", "));
+    L.push("- (Tam ilan metnini bu satırın altına yapıştırıyorum, varsa:)");
+    L.push("");
+    L.push("MEVCUT CV'M:");
+    L.push(cv || "(CV'mi buraya yapıştıracağım)");
+    L.push("");
+    L.push("İSTEDİKLERİM:");
+    L.push("1. CV'mi bu ilana göre uyarla: ilgili deneyim, proje ve becerileri öne al, ilandaki anahtar kelimeleri doğal biçimde kullan. 1 sayfayı geçmesin.");
+    L.push("2. CV'de olmayan hiçbir deneyim, beceri veya sertifika UYDURMA. Eksik gördüğünü ayrıca listele.");
+    L.push("3. 120 kelimelik kısa bir ön yazı yaz.");
+    L.push("4. Başvuru e-postası için konu satırı ve 4-5 cümlelik metin yaz.");
+    L.push("5. Mülakatta sorulabilecek 5 soruyu ve kısa cevap önerilerini ver.");
+    L.push("6. Neyi neden değiştirdiğini kısaca açıkla; ben de öğreneyim.");
+    return L.join("\n");
+  }
+  function openCv(j) {
+    state.cvJob = j;
+    state.cvLang = (j.country && j.country !== "TR") ? "en" : "tr";
+    $("cvModal").hidden = false; renderCv();
+  }
+  function renderCv() {
+    var j = state.cvJob; if (!j) return;
+    $("cvSub").textContent = [j.title, j.company].filter(Boolean).join(" · ");
+    $("cvLangTr").setAttribute("aria-pressed", String(state.cvLang === "tr"));
+    $("cvLangEn").setAttribute("aria-pressed", String(state.cvLang === "en"));
+    var cv = foldTr(cvText(state.cvLang));
+    var box = $("cvKw"); box.textContent = "";
+    var kws = jobKeywords(j);
+    if (!kws.length) box.appendChild(el("span", "meta", "Bu ilan için anahtar kelime bulunamadı."));
+    kws.forEach(function (k) {
+      var has = cv.indexOf(foldTr(k)) >= 0;
+      box.appendChild(el("span", "tag " + (has ? "ok" : "miss"), (has ? "✓ " : "✗ ") + k));
+    });
+    $("cvPrompt").value = buildPrompt(j, state.cvLang);
+    $("cvNote").textContent = cvText(state.cvLang).trim() ? "" : "CV metnin boş. CV sekmesine yapıştırıp kaydedersen istem tam dolar.";
+  }
+  $("cvLangTr").onclick = function () { state.cvLang = "tr"; renderCv(); };
+  $("cvLangEn").onclick = function () { state.cvLang = "en"; renderCv(); };
+  $("cvClose").onclick = function () { $("cvModal").hidden = true; };
+  $("cvCopy").onclick = function () {
+    var t = $("cvPrompt"); t.select();
+    var done = function () { $("cvCopy").textContent = "Kopyalandı ✓"; setTimeout(function () { $("cvCopy").textContent = "İstemi kopyala"; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t.value).then(done, function () { document.execCommand("copy"); done(); });
+    else { document.execCommand("copy"); done(); }
+  };
+  function renderCvTab() {
+    var a = $("cvTr"), b = $("cvEn");
+    if (document.activeElement !== a) a.value = profile.cv_tr;
+    if (document.activeElement !== b) b.value = profile.cv_en;
+  }
+  $("cvSave").onclick = function () {
+    profile = { cv_tr: $("cvTr").value, cv_en: $("cvEn").value };
+    $("cvMsg").textContent = "Kaydediliyor…";
+    sb.from("staj_profile").upsert({ email: user.email, cv_tr: profile.cv_tr, cv_en: profile.cv_en, updated_at: new Date().toISOString() }, { onConflict: "email" })
+      .then(function (r) { $("cvMsg").textContent = r && r.error ? "Kaydedilemedi" : "Kaydedildi ✓"; });
+  };
+
+  function renderStatus() {
+    $("status").textContent = meta.updated ? "Son tarama " + ago(meta.updated) + " · " + jobs.length + " ilan" : "Henüz tarama yok";
+  }
+  function renderAll() { renderTabs(); renderStatus(); renderEvents(); renderDomestic(); renderAbroad(); renderFar(); renderFirms(); renderCvTab(); renderBoard(); renderAnns(); renderSources(); }
+
+  $("q").oninput = function (e) { state.q = e.target.value; renderDomestic(); };
+  $("sort").onchange = function (e) { state.sort = e.target.value; renderDomestic(); };
+  $("fNew").onclick = function () { state.onlyNew = !state.onlyNew; renderDomestic(); };
+  $("fDue").onclick = function () { state.dueOnly = !state.dueOnly; renderDomestic(); renderAbroad(); };
+  $("fDue2").onclick = function () { state.dueOnly = !state.dueOnly; renderDomestic(); renderAbroad(); };
+  $("q2").oninput = function (e) { state.q2 = e.target.value; renderAbroad(); };
+  $("sort2").onchange = function (e) { state.sort2 = e.target.value; renderAbroad(); };
+  $("q3").oninput = function (e) { state.q3 = e.target.value; renderFar(); };
+  $("fHidden").onclick = function () { state.showHidden = !state.showHidden; renderBoard(); };
 
   var h = (location.hash || "").slice(1);
   if (TABS.some(function (t) { return t[0] === h; })) tab = h;
-  renderRegions();
-  renderTabs();
-  fetch("data/jobs.json?t=" + Date.now(), { cache: "no-store" })
-    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-    .then(function (d) {
-      meta = d.meta || {}; events = d.events || [];
-      jobs = Object.keys(d.jobs || {}).map(function (k) { return d.jobs[k]; });
-      if (!load("radar.lastRead", 0) && !localStorage.getItem("radar.visited")) { lastRead = Date.now(); store("radar.lastRead", lastRead); }
-      try { localStorage.setItem("radar.visited", "1"); } catch (e) {}
-      renderMeta(); renderAll();
-    })
-    .catch(function () { document.getElementById("status").textContent = "Veri yüklenemedi (ilk tarama henüz çalışmadı olabilir)"; renderAll(); });
+  sb.auth.getSession().then(function (r) { boot(r.data && r.data.session); });
+  sb.auth.onAuthStateChange(function (ev, session) { if (ev === "SIGNED_OUT") showLogin("Çıkış yapıldı.", false); });
 })();
 </script>
 </body>

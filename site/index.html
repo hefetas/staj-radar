@@ -239,7 +239,7 @@
     $("btnLogout2").hidden = !canLogout;
   }
   $("btnLogin").onclick = function () {
-    sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin } });
+    sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + location.pathname.replace(/index\.html$/, "") } });
   };
   function logout() { sb.auth.signOut().then(function () { location.reload(); }); }
   $("btnLogout").onclick = logout; $("btnLogout2").onclick = logout;
