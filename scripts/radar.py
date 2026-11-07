@@ -613,6 +613,9 @@ def supa_rpc(name: str, payload: dict):
 
 
 def use_supabase() -> bool:
+    if os.environ.get("SUPABASE_URL") and not os.environ.get("STAJ_INGEST_TOKEN"):
+        # Sessizce yerel dosyaya yazıp veriyi kaybetmek yerine açıkça hata ver
+        raise RuntimeError("STAJ_INGEST_TOKEN gizli anahtarı eksik: GitHub depo ayarlarında Secrets bölümüne ekle")
     return all(os.environ.get(k) for k in ("SUPABASE_URL", "SUPABASE_ANON_KEY", "STAJ_INGEST_TOKEN"))
 
 

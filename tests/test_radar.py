@@ -313,6 +313,21 @@ class RadarTests(unittest.TestCase):
             self.assertIn("Son başvuru 3 gün", rem[0]["title"])
             self.assertEqual(s["meta"]["companies"][0]["name"], "X")
 
+    def test_missing_token_fails_loudly(self):
+        import os
+        old = {k: os.environ.get(k) for k in ("SUPABASE_URL", "STAJ_INGEST_TOKEN")}
+        os.environ["SUPABASE_URL"] = "https://x.supabase.co"
+        os.environ.pop("STAJ_INGEST_TOKEN", None)
+        try:
+            with self.assertRaises(RuntimeError):
+                radar.use_supabase()
+        finally:
+            for k, v in old.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+
 
 if __name__ == "__main__":
     unittest.main()
