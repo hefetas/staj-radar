@@ -3,9 +3,20 @@
     "enabled": true,
     "urls": [
       "https://www.youthall.com/tr/is-ilanlari/stajyer/",
-      "https://www.youthall.com/tr/is-ilanlari/bursa-stajyer/"
+      "https://www.youthall.com/tr/is-ilanlari/bursa-stajyer/",
+      "https://www.youthall.com/tr/is-ilanlari/kocaeli-stajyer/",
+      "https://www.youthall.com/tr/is-ilanlari/istanbul-stajyer/",
+      "https://www.youthall.com/tr/is-ilanlari/sakarya-stajyer/",
+      "https://www.youthall.com/tr/is-ilanlari/yalova-stajyer/",
+      "https://www.youthall.com/tr/is-ilanlari/balikesir-stajyer/",
+      "https://www.youthall.com/tr/is-ilanlari/eskisehir-stajyer/",
+      "https://www.youthall.com/tr/is-ilanlari/tekirdag-stajyer/",
+      "https://www.youthall.com/tr/is-ilanlari/canakkale-stajyer/",
+      "https://www.youthall.com/tr/is-ilanlari/manisa-stajyer/",
+      "https://www.youthall.com/tr/is-ilanlari/izmir-stajyer/",
+      "https://www.youthall.com/tr/is-ilanlari/ankara-stajyer/"
     ],
-    "max_pages": 3
+    "max_pages": 4
   },
   "arbeitnow": {
     "enabled": true,
@@ -107,5 +118,36 @@
       }
     ]
   },
-  "watchlist": []
+  "watchlist": [
+    {
+      "name": "Ulusal Staj Programı (Kariyer Kapısı)",
+      "url": "https://kariyerkapisi.cbiko.gov.tr/",
+      "note": "Kamu kurumlarında staj; başvurular genelde Aralık-Ocak aylarında açılır",
+      "kind": "kamu"
+    },
+    {
+      "name": "IAESTE Türkiye (yurt dışı staj)",
+      "url": "https://youth.europa.eu/go-abroad/traineeships/iaeste-exchange-programme_tr",
+      "note": "Üniversite IAESTE komitesi üzerinden başvuru; teknik öğrenciler için yurt dışı staj",
+      "kind": "yurtdisi"
+    },
+    {
+      "name": "Uludağ Uluslararası Ofis (Erasmus+ staj)",
+      "url": "https://uludag.edu.tr/uaik",
+      "note": "Erasmus+ staj hareketliliği: hibe ve başvuru tarihleri",
+      "kind": "yurtdisi"
+    },
+    {
+      "name": "LinkedIn: Bursa staj (üretim)",
+      "url": "https://www.linkedin.com/jobs/search/?keywords=staj%20%C3%BCretim&location=Bursa",
+      "note": "Otomatik taranamaz; kayıtlı arama + e-posta uyarısı kur",
+      "kind": "manuel"
+    },
+    {
+      "name": "Kariyer.net staj ilanları",
+      "url": "https://www.kariyer.net/is-ilanlari/staj",
+      "note": "Otomatik taranamaz; filtre: Bursa + staj",
+      "kind": "manuel"
+    }
+  ]
 }

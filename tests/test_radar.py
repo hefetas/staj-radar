@@ -232,6 +232,63 @@ class RadarTests(unittest.TestCase):
             self.assertEqual(radar.run(args), 0)  # üçüncü tarama: tekrar olay üretmez
             self.assertEqual(len([e for e in json.loads(data.read_text())["events"] if e["type"] == "duyuru"]), 1)
 
+    def test_city_distance_and_regions(self):
+        self.assertEqual(radar.locate("Nilüfer / Bursa"), ("nilufer", 0))
+        self.assertEqual(radar.locate("Gebze, Kocaeli"), ("gebze", 180))
+        self.assertEqual(radar.locate("Ankara")[1], 390)
+        self.assertEqual(radar.locate("Türkiye"), (None, None))
+        self.assertEqual([radar.region_for_km(k) for k in (0, 80, 250, 700, None)],
+                         ["bursa", "yakin", "orta", "uzak", "belirsiz"])
+
+    def test_summer_internship_scoring_and_eligibility(self):
+        def job(title, loc, snippet=""):
+            return radar.make_job("t", title, "https://x.test/" + title.replace(" ", "-"), "Firma", loc, "TR", snippet)
+        good = job("Yaz Stajı - Üretim Planlama Stajyeri", "Bursa", "Excel, lean, fabrika")
+        bad = job("Uzun Dönem Stajyer (Yüksek Lisans)", "Bursa", "master öğrencisi, tez")
+        g, b = radar.score_job(good, self.prof), radar.score_job(bad, self.prof)
+        self.assertEqual(g[2], "bursa")
+        self.assertGreater(g[0], b[0] + 25)
+        self.assertEqual(good["km"], 0)
+
+    def test_supabase_state_roundtrip(self):
+        import os
+        calls = []
+        store = {"data": {}}
+
+        def fake_rpc(name, payload):
+            calls.append(name)
+            if name == "staj_get_state":
+                return store["data"]
+            store["data"] = payload["p_data"]
+
+        orig = radar.supa_rpc
+        radar.supa_rpc = fake_rpc
+        env = {"SUPABASE_URL": "https://x.supabase.co", "SUPABASE_ANON_KEY": "anon", "STAJ_INGEST_TOKEN": "tok"}
+        old = {k: os.environ.get(k) for k in env}
+        os.environ.update(env)
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                cdir = Path(d) / "cfg"
+                cdir.mkdir()
+                (cdir / "profile.json").write_text(json.dumps(self.prof))
+                off = {"enabled": False}
+                (cdir / "sources.json").write_text(json.dumps({
+                    "youthall": {"enabled": True, "urls": ["https://www.youthall.com/tr/is-ilanlari/stajyer/"], "max_pages": 1},
+                    "arbeitnow": off, "adzuna": off, "rss": off, "careers": off, "pages": off}))
+                args = Namespace(dry_run=True, no_notify=True, force=True, data=str(Path(d) / "x.json"), config_dir=str(cdir))
+                self.assertEqual(radar.run(args), 0)
+                self.assertEqual(calls, ["staj_get_state", "staj_put_state"])
+                self.assertTrue(store["data"]["jobs"])
+                self.assertFalse((Path(d) / "x.json").exists())  # yerel dosyaya yazılmaz
+                self.assertNotIn("tok", json.dumps(store["data"]))
+        finally:
+            radar.supa_rpc = orig
+            for k, v in old.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+
 
 if __name__ == "__main__":
     unittest.main()

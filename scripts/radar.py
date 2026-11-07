@@ -422,17 +422,46 @@ def kw_re(kw: str, strict: bool = False) -> re.Pattern:
     return re.compile(r"(?<![a-z0-9])" + k + tail)
 
 
+@functools.lru_cache(maxsize=1)
+def _city_table():
+    data = json.loads((ROOT / "config" / "cities.json").read_text(encoding="utf-8"))
+    items = sorted(((fold(k), v) for k, v in data.items()), key=lambda kv: -len(kv[0]))
+    return [(re.compile(r"(?<![a-z])" + re.escape(k) + r"(?![a-z])"), k, v) for k, v in items]
+
+
+def locate(text: str):
+    """Metindeki ilk bilinen şehri bulur; (şehir, Bursa'dan km) ya da (None, None)."""
+    t = fold(text)
+    best = None  # metinde en önce geçen yer kazanır ("Gebze, Kocaeli" -> Gebze); eşitlikte uzun ad
+    for rx, name, km in _city_table():
+        m = rx.search(t)
+        if m and (best is None or (m.start(), -len(name)) < best[0]):
+            best = ((m.start(), -len(name)), name, km)
+    return (best[1], best[2]) if best else (None, None)
+
+
+def region_for_km(km):
+    if km is None:
+        return "belirsiz"
+    if km == 0:
+        return "bursa"
+    if km <= 200:
+        return "yakin"
+    if km <= 450:
+        return "orta"
+    return "uzak"
+
+
 def classify(job: dict, prof: dict) -> tuple[str, list[str]]:
     loc = fold(job["location"] + " " + job["title"])
-    cfg = prof.get("location", {})
     if job["country"] != "TR":
-        region = "yurtdisi"
-    elif any(c in loc for c in map(fold, cfg.get("home_cities", []))):
-        region = "bursa"
-    elif any(c in loc for c in map(fold, cfg.get("near_cities", []))):
-        region = "yakin"
+        region, job["city"], job["km"] = "yurtdisi", None, None
     else:
-        region = "turkiye"
+        city, km = locate(job["location"])
+        if city is None:
+            city, km = locate(job["title"])
+        job["city"], job["km"] = city, km
+        region = region_for_km(km)
     tags = []
     if job.get("remote") or re.search(r"uzaktan|remote|home ?office|online", loc):
         tags.append("uzaktan")
@@ -472,7 +501,8 @@ def score_job(job: dict, prof: dict):
 
     region, tags = classify(job, prof)
     weights = prof.get("location", {}).get("weights", {})
-    s += weights.get({"bursa": "home", "yakin": "near", "turkiye": "turkey", "yurtdisi": "abroad"}[region], 0)
+    s += weights.get({"bursa": "home", "yakin": "near", "orta": "turkey", "uzak": "turkey",
+                      "belirsiz": "turkey", "yurtdisi": "abroad"}[region], 0)
     if "uzaktan" in tags:
         s += weights.get("remote", 0)
     return max(0, min(100, round(s))), reasons, region, tags
@@ -565,12 +595,49 @@ def expired(job: dict, today: dt.date) -> bool:
         return False
 
 
+# ------------------------------------------------------------ depolama (Supabase)
+def supa_rpc(name: str, payload: dict):
+    """Supabase RPC çağrısı. Yalnızca herkese açık anon anahtarı + özel yazma belirteci kullanılır."""
+    base = os.environ["SUPABASE_URL"].rstrip("/")
+    key = os.environ["SUPABASE_ANON_KEY"]
+    req = urllib.request.Request(
+        f"{base}/rest/v1/rpc/{name}", data=json.dumps(payload).encode("utf-8"),
+        headers={"apikey": key, "Authorization": f"Bearer {key}", "Content-Type": "application/json",
+                 "User-Agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            raw = r.read().decode("utf-8")
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"Supabase {name}: HTTP {e.code}") from None
+    return json.loads(raw) if raw.strip() else None
+
+
+def use_supabase() -> bool:
+    return all(os.environ.get(k) for k in ("SUPABASE_URL", "SUPABASE_ANON_KEY", "STAJ_INGEST_TOKEN"))
+
+
+def load_state(data_path: Path):
+    default = {"meta": {}, "jobs": {}}
+    if use_supabase():
+        st = supa_rpc("staj_get_state", {"p_token": os.environ["STAJ_INGEST_TOKEN"]})
+        return st if st else default
+    return load_json(data_path, default)
+
+
+def save_state(data_path: Path, state: dict) -> None:
+    if use_supabase():
+        supa_rpc("staj_put_state", {"p_token": os.environ["STAJ_INGEST_TOKEN"], "p_data": state})
+        return
+    data_path.parent.mkdir(parents=True, exist_ok=True)
+    data_path.write_text(json.dumps(state, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8")
+
+
 def run(args) -> int:
     cfg_dir = Path(args.config_dir) if getattr(args, "config_dir", None) else ROOT / "config"
     prof = load_json(cfg_dir / "profile.json")
     sources = load_json(cfg_dir / "sources.json")
     data_path = Path(args.data) if args.data else ROOT / "docs/data/jobs.json"
-    state = load_json(data_path, {"meta": {}, "jobs": {}})
+    state = load_state(data_path)
     meta = state.setdefault("meta", {})
     meta.setdefault("sources", {})
     meta.setdefault("last_run", {})
@@ -683,7 +750,10 @@ def run(args) -> int:
         add_event("duyuru", a["title"], a["site"], a["url"], a["site"], None, a["important"])
 
     # --- bildirimler
-    to_notify = sorted((j for j in new_jobs if j["score"] >= min_score), key=lambda j: -j["score"])
+    def near_first(j):  # Bursa'ya yakınlık önce, aynı mesafede yüksek puan; yurt dışı en sonda
+        km = 99999 if j.get("country", "TR") != "TR" else (j.get("km") if j.get("km") is not None else 9999)
+        return (km, -j["score"])
+    to_notify = sorted((j for j in new_jobs if j["score"] >= min_score), key=near_first)
     for j in to_notify:
         add_event("ilan", j["title"], " · ".join(x for x in (j["company"], j["location"]) if x),
                   j["url"], j["source"], j["score"], j["score"] >= 50)
@@ -718,8 +788,8 @@ def run(args) -> int:
     meta["total"] = len(jobs)
     meta["watchlist"] = sources.get("watchlist", [])
     meta["page_sites"] = [{"name": x["name"], "url": x["url"]} for x in sources.get("pages", {}).get("sites", [])]
-    data_path.parent.mkdir(parents=True, exist_ok=True)
-    data_path.write_text(json.dumps(state, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8")
+    meta["criteria"] = prof.get("criteria", {})
+    save_state(data_path, state)
     print(f"Toplam {len(jobs)} ilan, {len(new_jobs)} yeni ilan, {len(to_notify)} ilan bildirimi, "
           f"{len(new_anns)} yeni duyuru.")
     return 0

@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#15191a">
+<title>Staj Radar</title>
+<style>
+  :root {
+    --bg: #15191a; --card: #1d2224; --card2: #232a2c; --ink: #e3e1db; --muted: #8e9692; --line: #2d3436;
+    --accent: #8fb8a7; --accent-soft: #24332e; --warn: #d8a669; --warn-soft: #382f22; --bad: #cf8888;
+  }
+  * { box-sizing: border-box; }
+  html { color-scheme: dark; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 22px 16px 72px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-bottom: 14px; }
+  h1 { font-size: 1.45rem; margin: 0; letter-spacing: -0.01em; font-weight: 650; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--muted); font-size: .88rem; display: flex; gap: 10px; align-items: center; }
+  .link { background: none; border: 0; color: var(--muted); font: inherit; font-size: .85rem; cursor: pointer; text-decoration: underline; padding: 0; }
+  .tabs { display: flex; gap: 2px; margin-bottom: 16px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { font: inherit; font-size: .93rem; background: none; border: 0; border-bottom: 2px solid transparent; padding: 9px 13px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+  .tab[aria-selected=true] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .badge { display: inline-block; min-width: 18px; padding: 0 6px; margin-left: 6px; border-radius: 999px; background: var(--accent); color: #11201a; font-size: .72rem; line-height: 18px; text-align: center; font-weight: 650; }
+  .pane[hidden] { display: none; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .chip, select, input[type=search] { font: inherit; font-size: .88rem; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 6px 13px; cursor: pointer; }
+  input[type=search] { border-radius: 10px; flex: 1 1 200px; cursor: text; }
+  select { border-radius: 10px; }
+  .chip[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .group { margin: 22px 0 8px; font-size: .78rem; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; display: flex; justify-content: space-between; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: grid; grid-template-columns: 50px 1fr; gap: 12px; }
+  .score { width: 50px; height: 50px; border-radius: 12px; display: grid; place-items: center; font-weight: 650; background: var(--accent-soft); color: var(--accent); }
+  .score.mid { background: var(--warn-soft); color: var(--warn); }
+  .score.low { background: var(--card2); color: var(--muted); }
+  .title { font-weight: 600; margin: 0 0 2px; font-size: 1rem; word-break: break-word; }
+  .title a { color: inherit; text-decoration: none; }
+  .title a:hover { text-decoration: underline; }
+  .meta { color: var(--muted); font-size: .86rem; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
+  .tag { font-size: .74rem; padding: 1px 8px; border-radius: 999px; background: var(--card2); color: var(--muted); }
+  .tag.new { background: var(--accent-soft); color: var(--accent); }
+  .tag.soon { background: var(--warn-soft); color: var(--warn); }
+  .actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .btn { font: inherit; font-size: .84rem; padding: 4px 12px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; text-decoration: none; }
+  .btn:hover { border-color: var(--accent); }
+  .btn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .empty { text-align: center; color: var(--muted); padding: 44px 0; }
+  .ev { display: grid; grid-template-columns: 34px 1fr; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; }
+  .ev.unread { border-left: 3px solid var(--accent); }
+  .ico { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-size: .85rem; font-weight: 650; }
+  .ev.imp .ico { background: var(--warn-soft); color: var(--warn); }
+  .ev .title { font-size: .96rem; }
+  .board { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; align-items: start; }
+  .col { background: var(--accent-soft); border-radius: 12px; padding: 10px; min-height: 80px; }
+  .col h3 { margin: 0 0 8px; font-size: .84rem; color: var(--accent); display: flex; justify-content: space-between; }
+  .mini { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; margin-bottom: 8px; font-size: .88rem; }
+  .mini a { color: inherit; font-weight: 600; text-decoration: none; word-break: break-word; }
+  .mini select { width: 100%; margin-top: 6px; border-radius: 8px; font-size: .8rem; padding: 3px 6px; }
+  .mini textarea { width: 100%; margin-top: 6px; font: inherit; font-size: .8rem; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px; resize: vertical; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; }
+  .row .title { margin: 0; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin-bottom: 14px; }
+  .panel h2 { font-size: .95rem; margin: 0 0 8px; }
+  .panel ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: .9rem; }
+  .panel li { margin: 3px 0; }
+  .hint { color: var(--muted); font-size: .88rem; margin: 0 0 14px; }
+  .dots { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font-size: .82rem; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; background: var(--muted); }
+  .dot.ok { background: var(--accent); } .dot.hata { background: var(--bad); }
+  .login { max-width: 360px; margin: 18vh auto 0; text-align: center; }
+  .login p { color: var(--muted); }
+  .login .btn { font-size: 1rem; padding: 10px 20px; background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  [hidden] { display: none !important; }
+  @media (max-width: 480px) { .card { grid-template-columns: 42px 1fr; } .score { width: 42px; height: 42px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="loginView" class="login" hidden>
+    <h1>Staj <span>Radar</span></h1>
+    <p id="loginMsg">Kişisel staj takip sayfası. Devam etmek için giriş yap.</p>
+    <button class="btn" id="btnLogin">Google ile giriş</button>
+    <p><button class="link" id="btnLogout2" hidden>Çıkış yap</button></p>
+  </div>
+
+  <div id="appView" hidden>
+    <header>
+      <h1>Staj <span>Radar</span></h1>
+      <div class="sub"><span id="status">yükleniyor…</span><button class="link" id="btnRefresh">Yenile</button><button class="link" id="btnLogout">Çıkış</button></div>
+    </header>
+    <nav class="tabs" id="tabs" role="tablist"></nav>
+
+    <section class="pane" id="p-bildirimler">
+      <div class="bar" id="evFilters" role="group" aria-label="Bildirim filtresi"></div>
+      <div id="evList"></div>
+    </section>
+
+    <section class="pane" id="p-yurtici" hidden>
+      <div class="bar" id="regions" role="group" aria-label="Uzaklık"></div>
+      <div class="bar">
+        <input type="search" id="q" placeholder="Ara: firma, başlık, şehir…" aria-label="Ara">
+        <select id="sort" aria-label="Sırala">
+          <option value="km">Bursa'ya yakınlık</option>
+          <option value="score">Puana göre</option>
+          <option value="new">En yeni</option>
+          <option value="deadline">Son başvuru yakın</option>
+        </select>
+        <button class="chip" id="fNew" aria-pressed="false">Yeni (48 saat)</button>
+      </div>
+      <div id="list"></div>
+    </section>
+
+    <section class="pane" id="p-yurtdisi" hidden>
+      <div class="bar" id="countries" role="group" aria-label="Ülke"></div>
+      <div class="bar">
+        <input type="search" id="q2" placeholder="Ara: firma, başlık, şehir…" aria-label="Ara">
+        <select id="sort2" aria-label="Sırala">
+          <option value="score">Puana göre</option>
+          <option value="new">En yeni</option>
+        </select>
+      </div>
+      <div id="listAbroad"></div>
+    </section>
+
+    <section class="pane" id="p-takip" hidden>
+      <p class="hint">Kaydettiğin ve başvurduğun ilanlar. Durumu değiştir, not ekle. Telefon ve bilgisayar arasında eşitlenir.</p>
+      <div class="bar"><button class="chip" id="fHidden" aria-pressed="false">Gizlediklerimi göster</button></div>
+      <div class="board" id="board"></div>
+    </section>
+
+    <section class="pane" id="p-duyurular" hidden>
+      <p class="hint">Okul ve bölüm duyuru sayfalarında görülen son duyurular. Staj, kariyer, burs gibi kelime geçenler öne çıkar.</p>
+      <div class="bar" id="annFilters"></div>
+      <div id="annList"></div>
+    </section>
+
+    <section class="pane" id="p-kaynaklar" hidden>
+      <div class="panel"><h2 id="critTitle">Arama kriterleri</h2><ul id="critList"></ul></div>
+      <div class="panel"><h2>Takip listesi</h2><div id="linkList"></div></div>
+      <div class="panel"><h2>Kaynak durumu</h2><div class="dots" id="sources"></div></div>
+    </section>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(function () {
+  var SB_URL = "https://plaoulgdbgtpqhemfqix.supabase.co";
+  var SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYW91bGdkYmd0cHFoZW1mcWl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM5OTQxMTgsImV4cCI6MjEwOTU3MDExOH0.M8qGu503nnnHGEvIwJN1a2tBcfXVDAvvVVxviB2vVF8";
+  var sb = window.supabase.createClient(SB_URL, SB_KEY);
+
+  var REGIONS = [["all", "Hepsi"], ["bursa", "Bursa"], ["yakin", "Yakın (≤200 km)"], ["orta", "Orta (≤450 km)"], ["uzak", "Uzak"], ["belirsiz", "Konum yok"]];
+  var REGION_TITLE = { bursa: "Bursa", yakin: "Yakın şehirler (≤200 km)", orta: "Orta uzaklık (≤450 km)", uzak: "Uzak şehirler", belirsiz: "Konum belirtilmemiş" };
+  var REGION_ORDER = { bursa: 0, yakin: 1, orta: 2, uzak: 3, belirsiz: 4 };
+  var TABS = [["bildirimler", "Bildirimler"], ["yurtici", "Yurt içi"], ["yurtdisi", "Yurt dışı"], ["takip", "Takip"], ["duyurular", "Duyurular"], ["kaynaklar", "Kaynaklar"]];
+  var STATUSES = [["saved", "★ Kaydedildi"], ["applied", "Başvurdum"], ["interview", "Mülakat"], ["offer", "Kabul/Teklif"], ["rejected", "Olumsuz"]];
+  var ACTIVE_AFTER = ["applied", "interview", "offer", "rejected"];
+  var COUNTRY = { DE: "Almanya", GB: "Birleşik Krallık", NL: "Hollanda", AT: "Avusturya", CH: "İsviçre", FR: "Fransa" };
+
+  var state = { region: "all", q: "", sort: "km", onlyNew: false, country: "all", q2: "", sort2: "score", evFilter: "all", annFilter: "all", showHidden: false };
+  var tab = "bildirimler";
+  var user = null, jobs = [], meta = {}, events = [], anns = [], marks = {}, checked = {}, lastRead = 0;
+
+  function load(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  checked = load("radar.checked", {}); lastRead = load("radar.lastRead", 0);
+
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function safeUrl(u) { return /^https?:\/\//i.test(u || "") ? u : "#"; }
+  function ext(a, u) { a.href = safeUrl(u); a.target = "_blank"; a.rel = "noopener noreferrer"; return a; }
+  function ago(iso) {
+    var m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    if (m < 2) return "az önce"; if (m < 90) return m + " dk önce";
+    if (m < 60 * 36) return Math.round(m / 60) + " saat önce"; return Math.round(m / 1440) + " gün önce";
+  }
+  function daysLeft(d) { return d ? Math.ceil((new Date(d + "T23:59:59") - Date.now()) / 86400000) : null; }
+  function isNew(j) { return Date.now() - new Date(j.first_seen).getTime() < 48 * 3600 * 1000; }
+  function isAbroad(j) { return (j.country || "TR") !== "TR"; }
+  function status(j) { return marks[j.id] ? marks[j.id].status : null; }
+
+  /* ---------------- giriş ---------------- */
+  function showLogin(msg, canLogout) {
+    $("appView").hidden = true; $("loginView").hidden = false;
+    if (msg) $("loginMsg").textContent = msg;
+    $("btnLogout2").hidden = !canLogout;
+  }
+  $("btnLogin").onclick = function () {
+    sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + location.pathname } });
+  };
+  function logout() { sb.auth.signOut().then(function () { location.reload(); }); }
+  $("btnLogout").onclick = logout; $("btnLogout2").onclick = logout;
+
+  function boot(session) {
+    if (!session) { showLogin("Kişisel staj takip sayfası. Devam etmek için giriş yap.", false); return; }
+    user = session.user;
+    sb.rpc("staj_is_allowed").then(function (r) {
+      if (r.error || r.data !== true) { showLogin("Bu Google hesabı (" + (user.email || "") + ") yetkili değil.", true); return; }
+      $("loginView").hidden = true; $("appView").hidden = false;
+      refresh();
+    });
+  }
+
+  /* ---------------- veri ---------------- */
+  function refresh() {
+    $("status").textContent = "yükleniyor…";
+    Promise.all([
+      sb.from("staj_state").select("data").eq("id", 1).maybeSingle(),
+      sb.from("staj_marks").select("job_id,status,note")
+    ]).then(function (res) {
+      if (res[0].error) { $("status").textContent = "Veri yüklenemedi"; return; }
+      var d = (res[0].data && res[0].data.data) || {};
+      meta = d.meta || {}; events = d.events || [];
+      jobs = Object.keys(d.jobs || {}).map(function (k) { return d.jobs[k]; });
+      anns = Object.keys(d.announcements || {}).map(function (k) { return d.announcements[k]; });
+      marks = {};
+      ((res[1].data) || []).forEach(function (m) { marks[m.job_id] = { status: m.status, note: m.note || "" }; });
+      if (!localStorage.getItem("radar.visited")) { lastRead = Date.now(); store("radar.lastRead", lastRead); }
+      try { localStorage.setItem("radar.visited", "1"); } catch (e) {}
+      renderAll();
+    });
+  }
+  $("btnRefresh").onclick = refresh;
+  setInterval(function () { if (user && !document.hidden) refresh(); }, 10 * 60 * 1000);
+
+  function saveMark(j, st, note) {
+    var id = j.id || j;
+    if (!st) { delete marks[id]; sb.from("staj_marks").delete().eq("job_id", id).then(function () {}); }
+    else {
+      var n = note != null ? note : (marks[id] ? marks[id].note : "");
+      marks[id] = { status: st, note: n };
+      sb.from("staj_marks").upsert({ email: user.email, job_id: id, status: st, note: n, updated_at: new Date().toISOString() },
+        { onConflict: "email,job_id" }).then(function () {});
+    }
+  }
+  function toggleMark(j, st) { saveMark(j, status(j) === st ? null : st); renderAll(); }
+
+  /* ---------------- sekmeler ---------------- */
+  function unreadCount() { return events.filter(function (e) { return new Date(e.ts).getTime() > lastRead && e.type !== "sistem"; }).length; }
+  function renderTabs() {
+    var box = $("tabs"); box.textContent = "";
+    TABS.forEach(function (t) {
+      var b = el("button", "tab", t[1]);
+      b.setAttribute("role", "tab"); b.setAttribute("aria-selected", String(tab === t[0]));
+      if (t[0] === "bildirimler" && unreadCount()) b.appendChild(el("span", "badge", String(unreadCount())));
+      b.onclick = function () { setTab(t[0]); };
+      box.appendChild(b);
+    });
+    TABS.forEach(function (t) { $("p-" + t[0]).hidden = tab !== t[0]; });
+    var n = unreadCount(); document.title = (n ? "(" + n + ") " : "") + "Staj Radar";
+  }
+  function setTab(t) { tab = t; try { history.replaceState(null, "", "#" + t); } catch (e) {} renderAll(); }
+
+  /* ---------------- bildirimler ---------------- */
+  function dayLabel(iso) {
+    var d = new Date(iso), t = new Date(), y = new Date(Date.now() - 86400000);
+    if (d.toDateString() === t.toDateString()) return "Bugün";
+    if (d.toDateString() === y.toDateString()) return "Dün";
+    return d.toLocaleDateString("tr-TR", { day: "numeric", month: "long", weekday: "long" });
+  }
+  function chips(box, list, get, set) {
+    box.textContent = "";
+    list.forEach(function (f) {
+      var b = el("button", "chip", f[1]); b.setAttribute("aria-pressed", String(get() === f[0]));
+      b.onclick = function () { set(f[0]); renderAll(); }; box.appendChild(b);
+    });
+  }
+  function renderEvents() {
+    var bar = $("evFilters");
+    chips(bar, [["all", "Hepsi"], ["ilan", "İlanlar"], ["duyuru", "Duyurular"], ["important", "Önemli"], ["sistem", "Sistem"]],
+      function () { return state.evFilter; }, function (v) { state.evFilter = v; });
+    var rd = el("button", "chip", "Tümünü okundu say"); rd.style.marginLeft = "auto";
+    rd.onclick = function () { lastRead = Date.now(); store("radar.lastRead", lastRead); renderAll(); };
+    bar.appendChild(rd);
+    var box = $("evList"); box.textContent = "";
+    var rows = events.filter(function (e) {
+      if (state.evFilter === "all") return true;
+      if (state.evFilter === "important") return e.important;
+      return e.type === state.evFilter;
+    });
+    if (!rows.length) { box.appendChild(el("div", "empty", "Bu filtrede bildirim yok.")); return; }
+    var last = "";
+    rows.forEach(function (e) {
+      var dl = dayLabel(e.ts);
+      if (dl !== last) { box.appendChild(el("div", "group", dl)); last = dl; }
+      var unread = new Date(e.ts).getTime() > lastRead && e.type !== "sistem";
+      var c = el("article", "ev" + (unread ? " unread" : "") + (e.important ? " imp" : ""));
+      c.appendChild(el("div", "ico", e.type === "ilan" ? "İlan" : e.type === "duyuru" ? "Duy." : "Sis."));
+      var b = el("div"), t = el("h2", "title");
+      if (e.url) t.appendChild(ext(el("a", null, e.title), e.url)); else t.textContent = e.title;
+      b.appendChild(t);
+      b.appendChild(el("div", "meta", [e.text, e.score != null ? "puan " + e.score : "",
+        new Date(e.ts).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })].filter(Boolean).join(" · ")));
+      c.appendChild(b); box.appendChild(c);
+    });
+  }
+
+  /* ---------------- ilan kartı ---------------- */
+  function card(j) {
+    var st = status(j);
+    var c = el("article", "card");
+    c.appendChild(el("div", "score" + (j.score < 35 ? " low" : j.score < 55 ? " mid" : ""), String(j.score)));
+    var body = el("div"), t = el("h2", "title");
+    t.appendChild(ext(el("a", null, j.title || "(başlıksız)"), j.url)); body.appendChild(t);
+    var where = j.location || (COUNTRY[j.country] || j.country);
+    if (!isAbroad(j) && j.km) where += " · ~" + j.km + " km";
+    body.appendChild(el("div", "meta", [j.company, where].filter(Boolean).join(" · ")));
+    var tags = el("div", "tags");
+    if (isNew(j)) tags.appendChild(el("span", "tag new", "yeni"));
+    var dl = daysLeft(j.deadline);
+    if (dl !== null) tags.appendChild(el("span", "tag" + (dl <= 7 ? " soon" : ""), dl <= 0 ? "son gün" : "son başvuru " + dl + " gün"));
+    if ((j.tags || []).indexOf("uzaktan") >= 0) tags.appendChild(el("span", "tag", "uzaktan"));
+    tags.appendChild(el("span", "tag", j.source));
+    (j.reasons || []).filter(function (r) { return r !== "staj ilanı"; }).slice(0, 5).forEach(function (r) {
+      tags.appendChild(el("span", "tag" + (r.charAt(0) === "-" ? " soon" : ""), r));
+    });
+    body.appendChild(tags);
+    var act = el("div", "actions");
+    act.appendChild(ext(el("a", "btn", "İlana git"), j.url));
+    [["saved", "★ Kaydet"], ["applied", "✓ Başvurdum"], ["hidden", "Gizle"]].forEach(function (p) {
+      var b = el("button", "btn" + (st === p[0] ? " on" : ""), p[1]);
+      b.onclick = function () { toggleMark(j, p[0]); }; act.appendChild(b);
+    });
+    body.appendChild(act); c.appendChild(body); return c;
+  }
+  function sortJobs(arr, how) {
+    arr.sort(function (a, b) {
+      if (how === "km") {
+        var ra = REGION_ORDER[a.region] != null ? REGION_ORDER[a.region] : 9, rb = REGION_ORDER[b.region] != null ? REGION_ORDER[b.region] : 9;
+        if (ra !== rb) return ra - rb;
+        var ka = a.km == null ? 9999 : a.km, kb = b.km == null ? 9999 : b.km;
+        return ka - kb || b.score - a.score;
+      }
+      if (how === "new") return new Date(b.first_seen) - new Date(a.first_seen);
+      if (how === "deadline") { var da = a.deadline || "9999", db = b.deadline || "9999"; return da < db ? -1 : da > db ? 1 : b.score - a.score; }
+      return b.score - a.score || new Date(b.first_seen) - new Date(a.first_seen);
+    });
+    return arr;
+  }
+  function visibleBase(j) { var s = status(j); return s !== "hidden" && ACTIVE_AFTER.indexOf(s) < 0; }
+
+  function renderDomestic() {
+    chips($("regions"), REGIONS, function () { return state.region; }, function (v) { state.region = v; });
+    var q = state.q.trim().toLowerCase();
+    var rows = jobs.filter(function (j) {
+      if (isAbroad(j) || !visibleBase(j)) return false;
+      if (state.region !== "all" && j.region !== state.region) return false;
+      if (state.onlyNew && !isNew(j)) return false;
+      return !q || (j.title + " " + j.company + " " + j.location + " " + j.source).toLowerCase().indexOf(q) >= 0;
+    });
+    sortJobs(rows, state.sort);
+    var box = $("list"); box.textContent = "";
+    if (!rows.length) { box.appendChild(el("div", "empty", jobs.length ? "Bu filtreyle ilan yok." : "Henüz ilan yok. İlk tarama çalışınca burada görünecek.")); }
+    var last = null;
+    rows.forEach(function (j) {
+      if (state.sort === "km" && j.region !== last) {
+        var n = rows.filter(function (x) { return x.region === j.region; }).length;
+        var g = el("div", "group"); g.appendChild(el("span", null, REGION_TITLE[j.region] || j.region)); g.appendChild(el("span", null, String(n)));
+        box.appendChild(g); last = j.region;
+      }
+      box.appendChild(card(j));
+    });
+    $("fNew").setAttribute("aria-pressed", String(state.onlyNew));
+  }
+
+  function renderAbroad() {
+    var all = jobs.filter(function (j) { return isAbroad(j) && visibleBase(j); });
+    var codes = {}; all.forEach(function (j) { codes[j.country] = (codes[j.country] || 0) + 1; });
+    var list = [["all", "Hepsi (" + all.length + ")"]].concat(Object.keys(codes).sort().map(function (c) { return [c, (COUNTRY[c] || c) + " (" + codes[c] + ")"]; }));
+    chips($("countries"), list, function () { return state.country; }, function (v) { state.country = v; });
+    var q = state.q2.trim().toLowerCase();
+    var rows = all.filter(function (j) {
+      if (state.country !== "all" && j.country !== state.country) return false;
+      return !q || (j.title + " " + j.company + " " + j.location + " " + j.source).toLowerCase().indexOf(q) >= 0;
+    });
+    sortJobs(rows, state.sort2);
+    var box = $("listAbroad"); box.textContent = "";
+    if (!rows.length) box.appendChild(el("div", "empty", "Yurt dışı için eşleşen ilan yok."));
+    rows.forEach(function (j) { box.appendChild(card(j)); });
+  }
+
+  /* ---------------- takip tahtası ---------------- */
+  function renderBoard() {
+    var box = $("board"); box.textContent = "";
+    var byId = {}; jobs.forEach(function (j) { byId[j.id] = j; });
+    var cols = STATUSES.slice(); if (state.showHidden) cols.push(["hidden", "Gizlenenler"]);
+    var any = false;
+    cols.forEach(function (st) {
+      var col = el("div", "col");
+      var ids = Object.keys(marks).filter(function (id) { return marks[id].status === st[0] && byId[id]; });
+      var h = el("h3"); h.appendChild(el("span", null, st[1])); h.appendChild(el("span", null, String(ids.length))); col.appendChild(h);
+      ids.forEach(function (id) {
+        any = true;
+        var j = byId[id], m = el("div", "mini");
+        m.appendChild(ext(el("a", null, j.title), j.url));
+        m.appendChild(el("div", "meta", [j.company, j.location].filter(Boolean).join(" · ")));
+        var sel = document.createElement("select");
+        cols.concat([["", "Listeden kaldır"]]).forEach(function (o) {
+          if (o[0] === "hidden" && st[0] !== "hidden") return;
+          var op = el("option", null, o[1]); op.value = o[0]; if (o[0] === st[0]) op.selected = true; sel.appendChild(op);
+        });
+        sel.onchange = function () { saveMark(j, sel.value || null); renderAll(); };
+        m.appendChild(sel);
+        var ta = document.createElement("textarea"); ta.rows = 2; ta.placeholder = "Not (kişi, tarih, link…)"; ta.value = marks[id].note || "";
+        ta.onchange = function () { saveMark(j, st[0], ta.value); };
+        m.appendChild(ta); col.appendChild(m);
+      });
+      box.appendChild(col);
+    });
+    if (!any) box.insertBefore(el("div", "empty", "Henüz kayıtlı ilan yok. Yurt içi veya yurt dışı sekmesinde “★ Kaydet” ya da “✓ Başvurdum” de."), box.firstChild);
+    $("fHidden").setAttribute("aria-pressed", String(state.showHidden));
+  }
+
+  /* ---------------- duyurular ---------------- */
+  function renderAnns() {
+    chips($("annFilters"), [["all", "Hepsi"], ["important", "Önemli"]], function () { return state.annFilter; }, function (v) { state.annFilter = v; });
+    var rows = anns.filter(function (a) { return state.annFilter === "all" || a.important; })
+      .sort(function (a, b) { return new Date(b.first_seen) - new Date(a.first_seen); });
+    var box = $("annList"); box.textContent = "";
+    if (!rows.length) { box.appendChild(el("div", "empty", "Duyuru yok.")); return; }
+    rows.slice(0, 80).forEach(function (a) {
+      var r = el("div", "row"), left = el("div"), t = el("h2", "title");
+      t.appendChild(ext(el("a", null, a.title), a.url)); left.appendChild(t);
+      left.appendChild(el("div", "meta", a.site)); r.appendChild(left);
+      if (a.important) r.appendChild(el("span", "tag soon", "önemli"));
+      box.appendChild(r);
+    });
+  }
+
+  /* ---------------- kaynaklar ---------------- */
+  function renderSources() {
+    var crit = meta.criteria || {};
+    $("critTitle").textContent = "Arama kriterleri" + (crit["kaynak"] ? " — " + crit["kaynak"] : "");
+    var ul = $("critList"); ul.textContent = "";
+    (crit["özet"] || []).forEach(function (t) { ul.appendChild(el("li", null, t)); });
+    var box = $("linkList"); box.textContent = "";
+    var today = new Date().toISOString().slice(0, 10);
+    var items = (meta.page_sites || []).map(function (p) { return { name: p.name, url: p.url, auto: true }; })
+      .concat((meta.watchlist || []).map(function (w) { return { name: w.name, url: w.url, note: w.note, auto: false }; }));
+    if (!items.length) box.appendChild(el("div", "meta", "Liste boş."));
+    items.forEach(function (it) {
+      var r = el("div", "row"), left = el("div"), t = el("h2", "title");
+      t.appendChild(ext(el("a", null, it.name), it.url)); left.appendChild(t);
+      left.appendChild(el("div", "meta", it.auto ? "Otomatik taranıyor; yeni duyuru Bildirimler'e düşer" : (it.note || "Elle takip")));
+      r.appendChild(left);
+      if (!it.auto) {
+        var done = checked[it.url] === today;
+        var b = el("button", "btn" + (done ? " on" : ""), done ? "✓ Bugün baktım" : "Bugün baktım");
+        b.onclick = function () { if (checked[it.url] === today) delete checked[it.url]; else checked[it.url] = today; store("radar.checked", checked); renderSources(); };
+        r.appendChild(b);
+      }
+      box.appendChild(r);
+    });
+    var f = $("sources"); f.textContent = "";
+    var src = meta.sources || {};
+    Object.keys(src).forEach(function (k) {
+      var st = src[k], span = el("span");
+      span.appendChild(el("span", "dot " + (st.status === "ok" ? "ok" : st.status === "hata" ? "hata" : "")));
+      span.appendChild(document.createTextNode(k + ": " + st.status + (st.status === "ok" ? " (" + st.count + ")" : "")));
+      if (st.error) span.title = st.error; f.appendChild(span);
+    });
+  }
+
+  function renderStatus() {
+    $("status").textContent = meta.updated ? "Son tarama " + ago(meta.updated) + " · " + jobs.length + " ilan" : "Henüz tarama yok";
+  }
+  function renderAll() { renderTabs(); renderStatus(); renderEvents(); renderDomestic(); renderAbroad(); renderBoard(); renderAnns(); renderSources(); }
+
+  $("q").oninput = function (e) { state.q = e.target.value; renderDomestic(); };
+  $("sort").onchange = function (e) { state.sort = e.target.value; renderDomestic(); };
+  $("fNew").onclick = function () { state.onlyNew = !state.onlyNew; renderDomestic(); };
+  $("q2").oninput = function (e) { state.q2 = e.target.value; renderAbroad(); };
+  $("sort2").onchange = function (e) { state.sort2 = e.target.value; renderAbroad(); };
+  $("fHidden").onclick = function () { state.showHidden = !state.showHidden; renderBoard(); };
+
+  var h = (location.hash || "").slice(1);
+  if (TABS.some(function (t) { return t[0] === h; })) tab = h;
+  sb.auth.getSession().then(function (r) { boot(r.data && r.data.session); });
+  sb.auth.onAuthStateChange(function (ev, session) { if (ev === "SIGNED_OUT") showLogin("Çıkış yapıldı.", false); });
+})();
+</script>
+</body>
+</html>
