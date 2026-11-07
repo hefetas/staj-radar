@@ -80,6 +80,24 @@ class RadarTests(unittest.TestCase):
         self.assertEqual(sef["company"], "Sefine Tersanesi")
         self.assertEqual(sef["title"], "SKY Uzun Dönem Staj Programı")
 
+    def test_youthall_real_format(self):
+        html = (
+            '<a href="/en/pgcareersturkey/summer-internship-2027-manufacturing-gebze-plant_117/">'
+            "P&amp;G Summer Internship 2027: Manufacturing | Gebze Plant Are you passionate about… Stajyer 16.12.2026 Kocaeli</a>"
+            '<a href="/tr/Akcansa/ready-mix-concrete-long-term-intern-thrace_58/">'
+            "Akçansa Ready-Mix Concrete Long-Term Intern - Thrace About Us As a leader… Stajyer 17.11.2026 Tekirdağ</a>"
+            '<a href="/en/Commencis/commencis-cloud-camp-2027_50/">'
+            "Commencis Commencis Cloud Camp 2027 Join us as we pave… Stajyer 25.11.2026 Hibrit</a>"
+        )
+        jobs = {j["url"].split("/")[-2]: j for j in radar.parse_youthall(html, "https://www.youthall.com/tr/")}
+        g = jobs["summer-internship-2027-manufacturing-gebze-plant_117"]
+        self.assertEqual(g["company"], "P&G")
+        self.assertEqual(g["title"], "Summer Internship 2027: Manufacturing | Gebze Plant")
+        a = jobs["ready-mix-concrete-long-term-intern-thrace_58"]
+        self.assertEqual((a["company"], a["title"]), ("Akçansa", "Ready-Mix Concrete Long-Term Intern - Thrace"))
+        c = jobs["commencis-cloud-camp-2027_50"]
+        self.assertEqual((c["company"], c["title"]), ("Commencis", "Commencis Cloud Camp 2027"))
+
     def test_scoring_order(self):
         jobs = {j["url"].split("/")[-2]: j for j in radar.parse_youthall(YOUTHALL_HTML, "https://www.youthall.com/")}
         gebze = radar.score_job(jobs["summer-internship-2027-manufacturing-gebze-plant_117"], self.prof)

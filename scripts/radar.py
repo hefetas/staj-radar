@@ -160,6 +160,29 @@ TYPE_TAIL = re.compile(r"\s+(Stajyer|MT Programı|Tam Zamanlı|Yarı Zamanlı|G�
                        r"Proje Bazlı|Serbest Zamanlı|Yeni Mezun|Genç Profesyonel|Profesyonel|Burs)\s*$")
 
 
+NON_ALNUM = re.compile(r"[^a-z0-9]")
+
+
+def split_company_title(body: str, slug: str):
+    """Kart metni "Şirket Başlık Açıklama…" biçiminde; URL slug'ı başlığın harfleriyle
+    eşleşir. Slug'ı metinde bulup şirketi (öncesi) ve başlığı (kendisi) ayırır."""
+    slug_s = NON_ALNUM.sub("", fold(slug))
+    if not slug_s:
+        return None
+    tokens = body.split()
+    for i in range(0, min(len(tokens), 5)):
+        acc = ""
+        for j in range(i, len(tokens)):
+            acc += NON_ALNUM.sub("", fold(tokens[j]))
+            if acc.startswith(slug_s):
+                company = " ".join(tokens[:i]).strip(" -–—:|")
+                title = " ".join(tokens[i:j + 1]).strip(" -–—:|…")
+                return company, title
+            if not slug_s.startswith(acc):
+                break
+    return None
+
+
 def humanize_slug(slug: str) -> str:
     return " ".join(w.capitalize() if w.islower() else w for w in slug.replace("-", " ").split())
 
@@ -184,7 +207,14 @@ def parse_youthall(html_text: str, base: str) -> list[dict]:
             deadline = f"{y}-{mo}-{d}"
             body = text[:dm.start()].strip()
         body = TYPE_TAIL.sub("", body)
-        # Başlık: "Şirket - Başlık…" biçimindeki etiketten; kesilmişse/çok uzunsa slug'dan.
+        slug_core = slug.rsplit("_", 1)[0]
+        sp = split_company_title(body, slug_core)
+        if sp and sp[1]:
+            out.append(make_job("Youthall", sp[1], full, sp[0] or humanize_slug(company_slug),
+                                city, "TR", body, deadline=deadline, trusted_intern=True,
+                                remote=bool(re.search(r"uzaktan|remote|online", fold(city + " " + slug)))))
+            continue
+        # Yedek: "Şirket - Başlık…" biçimindeki etiketten; kesilmişse/çok uzunsa slug'dan.
         head = re.split(r"…|\.\.\.", body)[0].strip()
         truncated = len(head) < len(body) and body[len(head):len(head) + 1] in ("…", ".")
         company = ""
