@@ -189,6 +189,16 @@
       <div class="board" id="board"></div>
     </section>
 
+    <section class="pane" id="p-linkedin" hidden>
+      <p class="hint">LinkedIn'de çok ilan açılıyor ama otomatik taranamaz. Buradaki düğmeler hazır aramaları senin LinkedIn hesabınla, kendi tarayıcında açar; başvuruyu orada yaparsın. Beğendiğin ilanı kaybetmemek için LinkedIn'de kaydet veya başvurduktan sonra Takip sekmesinden not al.</p>
+      <div class="bar" id="liTime" role="group" aria-label="Zaman"></div>
+      <div class="bar"><button class="chip" id="liIntern" aria-pressed="false" title="Yalnızca 'Staj' deneyim seviyesi işaretli ilanlar; bazı ilanları gizleyebilir">Yalnız “Staj” seviyesi</button></div>
+      <div id="liGroups"></div>
+      <div class="panel"><h2>Kendi aramanı yap</h2>
+        <div class="fieldrow"><input class="field" id="liKw" placeholder="Anahtar kelime (ör. yaz stajı kalite)"><input class="field" id="liLoc" placeholder="Konum (ör. Bursa)"><a class="btn on" id="liGo" href="https://www.linkedin.com/jobs/" target="_blank" rel="noopener noreferrer">LinkedIn'de ara</a></div>
+      </div>
+    </section>
+
     <section class="pane" id="p-belgeler" hidden>
       <p class="hint">Staj öncesi ve sırasında yapılacaklar. Liste, Uludağ Mühendislik Fakültesi Endüstri Mühendisliği Uygulamalı Eğitim Kılavuzu'nun özetinden hazırlandı. Bölümün güncel yönergesinde başka belge veya tarih varsa aşağıdan ekle.</p>
       <div class="panel"><h2 id="docTitle">Kontrol listesi</h2><div id="docList"></div>
@@ -268,12 +278,12 @@
   var REGIONS = [["all", "Hepsi"], ["bursa", "Bursa"], ["yakin", "Yakın (≤200 km)"], ["orta", "Orta (≤450 km)"], ["uzak", "Uzak"], ["belirsiz", "Konum yok"]];
   var REGION_TITLE = { bursa: "Bursa", yakin: "Yakın şehirler (≤200 km)", orta: "Orta uzaklık (≤450 km)", uzak: "Uzak şehirler", belirsiz: "Konum belirtilmemiş" };
   var REGION_ORDER = { bursa: 0, yakin: 1, orta: 2, uzak: 3, belirsiz: 4 };
-  var TABS = [["bildirimler", "Bildirim"], ["yurtici", "Yurt içi"], ["yurtdisi", "Yurt dışı"], ["diger", "Diğer"], ["firmalar", "Firmalar"], ["takip", "Takip"], ["belgeler", "Belgeler"], ["duyurular", "Duyuru"], ["cv", "CV"], ["kaynaklar", "Kaynak"]];
+  var TABS = [["bildirimler", "Bildirim"], ["yurtici", "Yurt içi"], ["yurtdisi", "Yurt dışı"], ["linkedin", "LinkedIn"], ["diger", "Diğer"], ["firmalar", "Firmalar"], ["takip", "Takip"], ["belgeler", "Belgeler"], ["duyurular", "Duyuru"], ["cv", "CV"], ["kaynaklar", "Kaynak"]];
   var STATUSES = [["saved", "★ Kaydedildi"], ["applied", "Başvurdum"], ["interview", "Mülakat"], ["offer", "Kabul/Teklif"], ["rejected", "Olumsuz"]];
   var ACTIVE_AFTER = ["applied", "interview", "offer", "rejected"];
   var COUNTRY = { DE: "Almanya", GB: "Birleşik Krallık", NL: "Hollanda", AT: "Avusturya", CH: "İsviçre", FR: "Fransa" };
 
-  var state = { farFilter: "all", q3: "", dueOnly: false, firmFilter: "all", cvLang: "tr", cvJob: null, region: "all", q: "", sort: "km", onlyNew: false, country: "all", q2: "", sort2: "score", evFilter: "all", annFilter: "all", showHidden: false, open: {}, mailKind: "ilk" };
+  var state = { farFilter: "all", q3: "", dueOnly: false, firmFilter: "all", cvLang: "tr", cvJob: null, region: "all", q: "", sort: "km", onlyNew: false, country: "all", q2: "", sort2: "score", evFilter: "all", annFilter: "all", showHidden: false, open: {}, mailKind: "ilk", liTime: "r604800", liIntern: false };
   var tab = "bildirimler";
   var user = null, jobs = [], meta = {}, events = [], anns = [], marks = {}, briefs = {}, checked = {}, lastRead = 0, profile = { cv_tr: "", cv_en: "" };
 
@@ -560,6 +570,7 @@
     });
     var cvb = el("button", "btn", "CV'yi uyarla"); cvb.onclick = function () { openCv(j); }; act.appendChild(cvb);
     briefBtn(act, { name: j.company, title: j.title, location: j.location || (COUNTRY[j.country] || j.country), url: j.url });
+    liBtns(act, j.company);
     body.appendChild(act); personUi(j, act, body); c.appendChild(body); return c;
   }
   function sortJobs(arr, how) {
@@ -804,6 +815,7 @@
       act.appendChild(cvb);
       var mb = el("button", "btn", "✉ E-posta taslağı"); mb.onclick = function () { openMail(c, fj); }; act.appendChild(mb);
       briefBtn(act, { name: c.name, title: "Staj (ilansız başvuru)", location: c.city, sector: c.sector, url: c.url });
+      liBtns(act, c.name);
       body.appendChild(act); personUi(fj, act, body);
       var cr = el("div", "fieldrow"), ci = document.createElement("input");
       ci.type = "email"; ci.className = "field"; ci.placeholder = "İK / staj e-postası (biliyorsan)"; ci.value = (marks[fj.id] || {}).contact || "";
@@ -994,6 +1006,58 @@
   }
   $("fIcs").onclick = exportIcs; $("fIcs2").onclick = exportIcs;
 
+  /* ---------------- LinkedIn hazır aramalar ---------------- */
+  function liUrl(kw, loc) {
+    var u = "https://www.linkedin.com/jobs/search/?keywords=" + encodeURIComponent(kw);
+    if (loc) u += "&location=" + encodeURIComponent(loc);
+    if (state.liIntern) u += "&f_E=1";
+    if (state.liTime) u += "&f_TPR=" + state.liTime;
+    return u + "&sortBy=DD";
+  }
+  function liPeopleUrl(name) {
+    return "https://www.linkedin.com/search/results/people/?keywords=" + encodeURIComponent(name + " Uludağ Üniversitesi");
+  }
+  function liBtns(act, name) {
+    if (!name) return;
+    // Firma aramasında zaman/seviye filtresi uygulanmaz: tüm güncel ilanlar görünsün
+    act.appendChild(ext(el("a", "btn", "LinkedIn ilanları"), "https://www.linkedin.com/jobs/search/?keywords=" + encodeURIComponent(name + " staj") + "&sortBy=DD"));
+    act.appendChild(ext(el("a", "btn", "👥 LinkedIn kişileri"), liPeopleUrl(name)));
+  }
+  var LI_GROUPS = [
+    { t: "Bursa (öncelik)", loc: "Bursa", items: [["Staj üretim", "staj üretim"], ["Yaz stajı", "yaz stajı"], ["Stajyer mühendis", "stajyer mühendis"], ["Endüstri mühendisliği", "endüstri mühendisliği stajyer"],
+      ["Kalite", "kalite stajyer"], ["Üretim planlama", "üretim planlama stajyer"], ["Tedarik zinciri / lojistik", "tedarik zinciri lojistik stajyer"], ["Süreç iyileştirme", "süreç iyileştirme stajyer"]] },
+    { t: "Yakın şehirler", kw: "staj mühendis", locs: ["Kocaeli", "Sakarya", "Yalova", "Balıkesir", "İstanbul", "Eskişehir", "Tekirdağ", "Çanakkale", "Manisa", "İzmir", "Ankara"] },
+    { t: "Tüm Türkiye, role göre", loc: "Türkiye", items: [["Üretim planlama", "üretim planlama staj"], ["Kalite güvence", "kalite güvence staj"], ["Süreç iyileştirme", "süreç iyileştirme staj"],
+      ["Depo / lojistik", "depo lojistik staj"], ["Yalın üretim", "yalın üretim staj"], ["Veri analizi", "veri analizi staj endüstri"]] },
+    { t: "Yurt dışı (İngilizce)", kw: "industrial engineering intern", locs: [["Almanya", "Germany"], ["Hollanda", "Netherlands"], ["Polonya", "Poland"], ["Avusturya", "Austria"], ["İsviçre", "Switzerland"],
+      ["İspanya", "Spain"], ["İtalya", "Italy"], ["Çekya", "Czechia"], ["Macaristan", "Hungary"], ["Romanya", "Romania"], ["Birleşik Krallık", "United Kingdom"]] },
+    { t: "Yurt dışı (Almanca)", loc: "Germany", items: [["Pflichtpraktikum Produktion", "Pflichtpraktikum Produktion"], ["Praktikum Industrial Engineering", "Praktikum Industrial Engineering"],
+      ["Praktikum Logistik", "Praktikum Logistik"], ["Praktikum Qualitätsmanagement", "Praktikum Qualitätsmanagement"]] }
+  ];
+  function renderLinkedin() {
+    chips($("liTime"), [["r86400", "Son 24 saat"], ["r604800", "Son 1 hafta"], ["r2592000", "Son 1 ay"], ["", "Hepsi"]],
+      function () { return state.liTime; }, function (v) { state.liTime = v; });
+    $("liIntern").setAttribute("aria-pressed", String(state.liIntern));
+    var box = $("liGroups"); box.textContent = "";
+    LI_GROUPS.forEach(function (g) {
+      var p = el("div", "panel"); p.appendChild(el("h2", null, g.t));
+      var row = el("div", "actions");
+      (g.items || []).forEach(function (it) { row.appendChild(ext(el("a", "btn", it[0]), liUrl(it[1], g.loc))); });
+      (g.locs || []).forEach(function (l) {
+        var lab = Array.isArray(l) ? l[0] : l, loc = Array.isArray(l) ? l[1] : l;
+        row.appendChild(ext(el("a", "btn", lab), liUrl(g.kw, loc)));
+      });
+      p.appendChild(row); box.appendChild(p);
+    });
+    syncLiGo();
+  }
+  function syncLiGo() {
+    var kw = $("liKw").value.trim() || "staj", loc = $("liLoc").value.trim();
+    ext($("liGo"), liUrl(kw, loc));
+  }
+  $("liIntern").onclick = function () { state.liIntern = !state.liIntern; renderAll(); };
+  $("liKw").oninput = syncLiGo; $("liLoc").oninput = syncLiGo;
+
   /* ---------------- firma özeti (araştırma) ---------------- */
   var briefCtx = null;
   function briefKey(name) { return slug(name || ""); }
@@ -1137,7 +1201,7 @@
   function renderStatus() {
     $("status").textContent = meta.updated ? "Son tarama " + ago(meta.updated) + " · " + jobs.length + " ilan" : "Henüz tarama yok";
   }
-  function renderAll() { renderTabs(); renderStatus(); renderEvents(); renderDomestic(); renderAbroad(); renderFar(); renderFirms(); renderCvTab(); renderPrograms($("progHome"), "yurtici"); renderPrograms($("progAbroad"), "yurtdisi"); renderBoard(); renderDocs(); renderAnns(); renderSources(); renderAccess(); }
+  function renderAll() { renderTabs(); renderStatus(); renderEvents(); renderDomestic(); renderAbroad(); renderFar(); renderFirms(); renderCvTab(); renderPrograms($("progHome"), "yurtici"); renderPrograms($("progAbroad"), "yurtdisi"); renderBoard(); renderDocs(); renderLinkedin(); renderAnns(); renderSources(); renderAccess(); }
 
   $("q").oninput = function (e) { state.q = e.target.value; renderDomestic(); };
   $("sort").onchange = function (e) { state.sort = e.target.value; renderDomestic(); };
