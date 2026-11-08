@@ -441,6 +441,8 @@ def fetch_jooble(cfg: dict) -> list[dict]:
                 "keywords": q["keywords"], "location": q.get("location", ""), "page": 1}))
             print(f"[jooble] {q['keywords']} / {q.get('location', '')}: toplam={data.get('totalCount')} gelen={len(data.get('jobs', []))}",
                   file=sys.stderr)
+            for r in data.get("jobs", [])[:4]:
+                print(f"   - {strip_tags(r.get('title', ''))[:70]} | {r.get('company', '')[:30]} | {r.get('location', '')[:30]}", file=sys.stderr)
             for r in data.get("jobs", []):
                 if not r.get("link"):
                     continue

@@ -417,44 +417,36 @@
     "min_interval_hours": 24,
     "queries": [
       {
-        "keywords": "staj üretim",
-        "location": "Bursa"
+        "keywords": "intern production",
+        "location": "Bursa, Turkey"
       },
       {
-        "keywords": "stajyer",
-        "location": ""
+        "keywords": "intern quality",
+        "location": "Bursa, Turkey"
       },
       {
-        "keywords": "staj",
+        "keywords": "internship industrial engineering",
         "location": "Turkey"
       },
       {
-        "keywords": "intern",
+        "keywords": "summer internship",
         "location": "Bursa, Turkey"
+      },
+      {
+        "keywords": "intern manufacturing",
+        "location": "Kocaeli, Turkey"
+      },
+      {
+        "keywords": "intern manufacturing",
+        "location": "Istanbul, Turkey"
       },
       {
         "keywords": "production intern",
         "location": "Turkey"
       },
       {
-        "keywords": "mühendis",
-        "location": "Bursa"
-      },
-      {
-        "keywords": "engineer",
-        "location": "Turkey"
-      },
-      {
-        "keywords": "endüstri mühendisliği stajyer",
-        "location": "Bursa"
-      },
-      {
-        "keywords": "üretim stajyeri",
-        "location": "Kocaeli"
-      },
-      {
-        "keywords": "üretim stajyeri",
-        "location": "İstanbul"
+        "keywords": "intern engineer",
+        "location": "Sakarya, Turkey"
       }
     ]
   }
