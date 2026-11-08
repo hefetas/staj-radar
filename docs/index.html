@@ -125,7 +125,12 @@
     </header>
     <nav class="tabs" id="tabs" role="tablist"></nav>
 
-    <section class="pane" id="p-bildirimler">
+    <section class="pane" id="p-yeni" hidden>
+      <div class="bar"><span class="hint" id="newInfo" style="margin:0"></span><button class="chip" id="btnSeen" style="margin-left:auto">Gördüm, temizle</button></div>
+      <div id="newList"></div>
+    </section>
+
+    <section class="pane" id="p-bildirimler" hidden>
       <div class="bar" id="evFilters" role="group" aria-label="Bildirim filtresi"></div>
       <div id="evList"></div>
     </section>
@@ -278,13 +283,13 @@
   var REGIONS = [["all", "Hepsi"], ["bursa", "Bursa"], ["yakin", "Yakın (≤200 km)"], ["orta", "Orta (≤450 km)"], ["uzak", "Uzak"], ["belirsiz", "Konum yok"]];
   var REGION_TITLE = { bursa: "Bursa", yakin: "Yakın şehirler (≤200 km)", orta: "Orta uzaklık (≤450 km)", uzak: "Uzak şehirler", belirsiz: "Konum belirtilmemiş" };
   var REGION_ORDER = { bursa: 0, yakin: 1, orta: 2, uzak: 3, belirsiz: 4 };
-  var TABS = [["bildirimler", "Bildirim"], ["yurtici", "Yurt içi"], ["yurtdisi", "Yurt dışı"], ["linkedin", "LinkedIn"], ["diger", "Diğer"], ["firmalar", "Firmalar"], ["takip", "Takip"], ["belgeler", "Belgeler"], ["duyurular", "Duyuru"], ["cv", "CV"], ["kaynaklar", "Kaynak"]];
+  var TABS = [["yeni", "Yeni"], ["bildirimler", "Bildirim"], ["yurtici", "Yurt içi"], ["yurtdisi", "Yurt dışı"], ["linkedin", "LinkedIn"], ["diger", "Diğer"], ["firmalar", "Firmalar"], ["takip", "Takip"], ["belgeler", "Belgeler"], ["duyurular", "Duyuru"], ["cv", "CV"], ["kaynaklar", "Kaynak"]];
   var STATUSES = [["saved", "★ Kaydedildi"], ["applied", "Başvurdum"], ["interview", "Mülakat"], ["offer", "Kabul/Teklif"], ["rejected", "Olumsuz"]];
   var ACTIVE_AFTER = ["applied", "interview", "offer", "rejected"];
   var COUNTRY = { DE: "Almanya", GB: "Birleşik Krallık", NL: "Hollanda", AT: "Avusturya", CH: "İsviçre", FR: "Fransa" };
 
   var state = { farFilter: "all", q3: "", dueOnly: false, firmFilter: "all", cvLang: "tr", cvJob: null, region: "all", q: "", sort: "km", onlyNew: false, country: "all", q2: "", sort2: "score", evFilter: "all", annFilter: "all", showHidden: false, open: {}, mailKind: "ilk", liTime: "r604800", liIntern: false };
-  var tab = "bildirimler";
+  var tab = "yeni", newSince = null, seenSaved = false;
   var user = null, jobs = [], meta = {}, events = [], anns = [], marks = {}, briefs = {}, checked = {}, lastRead = 0, profile = { cv_tr: "", cv_en: "" };
 
   function load(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
@@ -405,7 +410,7 @@
     Promise.all([
       sb.from("staj_state").select("data").eq("id", 1).maybeSingle(),
       sb.from("staj_marks").select("job_id,status,note,contact,applied_at,person"),
-      sb.from("staj_profile").select("cv_tr,cv_en,checklist").maybeSingle(),
+      sb.from("staj_profile").select("cv_tr,cv_en,checklist,last_seen").maybeSingle(),
       sb.from("staj_briefs").select("firm_key,firm_name,content,updated_at")
     ]).then(function (res) {
       briefs = {};
@@ -415,7 +420,8 @@
       meta = d.meta || {}; events = d.events || [];
       jobs = Object.keys(d.jobs || {}).map(function (k) { return d.jobs[k]; });
       anns = Object.keys(d.announcements || {}).map(function (k) { return d.announcements[k]; });
-      if (res[2] && res[2].data) { profile = { cv_tr: res[2].data.cv_tr || "", cv_en: res[2].data.cv_en || "", checklist: res[2].data.checklist || null }; }
+      if (res[2] && res[2].data) { profile = { cv_tr: res[2].data.cv_tr || "", cv_en: res[2].data.cv_en || "", checklist: res[2].data.checklist || null, last_seen: res[2].data.last_seen || null }; }
+      if (newSince === null) newSince = profile.last_seen ? new Date(profile.last_seen).getTime() : Date.now() - 3 * 86400000;
       marks = {};
       ((res[1].data) || []).forEach(function (m) {
         marks[m.job_id] = { status: m.status, note: m.note || "", contact: m.contact || "", applied_at: m.applied_at || null, person: m.person || "" };
@@ -485,6 +491,7 @@
     TABS.forEach(function (t) {
       var b = el("button", "tab", t[1]);
       b.setAttribute("role", "tab"); b.setAttribute("aria-selected", String(tab === t[0]));
+      if (t[0] === "yeni") { var nc = newItems().total; if (nc) b.appendChild(el("span", "badge", String(nc))); }
       if (t[0] === "bildirimler" && unreadCount()) b.appendChild(el("span", "badge", String(unreadCount())));
       if (t[0] === "erisim") { var np = access.requests.filter(function (x) { return x.status === "bekliyor"; }).length; if (np) b.appendChild(el("span", "badge", String(np))); }
       b.onclick = function () { setTab(t[0]); };
@@ -494,6 +501,49 @@
     var n = unreadCount(); document.title = (n ? "(" + n + ") " : "") + "Staj Radar";
   }
   function setTab(t) { tab = t; try { history.replaceState(null, "", "#" + t); } catch (e) {} renderAll(); }
+
+  /* ---------------- yeni (son ziyaretten beri) ---------------- */
+  function newItems() {
+    var since = newSince == null ? Date.now() : newSince;
+    var fresh = function (x) { return new Date(x.first_seen).getTime() > since; };
+    var js = jobs.filter(function (j) { return fresh(j) && visibleBase(j); });
+    return {
+      good: sortJobs(js.filter(function (j) { return !isFar(j); }), "km"),
+      far: sortJobs(js.filter(isFar), "score"),
+      anns: anns.filter(fresh).sort(function (a, b) { return new Date(b.first_seen) - new Date(a.first_seen); }),
+      total: js.length + anns.filter(fresh).length
+    };
+  }
+  function markSeen(clear) {
+    var now = new Date();
+    seenSaved = true;
+    if (clear) newSince = now.getTime();
+    profile.last_seen = now.toISOString();
+    if (user) sb.from("staj_profile").upsert({ email: user.email, last_seen: profile.last_seen }, { onConflict: "email" }).then(function () {});
+    if (clear) renderAll();
+  }
+  $("btnSeen").onclick = function () { markSeen(true); };
+  function renderNew() {
+    var n = newItems(), box = $("newList"); box.textContent = "";
+    $("newInfo").textContent = newSince == null ? "" : n.total
+      ? n.total + " yeni kayıt · son bakışından beri (" + ago(new Date(newSince).toISOString()) + ")"
+      : "Son bakışından beri yeni bir şey yok.";
+    $("btnSeen").hidden = !n.total;
+    if (tab === "yeni" && !seenSaved && newSince != null) markSeen(false);
+    if (!n.total) { box.appendChild(el("div", "empty", "Yeni ilan veya duyuru yok. Tarama her gün 16:00'da çalışır.")); return; }
+    if (n.good.length) { box.appendChild(el("div", "group", "Yeni ilanlar (" + n.good.length + ")")); n.good.forEach(function (j) { box.appendChild(card(j)); }); }
+    if (n.far.length) { box.appendChild(el("div", "group", "İstenilenden uzak (" + n.far.length + ")")); n.far.forEach(function (j) { box.appendChild(card(j)); }); }
+    if (n.anns.length) {
+      box.appendChild(el("div", "group", "Yeni duyurular (" + n.anns.length + ")"));
+      n.anns.slice(0, 40).forEach(function (a) {
+        var r = el("div", "row"), left = el("div"), t = el("h2", "title");
+        t.appendChild(ext(el("a", null, a.title), a.url)); left.appendChild(t);
+        left.appendChild(el("div", "meta", a.site)); r.appendChild(left);
+        if (a.important) r.appendChild(el("span", "tag soon", "önemli"));
+        box.appendChild(r);
+      });
+    }
+  }
 
   /* ---------------- bildirimler ---------------- */
   function dayLabel(iso) {
@@ -1201,7 +1251,7 @@
   function renderStatus() {
     $("status").textContent = meta.updated ? "Son tarama " + ago(meta.updated) + " · " + jobs.length + " ilan" : "Henüz tarama yok";
   }
-  function renderAll() { renderTabs(); renderStatus(); renderEvents(); renderDomestic(); renderAbroad(); renderFar(); renderFirms(); renderCvTab(); renderPrograms($("progHome"), "yurtici"); renderPrograms($("progAbroad"), "yurtdisi"); renderBoard(); renderDocs(); renderLinkedin(); renderAnns(); renderSources(); renderAccess(); }
+  function renderAll() { renderTabs(); renderStatus(); renderNew(); renderEvents(); renderDomestic(); renderAbroad(); renderFar(); renderFirms(); renderCvTab(); renderPrograms($("progHome"), "yurtici"); renderPrograms($("progAbroad"), "yurtdisi"); renderBoard(); renderDocs(); renderLinkedin(); renderAnns(); renderSources(); renderAccess(); }
 
   $("q").oninput = function (e) { state.q = e.target.value; renderDomestic(); };
   $("sort").onchange = function (e) { state.sort = e.target.value; renderDomestic(); };

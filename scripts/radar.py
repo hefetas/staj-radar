@@ -677,11 +677,12 @@ def digest_stats() -> dict:
     return supa_rpc("staj_digest_stats", {"p_token": os.environ["STAJ_INGEST_TOKEN"]}) or {}
 
 
-def build_digest(jobs: dict, stats: dict, today: dt.date, far_below: int, now: dt.datetime) -> tuple[str, str]:
-    """Pazar akşamı haftalık özet: yeni ilanlar, yaklaşan son tarihler, başvuru sayıları."""
-    week_ago = now - dt.timedelta(days=7)
+def build_digest(jobs: dict, stats: dict, today: dt.date, far_below: int, now: dt.datetime,
+                 programs: list | None = None) -> tuple[str, str]:
+    """Günlük özet: son 24 saatin yeni ilanları, yaklaşan son tarihler, program tarihleri, başvuru sayıları."""
+    since = now - dt.timedelta(days=1)
     fit = [j for j in jobs.values() if j.get("score", 0) >= far_below]
-    new_fit = [j for j in fit if parse_dt(j["first_seen"]) >= week_ago]
+    new_fit = sorted((j for j in fit if parse_dt(j["first_seen"]) >= since), key=lambda j: -j.get("score", 0))
     soon = []
     for j in fit:
         try:
@@ -691,18 +692,29 @@ def build_digest(jobs: dict, stats: dict, today: dt.date, far_below: int, now: d
         if left is not None and 0 <= left <= 7:
             soon.append((left, j))
     soon.sort(key=lambda x: x[0])
-    lines = [f"• Bu hafta {len(new_fit)} yeni uygun ilan geldi (toplam {len(fit)} uygun ilan)."]
+    if new_fit:
+        lines = [f"• Son 24 saatte {len(new_fit)} yeni uygun ilan (toplam {len(fit)} uygun ilan):"]
+        lines += [f"   {j['title']} — {j.get('company', '')}" for j in new_fit[:3]]
+        if len(new_fit) > 3:
+            lines.append(f"   … ve {len(new_fit) - 3} ilan daha")
+    else:
+        lines = [f"• Son 24 saatte yeni uygun ilan yok (toplam {len(fit)} uygun ilan)."]
     if soon:
         lines.append("• Son başvurusu bu hafta olanlar:")
         lines += [f"   {l} gün: {j['title']} — {j.get('company', '')}" for l, j in soon[:5]]
-    else:
-        lines.append("• Önümüzdeki 7 günde son başvurusu dolan ilan yok.")
+    for w in programs or []:
+        try:
+            left = (dt.date.fromisoformat(w["deadline"]) - today).days if w.get("deadline") else None
+        except ValueError:
+            left = None
+        if left is not None and 0 <= left <= 45:
+            lines.append(f"• {w['name']}: son başvuruya {left} gün kaldı.")
     if stats:
         lines.append(f"• Başvuru: bu hafta {stats.get('applied_week', 0)}, toplam {stats.get('applied_total', 0)}; "
                      f"cevap bekleyen {stats.get('waiting', 0)}, mülakat {stats.get('interview', 0)}.")
         if stats.get("known"):
             lines.append(f"• Tanıdığın olan {stats['known']} yer var; referans istemeyi unutma.")
-    return "Staj Radar haftalık özet", "\n".join(lines)
+    return "Staj Radar günlük özet", "\n".join(lines)
 
 
 def new_access_requests() -> list[str]:
@@ -927,19 +939,19 @@ def run(args) -> int:
         if not args.no_notify:
             notify("Staj Radar uyarı", a, args.dry_run)
 
-    # Haftalık özet: Pazar 18:00–23:59 (TR) aralığında, haftada bir
+    # Günlük özet: zamanlanmış çalıştırmada (SEND_DIGEST=1) günde bir kez; yeni ilan olmasa da gönderilir
     tr_now = now.astimezone(dt.timezone(dt.timedelta(hours=3)))
-    week_key = f"{tr_now.isocalendar()[0]}-W{tr_now.isocalendar()[1]:02d}"
-    if not args.no_notify and tr_now.weekday() == 6 and tr_now.hour >= 18 and meta.get("digest_week") != week_key and jobs:
+    day_key = tr_now.date().isoformat()
+    if not args.no_notify and os.environ.get("SEND_DIGEST") == "1" and meta.get("digest_day") != day_key and jobs:
         try:
             stats = digest_stats()
         except Exception as e:  # noqa: BLE001
             print(f"Özet istatistikleri okunamadı: {type(e).__name__}", file=sys.stderr)
             stats = {}
-        subj, body = build_digest(jobs, stats, today, int(prof.get("far_below", 28)), now)
+        subj, body = build_digest(jobs, stats, today, int(prof.get("far_below", 28)), now, sources.get("watchlist", []))
         if notify(subj, body, args.dry_run):
-            meta["digest_week"] = week_key
-            add_event("sistem", "Haftalık özet", body.replace("\n", " ")[:200], key=f"digest|{week_key}")
+            meta["digest_day"] = day_key
+            add_event("sistem", "Günlük özet", body.replace("\n", " ")[:200], key=f"digest|{day_key}")
 
     # Siteye erişim isteyenler (anında bildirim gitmediyse burada yakalanır)
     if not args.no_notify and not args.dry_run:

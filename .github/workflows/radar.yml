@@ -2,7 +2,7 @@ name: Staj Radar
 
 on:
   schedule:
-    - cron: "17 */4 * * *"   # her 4 saatte bir (UTC)
+    - cron: "0 13 * * *"     # her gün 16:00 Türkiye saati (13:00 UTC); GitHub birkaç dakika geciktirebilir
   workflow_dispatch:         # elle çalıştırmak için
 
 permissions:
@@ -29,6 +29,7 @@ jobs:
       - name: Tara ve bildir
         env:
           SITE_URL: https://hefetas.github.io/staj-radar
+          SEND_DIGEST: ${{ github.event_name == 'schedule' && '1' || '' }}
           SUPABASE_URL: https://plaoulgdbgtpqhemfqix.supabase.co
           SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYW91bGdkYmd0cHFoZW1mcWl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM5OTQxMTgsImV4cCI6MjEwOTU3MDExOH0.M8qGu503nnnHGEvIwJN1a2tBcfXVDAvvVVxviB2vVF8
           STAJ_INGEST_TOKEN: ${{ secrets.STAJ_INGEST_TOKEN }}

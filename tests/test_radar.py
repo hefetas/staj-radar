@@ -409,22 +409,64 @@ class RadarTests(unittest.TestCase):
                 else:
                     os.environ[k] = v
 
-    def test_weekly_digest(self):
+    def test_daily_digest(self):
         import datetime as dt
-        now = dt.datetime(2026, 11, 8, 16, 0, tzinfo=dt.timezone.utc)  # Pazar 19:00 TR
+        now = dt.datetime(2026, 11, 8, 13, 0, tzinfo=dt.timezone.utc)  # 16:00 TR
         today = dt.date(2026, 11, 8)
         jobs = {
-            "a": {"id": "a", "title": "Yaz Stajı Üretim", "company": "Acme", "score": 60, "first_seen": "2026-11-05T10:00:00+00:00",
+            "a": {"id": "a", "title": "Yaz Stajı Üretim", "company": "Acme", "score": 60, "first_seen": "2026-11-08T05:00:00+00:00",
                   "deadline": "2026-11-10"},
             "b": {"id": "b", "title": "Eski ilan", "company": "Eski", "score": 50, "first_seen": "2026-10-01T10:00:00+00:00"},
-            "c": {"id": "c", "title": "Alakasız", "company": "Z", "score": 5, "first_seen": "2026-11-06T10:00:00+00:00"},
+            "c": {"id": "c", "title": "Alakasız", "company": "Z", "score": 5, "first_seen": "2026-11-08T06:00:00+00:00"},
         }
-        subj, body = radar.build_digest(jobs, {"applied_week": 3, "applied_total": 5, "waiting": 4, "interview": 1, "known": 2}, today, 28, now)
-        self.assertIn("haftalık", subj.lower())
-        self.assertIn("Bu hafta 1 yeni uygun ilan", body)
+        progs = [{"name": "Ulusal Staj Programı", "deadline": "2026-12-14"}, {"name": "Eski Program", "deadline": "2026-10-01"}]
+        subj, body = radar.build_digest(jobs, {"applied_week": 3, "applied_total": 5, "waiting": 4, "interview": 1, "known": 2}, today, 28, now, progs)
+        self.assertIn("günlük", subj.lower())
+        self.assertIn("Son 24 saatte 1 yeni uygun ilan", body)
+        self.assertIn("Yaz Stajı Üretim — Acme", body)
+        self.assertNotIn("Alakasız", body)
         self.assertIn("2 gün: Yaz Stajı Üretim", body)
+        self.assertIn("Ulusal Staj Programı: son başvuruya 36 gün kaldı", body)
+        self.assertNotIn("Eski Program", body)
         self.assertIn("bu hafta 3, toplam 5", body)
-        self.assertIn("Tanıdığın olan 2", body)
+        # yeni ilan yokken de özet çıkar
+        _, empty = radar.build_digest({"b": jobs["b"]}, {}, today, 28, now)
+        self.assertIn("Son 24 saatte yeni uygun ilan yok", empty)
+
+    def test_digest_sent_once_per_day_on_schedule_only(self):
+        import os
+        page = {}
+
+        def fake(url, headers=None, timeout=25, retries=2, data=None):
+            return ""
+        radar.http_get = fake
+        old = os.environ.get("SEND_DIGEST")
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                cdir = Path(d) / "cfg"
+                cdir.mkdir()
+                (cdir / "profile.json").write_text(json.dumps(self.prof))
+                off = {"enabled": False}
+                (cdir / "sources.json").write_text(json.dumps({"youthall": off, "arbeitnow": off, "adzuna": off, "rss": off, "careers": off, "pages": off}))
+                data = Path(d) / "jobs.json"
+                data.write_text(json.dumps({"meta": {}, "jobs": {"a": {"id": "a", "title": "Yaz Stajı", "company": "Acme", "url": "https://a.test/1",
+                    "source": "x", "score": 60, "first_seen": "2026-01-01T00:00:00+00:00", "last_seen": "2999-01-01T00:00:00+00:00",
+                    "location": "Bursa", "country": "TR", "region": "bursa", "km": 0, "reasons": [], "tags": []}}, "announcements": {}, "events": []}))
+                args = Namespace(dry_run=True, no_notify=False, force=True, data=str(data), config_dir=str(cdir))
+                os.environ.pop("SEND_DIGEST", None)
+                radar.run(args)  # elle/schedule dışı: özet yok
+                s = json.loads(data.read_text())
+                self.assertFalse([e for e in s["events"] if e["title"] == "Günlük özet"])
+                os.environ["SEND_DIGEST"] = "1"
+                radar.run(args)
+                radar.run(args)  # aynı gün ikinci kez: tekrar yok
+                s = json.loads(data.read_text())
+                self.assertEqual(len([e for e in s["events"] if e["title"] == "Günlük özet"]), 1)
+        finally:
+            if old is None:
+                os.environ.pop("SEND_DIGEST", None)
+            else:
+                os.environ["SEND_DIGEST"] = old
 
     def test_new_access_requests(self):
         import os
