@@ -413,7 +413,7 @@
     ]
   },
   "jooble": {
-    "enabled": true,
+    "enabled": false,
     "min_interval_hours": 24,
     "queries": [
       {
@@ -449,6 +449,7 @@
         "location": "İstanbul"
       }
     ],
-    "domain": "tr.jooble.org"
+    "domain": "jooble.org",
+    "note": "Anahtar yalnızca ABD dizinine (jooble.org) bağlı; Türkiye ilanı vermiyor, tr.jooble.org 403. Jooble Türkiye erişimi verirse domain=tr.jooble.org ile açılır"
   }
 }
