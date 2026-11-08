@@ -45,7 +45,28 @@
   },
   "rss": {
     "enabled": true,
-    "feeds": []
+    "feeds": [
+      {
+        "name": "Google Uyarısı: Kariyer.net staj Bursa",
+        "url": "https://www.google.com/alerts/feeds/16864758251733615796/10989291941963369900",
+        "country": "TR"
+      },
+      {
+        "name": "Google Uyarısı: LinkedIn staj Bursa",
+        "url": "https://www.google.com/alerts/feeds/16864758251733615796/9688258188483454386",
+        "country": "TR"
+      },
+      {
+        "name": "Google Uyarısı: yaz stajı üretim Bursa",
+        "url": "https://www.google.com/alerts/feeds/16864758251733615796/6108326049712957760",
+        "country": "TR"
+      },
+      {
+        "name": "Google Uyarısı: LinkedIn intern production Bursa",
+        "url": "https://www.google.com/alerts/feeds/16864758251733615796/17012852321330983689",
+        "country": "TR"
+      }
+    ]
   },
   "careers": {
     "enabled": true,
