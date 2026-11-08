@@ -125,6 +125,15 @@
         "must": [
           "staj"
         ]
+      },
+      {
+        "name": "Tofaş yaz stajı sayfası",
+        "url": "https://tofas.com.tr/en/Career/JoinUs/Pages/SummerInternshipProgram.aspx",
+        "notify": "important",
+        "must": [
+          "staj",
+          "intern"
+        ]
       }
     ]
   },
@@ -388,5 +397,19 @@
       "note": "Uludağ Kariyer Fuarı'nda genel başvuru topluyor"
     }
   ],
-  "companies_source": "Bursa'nın ISO 500 şirketleri (Ekonomi Gazetesi) ve kariyer.net/Youthall'da staj ilanı çıkaran firmalar. Mavi 'kariyer sayfası' olmayanlar için arama bağlantısı var; resmi kariyer sayfasını oradan bulup kontrol et."
+  "companies_source": "Bursa'nın ISO 500 şirketleri (Ekonomi Gazetesi) ve kariyer.net/Youthall'da staj ilanı çıkaran firmalar. Mavi 'kariyer sayfası' olmayanlar için arama bağlantısı var; resmi kariyer sayfasını oradan bulup kontrol et.",
+  "ats": {
+    "enabled": true,
+    "sites": [
+      {
+        "name": "Bosch",
+        "type": "smartrecruiters",
+        "id": "BoschGroup",
+        "country": "TR",
+        "q": "intern",
+        "city": "Bursa",
+        "note": "Doğrulanmadı: ilk taramada hata verirse Kaynak sekmesinde görünür"
+      }
+    ]
+  }
 }

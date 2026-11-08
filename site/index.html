@@ -104,6 +104,12 @@
   .kw { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
   .kw .tag.ok { background: var(--accent-soft); color: var(--accent); }
   .kw .tag.miss { background: var(--warn-soft); color: var(--warn); }
+  .subtabs { display: flex; gap: 6px; flex-wrap: wrap; margin: -6px 0 14px; }
+  .subtabs:empty { display: none; }
+  .why { margin-top: 6px; font-size: .84rem; color: var(--accent); }
+  .lbl { display: block; margin: 12px 0 4px; font-size: .86rem; color: var(--muted); }
+  .panel .field, .panel select { width: 100%; box-sizing: border-box; border-radius: 8px; }
+  .panel .chk2 { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-size: .9rem; }
   [hidden] { display: none !important; }
   @media (max-width: 480px) { .card { grid-template-columns: 42px 1fr; } .score { width: 42px; height: 42px; } }
 </style>
@@ -124,10 +130,36 @@
       <div class="sub"><span id="status">yükleniyor…</span><button class="link" id="btnRefresh">Yenile</button><button class="link" id="btnLogout">Çıkış</button></div>
     </header>
     <nav class="tabs" id="tabs" role="tablist"></nav>
+    <nav class="subtabs" id="subtabs" aria-label="Alt bölümler"></nav>
 
     <section class="pane" id="p-yeni" hidden>
-      <div class="bar"><span class="hint" id="newInfo" style="margin:0"></span><button class="chip" id="btnSeen" style="margin-left:auto">Gördüm, temizle</button></div>
+      <div id="todayPicks"></div>
+      <div id="todayDue"></div>
+      <div class="bar" style="margin-top:18px"><span class="hint" id="newInfo" style="margin:0"></span><button class="chip" id="btnSeen" style="margin-left:auto">Gördüm, temizle</button></div>
       <div id="newList"></div>
+    </section>
+
+    <section class="pane" id="p-tercih" hidden>
+      <p class="hint">Bugün sekmesindeki “Sana özel” liste buradaki ayarlara ve kartlardaki 👍 / 👎 seçimlerine göre kişiselleşir. Hiçbir ilan silinmez: 👎 dediğin ilan Diğer sekmesine geçer, 👍 ile geri alabilirsin.</p>
+      <div class="panel">
+        <h2>Sana özel puan</h2>
+        <label class="lbl" for="pfInc">Aradığım kelimeler (virgülle; geçen ilanların puanı artar)</label>
+        <input class="field" type="text" id="pfInc" placeholder="örn: kalite, planlama, yalın üretim, bakım">
+        <label class="lbl" for="pfExc">İstemediğim kelimeler (puanı düşer)</label>
+        <input class="field" type="text" id="pfExc" placeholder="örn: satış, çağrı merkezi, muhasebe">
+        <label class="lbl" for="pfKm">Bursa'dan en fazla</label>
+        <select id="pfKm"><option value="0">Sınırsız</option><option value="30">30 km</option><option value="60">60 km</option><option value="100">100 km</option><option value="150">150 km</option><option value="250">250 km</option></select>
+        <label class="lbl" for="pfLevel">Bugün sekmesinin seçiciliği</label>
+        <select id="pfLevel"><option value="60">Sıkı: yalnızca en iyiler</option><option value="50">Dengeli</option><option value="40">Geniş: daha fazla ilan</option></select>
+        <label class="chk2"><input type="checkbox" id="pfDe"> Almanca isteyebilecek ilanların puanını düşür</label>
+        <label class="chk2"><input type="checkbox" id="pfAbroad"> Yurt dışı ilanları da “Sana özel”de göster</label>
+        <div class="bar" style="margin-top:14px"><button class="btn on" id="pfSave">Kaydet</button><span class="meta" id="pfMsg"></span></div>
+      </div>
+      <div class="panel">
+        <h2>Öğrendiklerim</h2>
+        <div class="meta" id="pfLearn"></div>
+        <div class="bar" style="margin-top:10px"><button class="btn" id="pfReset">👍/👎 geçmişini sıfırla</button></div>
+      </div>
     </section>
 
     <section class="pane" id="p-bildirimler" hidden>
@@ -169,7 +201,7 @@
     </section>
 
     <section class="pane" id="p-diger" hidden>
-      <p class="hint">Puanı düşük kaldığı için ana listelerden ayırdığım ilanlar: alakasız ya da pek uymayanlar. Hiçbiri silinmez, buradan da bakabilirsin.</p>
+      <p class="hint">Puanı düşük kaldığı ya da 👎 dediğin için ana listelerden ayırdığım ilanlar. Hiçbiri silinmez; 👍 ile ana listeye geri alabilirsin.</p>
       <div class="bar" id="farFilters" role="group" aria-label="Konum"></div>
       <div class="bar"><input type="search" id="q3" placeholder="Ara: firma, başlık, şehir…" aria-label="Ara"></div>
       <div id="listFar"></div>
@@ -283,12 +315,19 @@
   var REGIONS = [["all", "Hepsi"], ["bursa", "Bursa"], ["yakin", "Yakın (≤200 km)"], ["orta", "Orta (≤450 km)"], ["uzak", "Uzak"], ["belirsiz", "Konum yok"]];
   var REGION_TITLE = { bursa: "Bursa", yakin: "Yakın şehirler (≤200 km)", orta: "Orta uzaklık (≤450 km)", uzak: "Uzak şehirler", belirsiz: "Konum belirtilmemiş" };
   var REGION_ORDER = { bursa: 0, yakin: 1, orta: 2, uzak: 3, belirsiz: 4 };
-  var TABS = [["yeni", "Yeni"], ["bildirimler", "Bildirim"], ["yurtici", "Yurt içi"], ["yurtdisi", "Yurt dışı"], ["linkedin", "LinkedIn"], ["diger", "Diğer"], ["firmalar", "Firmalar"], ["takip", "Takip"], ["belgeler", "Belgeler"], ["duyurular", "Duyuru"], ["cv", "CV"], ["kaynaklar", "Kaynak"]];
+  var GROUPS = [
+    ["yeni", "Bugün", [["yeni", "Bugün"]]],
+    ["ilanlar", "İlanlar", [["yurtici", "Yurt içi"], ["yurtdisi", "Yurt dışı"], ["linkedin", "LinkedIn"], ["diger", "Diğer"]]],
+    ["basvuru", "Başvurularım", [["takip", "Takip"], ["firmalar", "Firmalar"], ["belgeler", "Belgeler"]]],
+    ["ayar", "Ayarlar", [["tercih", "Tercihler"], ["cv", "CV"], ["bildirimler", "Bildirim"], ["duyurular", "Duyuru"], ["kaynaklar", "Kaynak"]]]
+  ];
+  function tabList() { var o = []; GROUPS.forEach(function (g) { g[2].forEach(function (t) { o.push(t); }); }); return o; }
+  function groupOf(t) { for (var i = 0; i < GROUPS.length; i++) if (GROUPS[i][2].some(function (x) { return x[0] === t; })) return GROUPS[i]; return GROUPS[0]; }
   var STATUSES = [["saved", "★ Kaydedildi"], ["applied", "Başvurdum"], ["interview", "Mülakat"], ["offer", "Kabul/Teklif"], ["rejected", "Olumsuz"]];
   var ACTIVE_AFTER = ["applied", "interview", "offer", "rejected"];
   var COUNTRY = { DE: "Almanya", GB: "Birleşik Krallık", NL: "Hollanda", AT: "Avusturya", CH: "İsviçre", FR: "Fransa" };
 
-  var state = { farFilter: "all", q3: "", dueOnly: false, firmFilter: "all", cvLang: "tr", cvJob: null, region: "all", q: "", sort: "km", onlyNew: false, country: "all", q2: "", sort2: "score", evFilter: "all", annFilter: "all", showHidden: false, open: {}, mailKind: "ilk", liTime: "r604800", liIntern: false };
+  var state = { farFilter: "all", q3: "", dueOnly: false, firmFilter: "all", cvLang: "tr", cvJob: null, region: "all", q: "", sort: "km", onlyNew: false, country: "all", q2: "", sort2: "score", evFilter: "all", annFilter: "all", showHidden: false, open: {}, cardOpen: {}, sub: {}, picksAll: false, mailKind: "ilk", liTime: "r604800", liIntern: false };
   var tab = "yeni", newSince = null, seenSaved = false;
   var user = null, jobs = [], meta = {}, events = [], anns = [], marks = {}, briefs = {}, checked = {}, lastRead = 0, profile = { cv_tr: "", cv_en: "" };
 
@@ -308,7 +347,56 @@
   function daysLeft(d) { return d ? Math.round((new Date(d + "T00:00:00") - new Date(new Date().toDateString())) / 86400000) : null; }
   function isNew(j) { return Date.now() - new Date(j.first_seen).getTime() < 48 * 3600 * 1000; }
   function isAbroad(j) { return (j.country || "TR") !== "TR"; }
-  function isFar(j) { return j.score < ((meta && meta.far_below) || 28); }
+  /* ---- kişisel puan: tercihler + 👍/👎 öğrenmesi ---- */
+  function defaultPrefs() { return { inc: "", exc: "", maxKm: 0, level: 50, noGerman: true, abroad: false, votes: {} }; }
+  function mergePrefs(p) { var d = Object.assign(defaultPrefs(), p || {}); if (!d.votes || typeof d.votes !== "object") d.votes = {}; return d; }
+  var prefs = defaultPrefs(), prefsDirty = false, fitCache = {}, learnCache = null;
+  var STOP = { staj: 1, stajyer: 1, stajyeri: 1, intern: 1, internship: 1, yaz: 1, donemi: 1, donem: 1, programi: 1, program: 1, summer: 1, icin: 1, the: 1, and: 1, with: 1 };
+  function usable(t) { return t.length >= 4 && !STOP[t] && t.indexOf("staj") !== 0 && t.indexOf("intern") !== 0; }
+  function cfold(s) { return (s || "").toLocaleLowerCase("tr").replace(/ı/g, "i").replace(/ş/g, "s").replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ö/g, "o").replace(/ç/g, "c").replace(/[^a-z0-9]+/g, " "); }
+  function words(list) { return (list || "").split(",").map(function (x) { return cfold(x).trim(); }).filter(Boolean); }
+  function learnModel() {
+    if (learnCache) return learnCache;
+    var firm = {}, tok = {};
+    jobs.forEach(function (j) {
+      var v = prefs.votes[j.id], st = status(j), w = 0;
+      if (v === 1) w = 1; else if (v === -1) w = -1;
+      else if (["saved", "applied", "interview", "offer"].indexOf(st) >= 0) w = 1;
+      else if (st === "hidden") w = -1;
+      if (!w) return;
+      var f = cfold(j.company).trim(); if (f) firm[f] = (firm[f] || 0) + w;
+      var seen = {};
+      cfold(j.title).split(" ").forEach(function (t) { if (usable(t) && !seen[t]) { seen[t] = 1; tok[t] = (tok[t] || 0) + w; } });
+    });
+    learnCache = { firm: firm, tok: tok };
+    return learnCache;
+  }
+  function fitInfo(j) {
+    if (fitCache[j.id]) return fitCache[j.id];
+    var s = j.score, plus = [], minus = [], L = learnModel();
+    var txt = " " + cfold([j.title, j.company, j.snippet].join(" ")) + " ";
+    var hit = words(prefs.inc).filter(function (w) { return txt.indexOf(w) >= 0; });
+    if (hit.length) { s += Math.min(15, hit.length * 5); plus.push("aradığın: " + hit.slice(0, 3).join(", ")); }
+    var bad = words(prefs.exc).filter(function (w) { return txt.indexOf(w) >= 0; });
+    if (bad.length) { s -= Math.min(30, bad.length * 15); minus.push("istemediğin kelime: " + bad.slice(0, 2).join(", ")); }
+    if (!isAbroad(j)) {
+      if (j.region === "bursa") plus.push("Bursa'da");
+      else if (j.km != null) plus.push("~" + j.km + " km");
+      if (prefs.maxKm > 0 && j.km != null && j.km > prefs.maxKm) { s -= 20; minus.push("sınırından uzak (~" + j.km + " km)"); }
+    }
+    if (prefs.noGerman && (j.tags || []).indexOf("almanca") >= 0) { s -= 20; minus.push("Almanca isteyebilir"); }
+    var fw = L.firm[cfold(j.company).trim()] || 0;
+    if (fw) { s += Math.max(-2, Math.min(2, fw)) * 10; (fw > 0 ? plus : minus).push(fw > 0 ? "bu firmayı beğenmiştin" : "bu firmadan eleme yapmıştın"); }
+    var net = 0, seen = {};
+    cfold(j.title).split(" ").forEach(function (t) { if (usable(t) && !seen[t]) { seen[t] = 1; net += L.tok[t] || 0; } });
+    if (net) { s += Math.max(-12, Math.min(12, net * 3)); if (Math.abs(net) >= 2) (net > 0 ? plus : minus).push(net > 0 ? "benzer ilanları beğenmiştin" : "benzerlerini elemiştin"); }
+    (j.reasons || []).filter(function (r) { return r !== "staj ilanı" && r.charAt(0) !== "-"; }).slice(0, 2).forEach(function (r) { plus.push(r); });
+    var out = { score: Math.max(0, Math.min(100, Math.round(s))), why: plus.concat(minus).slice(0, 5).join(" · ") };
+    fitCache[j.id] = out; return out;
+  }
+  function isFar(j) { var v = prefs.votes[j.id]; if (v === -1) return true; if (v === 1) return false; return fitInfo(j).score < ((meta && meta.far_below) || 28); }
+  function savePrefs() { if (user) sb.from("staj_profile").upsert({ email: user.email, prefs: prefs, updated_at: new Date().toISOString() }, { onConflict: "email" }).then(function () {}); }
+  function voteJob(j, v) { if (prefs.votes[j.id] === v) delete prefs.votes[j.id]; else prefs.votes[j.id] = v; savePrefs(); renderAll(); }
   function status(j) { var m = marks[j.id]; return m && m.status !== "known" ? m.status : null; }
 
   /* ---------------- giriş ---------------- */
@@ -352,7 +440,7 @@
       $("loginView").hidden = true; $("appView").hidden = false;
       sb.rpc("staj_is_admin").then(function (a) {
         if (a.data === true) {
-          isAdmin = true; TABS.push(["erisim", "Erişim"]);
+          isAdmin = true; GROUPS[3][2].push(["erisim", "Erişim"]);
           if (location.hash === "#erisim") tab = "erisim";
           loadAccess();
         }
@@ -410,7 +498,7 @@
     Promise.all([
       sb.from("staj_state").select("data").eq("id", 1).maybeSingle(),
       sb.from("staj_marks").select("job_id,status,note,contact,applied_at,person"),
-      sb.from("staj_profile").select("cv_tr,cv_en,checklist,last_seen").maybeSingle(),
+      sb.from("staj_profile").select("cv_tr,cv_en,checklist,last_seen,prefs").maybeSingle(),
       sb.from("staj_briefs").select("firm_key,firm_name,content,updated_at")
     ]).then(function (res) {
       briefs = {};
@@ -420,7 +508,7 @@
       meta = d.meta || {}; events = d.events || [];
       jobs = Object.keys(d.jobs || {}).map(function (k) { return d.jobs[k]; });
       anns = Object.keys(d.announcements || {}).map(function (k) { return d.announcements[k]; });
-      if (res[2] && res[2].data) { profile = { cv_tr: res[2].data.cv_tr || "", cv_en: res[2].data.cv_en || "", checklist: res[2].data.checklist || null, last_seen: res[2].data.last_seen || null }; }
+      if (res[2] && res[2].data) { profile = { cv_tr: res[2].data.cv_tr || "", cv_en: res[2].data.cv_en || "", checklist: res[2].data.checklist || null, last_seen: res[2].data.last_seen || null, prefs: res[2].data.prefs || null }; if (!prefsDirty) prefs = mergePrefs(res[2].data.prefs); }
       if (newSince === null) newSince = profile.last_seen ? new Date(profile.last_seen).getTime() : Date.now() - 3 * 86400000;
       marks = {};
       ((res[1].data) || []).forEach(function (m) {
@@ -488,19 +576,29 @@
   function unreadCount() { return events.filter(function (e) { return new Date(e.ts).getTime() > lastRead && e.type !== "sistem"; }).length; }
   function renderTabs() {
     var box = $("tabs"); box.textContent = "";
-    TABS.forEach(function (t) {
-      var b = el("button", "tab", t[1]);
-      b.setAttribute("role", "tab"); b.setAttribute("aria-selected", String(tab === t[0]));
-      if (t[0] === "yeni") { var nc = newItems().total; if (nc) b.appendChild(el("span", "badge", String(nc))); }
-      if (t[0] === "bildirimler" && unreadCount()) b.appendChild(el("span", "badge", String(unreadCount())));
-      if (t[0] === "erisim") { var np = access.requests.filter(function (x) { return x.status === "bekliyor"; }).length; if (np) b.appendChild(el("span", "badge", String(np))); }
-      b.onclick = function () { setTab(t[0]); };
+    var cur = groupOf(tab), np = isAdmin && access && access.requests ? access.requests.filter(function (x) { return x.status === "bekliyor"; }).length : 0;
+    GROUPS.forEach(function (g) {
+      var b = el("button", "tab", g[1]);
+      b.setAttribute("role", "tab"); b.setAttribute("aria-selected", String(g === cur));
+      if (g[0] === "yeni") { var nc = newItems().total; if (nc) b.appendChild(el("span", "badge", String(nc))); }
+      if (g[0] === "ayar" && np) b.appendChild(el("span", "badge", String(np)));
+      b.onclick = function () { setTab(state.sub[g[0]] || g[2][0][0]); };
       box.appendChild(b);
     });
-    TABS.forEach(function (t) { $("p-" + t[0]).hidden = tab !== t[0]; });
+    var sb2 = $("subtabs"); sb2.textContent = "";
+    if (cur[2].length > 1) {
+      cur[2].forEach(function (t) {
+        var b = el("button", "chip", t[1]); b.setAttribute("aria-pressed", String(tab === t[0]));
+        if (t[0] === "bildirimler" && unreadCount()) b.appendChild(el("span", "badge", String(unreadCount())));
+        if (t[0] === "erisim" && np) b.appendChild(el("span", "badge", String(np)));
+        b.onclick = function () { setTab(t[0]); };
+        sb2.appendChild(b);
+      });
+    }
+    tabList().forEach(function (t) { var p = $("p-" + t[0]); if (p) p.hidden = tab !== t[0]; });
     var n = unreadCount(); document.title = (n ? "(" + n + ") " : "") + "Staj Radar";
   }
-  function setTab(t) { tab = t; try { history.replaceState(null, "", "#" + t); } catch (e) {} renderAll(); }
+  function setTab(t) { tab = t; state.sub[groupOf(t)[0]] = t; try { history.replaceState(null, "", "#" + t); } catch (e) {} renderAll(); }
 
   /* ---------------- yeni (son ziyaretten beri) ---------------- */
   function newItems() {
@@ -523,19 +621,72 @@
     if (clear) renderAll();
   }
   $("btnSeen").onclick = function () { markSeen(true); };
+  function picksList() {
+    return jobs.filter(function (j) {
+      var st = status(j);
+      if (!visibleBase(j) || st === "saved" || isFar(j)) return false;
+      if (isAbroad(j) && !prefs.abroad) return false;
+      return fitInfo(j).score >= prefs.level;
+    }).sort(function (a, b) { return fitInfo(b).score - fitInfo(a).score || (a.km == null ? 9999 : a.km) - (b.km == null ? 9999 : b.km); });
+  }
+  function lookupItem(id) {
+    var o = null;
+    jobs.forEach(function (j) { if (j.id === id) o = j; });
+    if (o) return o;
+    (meta.companies || []).forEach(function (c) { var f = firmJob(c); if (f.id === id) o = f; });
+    (meta.watchlist || []).forEach(function (w) { if (w.pin) { var p = progJob(w); if (p.id === id) o = p; } });
+    return o;
+  }
+  function dueRows() {
+    var rows = [];
+    jobs.forEach(function (j) {
+      var d = daysLeft(j.deadline);
+      if (d !== null && d >= 0 && d <= 14 && visibleBase(j) && !isFar(j) && status(j) !== "applied") rows.push({ k: d, text: "⏳ " + (d === 0 ? "son gün bugün" : d + " gün kaldı"), title: j.title + " — " + j.company, url: j.url });
+    });
+    (meta.watchlist || []).forEach(function (w) {
+      var d = daysLeft(w.deadline), p = progJob(w), st = status(p);
+      if (d !== null && d >= 0 && d <= 30 && st !== "applied") rows.push({ k: d, text: "⏳ " + (d === 0 ? "son gün bugün" : d + " gün kaldı"), title: w.name, url: w.url });
+    });
+    Object.keys(marks).forEach(function (id) {
+      var m = marks[id]; if (m.status !== "applied" || !m.applied_at || id.indexOf("prog:") === 0) return;
+      var d = Math.floor((Date.now() - new Date(m.applied_at + "T00:00:00").getTime()) / 86400000), it = lookupItem(id);
+      if (d >= 7 && it) rows.push({ k: 100 - Math.min(d, 99), text: "✉ takip zamanı · " + d + " gün önce başvurdun", title: it.title + (it.company ? " — " + it.company : ""), url: it.url });
+    });
+    return rows.sort(function (a, b) { return a.k - b.k; });
+  }
   function renderNew() {
     var n = newItems(), box = $("newList"); box.textContent = "";
+    var pb = $("todayPicks"); pb.textContent = "";
+    var picks = picksList(), shown = state.picksAll ? picks : picks.slice(0, 5), shownIds = {};
+    var h = el("div", "group"); h.appendChild(el("span", null, "Sana özel · " + picks.length));
+    var tune = el("button", "link", "ayarla"); tune.onclick = function () { setTab("tercih"); }; h.appendChild(tune); pb.appendChild(h);
+    if (!picks.length) pb.appendChild(el("div", "empty", jobs.length ? "Şu an seçiciliği geçen ilan yok. Tercihler'den seçiciliği genişletebilir ya da İlanlar sekmesine bakabilirsin." : "Henüz ilan yok."));
+    shown.forEach(function (j) { shownIds[j.id] = 1; pb.appendChild(card(j, { why: true })); });
+    if (picks.length > 5) {
+      var more = el("button", "chip", state.picksAll ? "Daha az göster" : "Tümünü göster (" + picks.length + ")");
+      more.onclick = function () { state.picksAll = !state.picksAll; renderAll(); }; pb.appendChild(more);
+    }
+    var db = $("todayDue"); db.textContent = "";
+    var dr = dueRows();
+    if (dr.length) {
+      db.appendChild(el("div", "group", "Yaklaşanlar ve yapılacaklar"));
+      dr.slice(0, 8).forEach(function (r) {
+        var row = el("div", "row"), left = el("div"), t = el("h2", "title");
+        t.appendChild(ext(el("a", null, r.title), r.url)); left.appendChild(t); left.appendChild(el("div", "meta", r.text)); row.appendChild(left); db.appendChild(row);
+      });
+    }
     $("newInfo").textContent = newSince == null ? "" : n.total
-      ? n.total + " yeni kayıt · son bakışından beri (" + ago(new Date(newSince).toISOString()) + ")"
+      ? "Son bakışından beri " + n.total + " yeni kayıt (" + ago(new Date(newSince).toISOString()) + ")"
       : "Son bakışından beri yeni bir şey yok.";
     $("btnSeen").hidden = !n.total;
     if (tab === "yeni" && !seenSaved && newSince != null) markSeen(false);
-    if (!n.total) { box.appendChild(el("div", "empty", "Yeni ilan veya duyuru yok. Tarama her gün 16:00'da çalışır.")); return; }
-    if (n.good.length) { box.appendChild(el("div", "group", "Yeni ilanlar (" + n.good.length + ")")); n.good.forEach(function (j) { box.appendChild(card(j)); }); }
-    if (n.far.length) { box.appendChild(el("div", "group", "İstenilenden uzak (" + n.far.length + ")")); n.far.forEach(function (j) { box.appendChild(card(j)); }); }
-    if (n.anns.length) {
-      box.appendChild(el("div", "group", "Yeni duyurular (" + n.anns.length + ")"));
-      n.anns.slice(0, 40).forEach(function (a) {
+    var good = n.good.filter(function (j) { return !shownIds[j.id]; }), far = n.far, an = n.anns;
+    if (n.total && !good.length && !far.length && !an.length) { box.appendChild(el("div", "empty", "Yeni gelenlerin hepsi yukarıdaki “Sana özel” listesinde.")); return; }
+    if (good.length) { box.appendChild(el("div", "group", "Yeni ilanlar (" + good.length + ")")); good.forEach(function (j) { box.appendChild(card(j)); }); }
+    if (far.length) { box.appendChild(el("div", "group", "Diğer sekmesine giden yeniler (" + far.length + ")")); far.forEach(function (j) { box.appendChild(card(j)); }); }
+    if (an.length) {
+      box.appendChild(el("div", "group", "Yeni duyurular (" + an.length + ")"));
+      an.slice(0, 40).forEach(function (a) {
         var r = el("div", "row"), left = el("div"), t = el("h2", "title");
         t.appendChild(ext(el("a", null, a.title), a.url)); left.appendChild(t);
         left.appendChild(el("div", "meta", a.site)); r.appendChild(left);
@@ -544,6 +695,31 @@
       });
     }
   }
+
+  /* ---------------- tercihler ---------------- */
+  function renderPrefs() {
+    if (!prefsDirty) {
+      $("pfInc").value = prefs.inc || ""; $("pfExc").value = prefs.exc || ""; $("pfKm").value = String(prefs.maxKm || 0);
+      $("pfLevel").value = String(prefs.level || 50); $("pfDe").checked = !!prefs.noGerman; $("pfAbroad").checked = !!prefs.abroad;
+    }
+    var L = learnModel(), v = prefs.votes, ups = 0, downs = 0;
+    Object.keys(v).forEach(function (k) { if (v[k] === 1) ups++; else if (v[k] === -1) downs++; });
+    function top(m, sign) { return Object.keys(m).filter(function (k) { return m[k] * sign > 0; }).sort(function (a, b) { return m[b] * sign - m[a] * sign; }).slice(0, 3); }
+    var lines = [ups + " ilana 👍, " + downs + " ilana 👎 verdin; kaydettiklerin ve gizlediklerin de öğrenmeye katılıyor."];
+    var tu = top(L.firm, 1), td = top(L.firm, -1), kt = top(L.tok, 1), kd = top(L.tok, -1);
+    if (tu.length) lines.push("Öne çıkardığım firmalar: " + tu.join(", "));
+    if (td.length) lines.push("Geriye ittiğim firmalar: " + td.join(", "));
+    if (kt.length) lines.push("Beğendiğin başlık kelimeleri: " + kt.join(", "));
+    if (kd.length) lines.push("Elediğin başlık kelimeleri: " + kd.join(", "));
+    $("pfLearn").textContent = lines.join("\n"); $("pfLearn").style.whiteSpace = "pre-line";
+  }
+  ["pfInc", "pfExc", "pfKm", "pfLevel", "pfDe", "pfAbroad"].forEach(function (id) { $(id).addEventListener("input", function () { prefsDirty = true; $("pfMsg").textContent = ""; }); $(id).addEventListener("change", function () { prefsDirty = true; }); });
+  $("pfSave").onclick = function () {
+    prefs.inc = $("pfInc").value.trim(); prefs.exc = $("pfExc").value.trim(); prefs.maxKm = parseInt($("pfKm").value, 10) || 0;
+    prefs.level = parseInt($("pfLevel").value, 10) || 50; prefs.noGerman = $("pfDe").checked; prefs.abroad = $("pfAbroad").checked;
+    prefsDirty = false; savePrefs(); $("pfMsg").textContent = "Kaydedildi ✓"; renderAll();
+  };
+  $("pfReset").onclick = function () { prefs.votes = {}; savePrefs(); renderAll(); };
 
   /* ---------------- bildirimler ---------------- */
   function dayLabel(iso) {
@@ -590,11 +766,12 @@
   }
 
   /* ---------------- ilan kartı ---------------- */
-  function card(j) {
-    var st = status(j);
+  function card(j, opt) {
+    opt = opt || {};
+    var st = status(j), fi = fitInfo(j), open = !!state.cardOpen[j.id], vt = prefs.votes[j.id];
     var dlc = daysLeft(j.deadline);
     var c = el("article", "card" + (dlc !== null && dlc <= 14 ? " dueSoon" : ""));
-    c.appendChild(el("div", "score" + (j.score < 35 ? " low" : j.score < 55 ? " mid" : ""), String(j.score)));
+    c.appendChild(el("div", "score" + (fi.score < 35 ? " low" : fi.score < 55 ? " mid" : ""), String(fi.score)));
     var body = el("div"), t = el("h2", "title");
     t.appendChild(ext(el("a", null, j.title || "(başlıksız)"), j.url)); body.appendChild(t);
     var where = j.location || (COUNTRY[j.country] || j.country);
@@ -602,26 +779,36 @@
     body.appendChild(el("div", "meta", [j.company, where].filter(Boolean).join(" · ")));
     var tags = el("div", "tags");
     if (isNew(j)) tags.appendChild(el("span", "tag new", "yeni"));
-    var dl = daysLeft(j.deadline);
-    if (dl !== null) tags.appendChild(el("span", "tag" + (dl <= 14 ? " due" : ""), (dl <= 14 ? "⏳ " : "") + (dl <= 0 ? "son gün" : "son başvuru " + dl + " gün")));
-    if ((j.tags || []).indexOf("uzaktan") >= 0) tags.appendChild(el("span", "tag", "uzaktan"));
+    if (dlc !== null) tags.appendChild(el("span", "tag" + (dlc <= 14 ? " due" : ""), (dlc <= 14 ? "⏳ " : "") + (dlc <= 0 ? "son gün" : "son başvuru " + dlc + " gün")));
     if ((j.tags || []).indexOf("almanca") >= 0) tags.appendChild(el("span", "tag soon", "Almanca olabilir"));
-    tags.appendChild(el("span", "tag", j.source));
+    if (vt === -1) tags.appendChild(el("span", "tag soon", "elediğin ilan"));
     markTags(tags, j);
-    (j.reasons || []).filter(function (r) { return r !== "staj ilanı"; }).slice(0, 5).forEach(function (r) {
-      tags.appendChild(el("span", "tag" + (r.charAt(0) === "-" ? " soon" : ""), r));
-    });
-    body.appendChild(tags);
+    if (tags.childNodes.length) body.appendChild(tags);
+    if ((opt.why || open) && fi.why) body.appendChild(el("div", "why", fi.why));
     var act = el("div", "actions");
     act.appendChild(ext(el("a", "btn", "İlana git"), j.url));
-    [["saved", "★ Kaydet"], ["applied", "✓ Başvurdum"], ["hidden", "Gizle"]].forEach(function (p) {
-      var b = el("button", "btn" + (st === p[0] ? " on" : ""), p[1]);
-      b.onclick = function () { toggleMark(j, p[0]); }; act.appendChild(b);
-    });
-    var cvb = el("button", "btn", "CV'yi uyarla"); cvb.onclick = function () { openCv(j); }; act.appendChild(cvb);
-    briefBtn(act, { name: j.company, title: j.title, location: j.location || (COUNTRY[j.country] || j.country), url: j.url });
-    liBtns(act, j.company);
-    body.appendChild(act); personUi(j, act, body); c.appendChild(body); return c;
+    var sv = el("button", "btn" + (st === "saved" ? " on" : ""), "★ Kaydet"); sv.onclick = function () { toggleMark(j, "saved"); }; act.appendChild(sv);
+    var up = el("button", "btn" + (vt === 1 ? " on" : ""), "👍"); up.title = "Bana uygun: benzerlerini öne çıkar"; up.setAttribute("aria-label", "Uygun"); up.onclick = function () { voteJob(j, 1); }; act.appendChild(up);
+    var dn = el("button", "btn" + (vt === -1 ? " on" : ""), "👎"); dn.title = "Değil: Diğer sekmesine geç, benzerlerini düşür"; dn.setAttribute("aria-label", "Değil"); dn.onclick = function () { voteJob(j, -1); }; act.appendChild(dn);
+    var mo = el("button", "btn", open ? "Ayrıntı ▴" : "Ayrıntı ▾"); mo.onclick = function () { state.cardOpen[j.id] = !open; renderAll(); }; act.appendChild(mo);
+    body.appendChild(act);
+    if (open) {
+      var rs = (j.reasons || []).filter(function (r) { return r !== "staj ilanı"; }).slice(0, 6);
+      var tg = el("div", "tags");
+      if ((j.tags || []).indexOf("uzaktan") >= 0) tg.appendChild(el("span", "tag", "uzaktan"));
+      tg.appendChild(el("span", "tag", j.source));
+      rs.forEach(function (r) { tg.appendChild(el("span", "tag" + (r.charAt(0) === "-" ? " soon" : ""), r)); });
+      body.appendChild(tg);
+      var act2 = el("div", "actions");
+      [["applied", "✓ Başvurdum"], ["hidden", "Gizle"]].forEach(function (p) {
+        var b = el("button", "btn" + (st === p[0] ? " on" : ""), p[1]); b.onclick = function () { toggleMark(j, p[0]); }; act2.appendChild(b);
+      });
+      var cvb = el("button", "btn", "CV'yi uyarla"); cvb.onclick = function () { openCv(j); }; act2.appendChild(cvb);
+      briefBtn(act2, { name: j.company, title: j.title, location: j.location || (COUNTRY[j.country] || j.country), url: j.url });
+      liBtns(act2, j.company);
+      body.appendChild(act2); personUi(j, act2, body);
+    }
+    c.appendChild(body); return c;
   }
   function sortJobs(arr, how) {
     arr.sort(function (a, b) {
@@ -629,11 +816,11 @@
         var ra = REGION_ORDER[a.region] != null ? REGION_ORDER[a.region] : 9, rb = REGION_ORDER[b.region] != null ? REGION_ORDER[b.region] : 9;
         if (ra !== rb) return ra - rb;
         var ka = a.km == null ? 9999 : a.km, kb = b.km == null ? 9999 : b.km;
-        return ka - kb || b.score - a.score;
+        return ka - kb || fitInfo(b).score - fitInfo(a).score;
       }
       if (how === "new") return new Date(b.first_seen) - new Date(a.first_seen);
-      if (how === "deadline") { var da = a.deadline || "9999", db = b.deadline || "9999"; return da < db ? -1 : da > db ? 1 : b.score - a.score; }
-      return b.score - a.score || new Date(b.first_seen) - new Date(a.first_seen);
+      if (how === "deadline") { var da = a.deadline || "9999", db = b.deadline || "9999"; return da < db ? -1 : da > db ? 1 : fitInfo(b).score - fitInfo(a).score; }
+      return fitInfo(b).score - fitInfo(a).score || new Date(b.first_seen) - new Date(a.first_seen);
     });
     return arr;
   }
@@ -1251,7 +1438,7 @@
   function renderStatus() {
     $("status").textContent = meta.updated ? "Son tarama " + ago(meta.updated) + " · " + jobs.length + " ilan" : "Henüz tarama yok";
   }
-  function renderAll() { renderTabs(); renderStatus(); renderNew(); renderEvents(); renderDomestic(); renderAbroad(); renderFar(); renderFirms(); renderCvTab(); renderPrograms($("progHome"), "yurtici"); renderPrograms($("progAbroad"), "yurtdisi"); renderBoard(); renderDocs(); renderLinkedin(); renderAnns(); renderSources(); renderAccess(); }
+  function renderAll() { fitCache = {}; learnCache = null; renderTabs(); renderStatus(); renderNew(); renderPrefs(); renderEvents(); renderDomestic(); renderAbroad(); renderFar(); renderFirms(); renderCvTab(); renderPrograms($("progHome"), "yurtici"); renderPrograms($("progAbroad"), "yurtdisi"); renderBoard(); renderDocs(); renderLinkedin(); renderAnns(); renderSources(); renderAccess(); }
 
   $("q").oninput = function (e) { state.q = e.target.value; renderDomestic(); };
   $("sort").onchange = function (e) { state.sort = e.target.value; renderDomestic(); };
@@ -1264,7 +1451,7 @@
   $("fHidden").onclick = function () { state.showHidden = !state.showHidden; renderBoard(); };
 
   var h = (location.hash || "").slice(1);
-  if (TABS.some(function (t) { return t[0] === h; })) tab = h;
+  if (tabList().some(function (t) { return t[0] === h; })) tab = h;
   sb.auth.getSession().then(function (r) { boot(r.data && r.data.session); });
   sb.auth.onAuthStateChange(function (ev, session) { if (ev === "SIGNED_OUT") showLogin("Çıkış yapıldı.", false); });
 })();

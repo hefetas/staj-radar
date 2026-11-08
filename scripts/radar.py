@@ -362,6 +362,67 @@ def fetch_adzuna(cfg: dict) -> list[dict]:
     return out
 
 
+ATS_INTERN_RE = re.compile(r"(?<![a-z0-9])(staj|stajyer|intern|internship|praktikum|praktikant|werkstudent|trainee|co-?op|working student)")
+
+
+def _ats_postings(site: dict) -> list[dict]:
+    """Bir firmanın ATS (işe alım sistemi) herkese açık ilan listesini ortak biçime çevirir."""
+    kind, key = site["type"], site["id"]
+    out = []
+    if kind == "greenhouse":
+        data = json.loads(http_get(f"https://boards-api.greenhouse.io/v1/boards/{key}/jobs"))
+        for r in data.get("jobs", []):
+            out.append({"title": r.get("title", ""), "url": r.get("absolute_url", ""),
+                        "location": (r.get("location") or {}).get("name", ""), "posted": r.get("updated_at")})
+    elif kind == "lever":
+        data = json.loads(http_get(f"https://api.lever.co/v0/postings/{key}?mode=json"))
+        for r in data:
+            out.append({"title": r.get("text", ""), "url": r.get("hostedUrl", ""),
+                        "location": (r.get("categories") or {}).get("location", ""),
+                        "snippet": r.get("descriptionPlain", ""), "posted": None})
+    elif kind == "smartrecruiters":
+        q = urllib.parse.urlencode({"q": site.get("q", "intern"), "limit": 100,
+                                    **({"country": site["country"].lower()} if site.get("country") else {})})
+        data = json.loads(http_get(f"https://api.smartrecruiters.com/v1/companies/{key}/postings?{q}"))
+        for r in data.get("content", []):
+            loc = r.get("location") or {}
+            out.append({"title": r.get("name", ""), "url": f"https://jobs.smartrecruiters.com/{key}/{r.get('id', '')}",
+                        "location": ", ".join(x for x in (loc.get("city"), (loc.get("country") or "").upper()) if x),
+                        "posted": r.get("releasedDate")})
+    elif kind == "workable":
+        data = json.loads(http_get(f"https://apply.workable.com/api/v1/widget/accounts/{key}"))
+        for r in data.get("jobs", []):
+            out.append({"title": r.get("title", ""), "url": r.get("url", ""),
+                        "location": ", ".join(x for x in (r.get("city"), r.get("country")) if x),
+                        "posted": r.get("published_on")})
+    else:
+        raise ValueError(f"bilinmeyen ATS türü: {kind}")
+    return out
+
+
+def fetch_ats(cfg: dict) -> list[dict]:
+    """Firma ATS panolarından (Greenhouse/Lever/SmartRecruiters/Workable) yalnızca staj benzeri ilanları alır."""
+    sites = cfg.get("sites", [])
+    if not sites:
+        raise SkipSource("firma listesi boş")
+    out, errors, ok = [], [], 0
+    for s in sites:
+        try:
+            for r in _ats_postings(s):
+                if not r.get("url") or not ATS_INTERN_RE.search(fold(r["title"])):
+                    continue
+                out.append(make_job(f"ATS: {s['name']}", r["title"], r["url"], s["name"],
+                                    r.get("location") or s.get("city", ""), s.get("country", "TR"),
+                                    r.get("snippet", ""), r.get("posted"), trusted_intern=True))
+            ok += 1
+            time.sleep(PAUSE)
+        except Exception as e:  # noqa: BLE001
+            errors.append(f"{s.get('name')}: {e}")
+    if not ok and errors:
+        raise RuntimeError("; ".join(errors)[:300])
+    return out
+
+
 def fetch_pages(cfg: dict) -> dict:
     """Duyuru sayfalarındaki bağlantıları toplar. Yeni görünen bağlantı = yeni duyuru.
     Dönüş: {"items": [...], "ok_sites": [başarıyla okunan site adları]}"""
@@ -408,6 +469,7 @@ FETCHERS = {
     "adzuna": fetch_adzuna,
     "rss": fetch_rss,
     "careers": fetch_careers,
+    "ats": fetch_ats,
     "pages": fetch_pages,
 }
 
@@ -646,6 +708,7 @@ def utcnow() -> dt.datetime:
 
 DEADLINE_STEPS = (7, 3, 1)
 PROGRAM_STEPS = (14, 7, 3, 1)
+DIGEST_HEARTBEAT_DAYS = 7  # sessiz modda bu kadar gün hiç bildirim gitmediyse "çalışıyorum" haberi
 
 
 def firm_slug(name: str) -> str:
@@ -678,11 +741,13 @@ def digest_stats() -> dict:
 
 
 def build_digest(jobs: dict, stats: dict, today: dt.date, far_below: int, now: dt.datetime,
-                 programs: list | None = None) -> tuple[str, str]:
-    """Günlük özet: son 24 saatin yeni ilanları, yaklaşan son tarihler, program tarihleri, başvuru sayıları."""
+                 programs: list | None = None, pick_min: int | None = None, quiet: bool = False):
+    """Günlük özet: sana özel yeni ilanlar (puan >= pick_min), yaklaşan son tarihler, program tarihleri, başvuru sayıları.
+    quiet=True iken anlatılacak yeni bir şey yoksa None döner (bildirim gönderilmez)."""
     since = now - dt.timedelta(days=1)
     fit = [j for j in jobs.values() if j.get("score", 0) >= far_below]
-    new_fit = sorted((j for j in fit if parse_dt(j["first_seen"]) >= since), key=lambda j: -j.get("score", 0))
+    picks = [j for j in fit if j.get("score", 0) >= (pick_min or 0)]
+    new_fit = sorted((j for j in picks if parse_dt(j["first_seen"]) >= since), key=lambda j: -j.get("score", 0))
     soon = []
     for j in fit:
         try:
@@ -702,13 +767,17 @@ def build_digest(jobs: dict, stats: dict, today: dt.date, far_below: int, now: d
     if soon:
         lines.append("• Son başvurusu bu hafta olanlar:")
         lines += [f"   {l} gün: {j['title']} — {j.get('company', '')}" for l, j in soon[:5]]
+    prog_lines = []
     for w in programs or []:
         try:
             left = (dt.date.fromisoformat(w["deadline"]) - today).days if w.get("deadline") else None
         except ValueError:
             left = None
-        if left is not None and 0 <= left <= 45:
-            lines.append(f"• {w['name']}: son başvuruya {left} gün kaldı.")
+        if left is not None and 0 <= left <= (14 if quiet else 45):
+            prog_lines.append(f"• {w['name']}: son başvuruya {left} gün kaldı.")
+    lines += prog_lines
+    if quiet and not (new_fit or soon or prog_lines):
+        return None
     if stats:
         lines.append(f"• Başvuru: bu hafta {stats.get('applied_week', 0)}, toplam {stats.get('applied_total', 0)}; "
                      f"cevap bekleyen {stats.get('waiting', 0)}, mülakat {stats.get('interview', 0)}.")
@@ -948,10 +1017,21 @@ def run(args) -> int:
         except Exception as e:  # noqa: BLE001
             print(f"Özet istatistikleri okunamadı: {type(e).__name__}", file=sys.stderr)
             stats = {}
-        subj, body = build_digest(jobs, stats, today, int(prof.get("far_below", 28)), now, sources.get("watchlist", []))
-        if notify(subj, body, args.dry_run):
+        quiet = bool(prof.get("digest_quiet", True))
+        got = build_digest(jobs, stats, today, int(prof.get("far_below", 28)), now, sources.get("watchlist", []),
+                           int(prof.get("pick_min", 50)), quiet)
+        if got is None:  # sessiz mod: yeni bir şey yok. 7 gündür hiçbir şey gitmediyse "çalışıyorum" haberi ver
+            last_sent = meta.get("digest_day")
+            try:
+                idle = (today - dt.date.fromisoformat(last_sent)).days if last_sent else 99
+            except ValueError:
+                idle = 99
+            if idle >= DIGEST_HEARTBEAT_DAYS:
+                got = ("Staj Radar çalışıyor",
+                       f"Son {DIGEST_HEARTBEAT_DAYS} gündür sana özel yeni ilan çıkmadı. Tarama her gün çalışıyor; toplam {len(jobs)} ilan listede.")
+        if got and notify(got[0], got[1], args.dry_run):
             meta["digest_day"] = day_key
-            add_event("sistem", "Günlük özet", body.replace("\n", " ")[:200], key=f"digest|{day_key}")
+            add_event("sistem", "Günlük özet", got[1].replace("\n", " ")[:200], key=f"digest|{day_key}")
 
     # Siteye erişim isteyenler (anında bildirim gitmediyse burada yakalanır)
     if not args.no_notify and not args.dry_run:

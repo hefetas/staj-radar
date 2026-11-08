@@ -220,5 +220,7 @@
       "Konum önceliği: Bursa, sonra Bursa'ya yakınlıktan uzağa (yaklaşık karayolu km)"
     ]
   },
-  "far_below": 28
+  "far_below": 28,
+  "pick_min": 50,
+  "digest_quiet": true
 }

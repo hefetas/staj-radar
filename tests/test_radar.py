@@ -518,6 +518,115 @@ class RadarTests(unittest.TestCase):
         self.assertIn("almanca", tags)
         self.assertGreaterEqual(score, self.prof["far_below"])  # Almanca cezası yok; üretim planlama puan getirir
 
+    def test_ats_fetchers_filter_interns(self):
+        gh = json.dumps({"jobs": [
+            {"title": "Production Intern", "absolute_url": "https://boards.greenhouse.io/x/jobs/1", "location": {"name": "Bursa, TR"}, "updated_at": "2026-11-01"},
+            {"title": "Senior Engineer", "absolute_url": "https://boards.greenhouse.io/x/jobs/2", "location": {"name": "Berlin"}}]})
+        lv = json.dumps([{"text": "Kalite Stajyeri", "hostedUrl": "https://jobs.lever.co/y/1", "categories": {"location": "Bursa"}, "descriptionPlain": "Kalite süreçleri"},
+                         {"text": "Sales Manager", "hostedUrl": "https://jobs.lever.co/y/2", "categories": {}}])
+        sr = json.dumps({"content": [{"id": "77", "name": "Praktikum Produktion", "releasedDate": "2026-11-02T10:00:00Z",
+                                      "location": {"city": "Bursa", "country": "tr"}},
+                                     {"id": "78", "name": "Controller", "location": {"city": "Bursa", "country": "tr"}}]})
+        wk = json.dumps({"jobs": [{"title": "Summer Intern", "url": "https://apply.workable.com/z/j/1", "city": "Gebze", "country": "Turkey"},
+                                  {"title": "Accountant", "url": "https://apply.workable.com/z/j/2"}]})
+        seen = []
+
+        def fake(url, headers=None, timeout=25, retries=2, data=None):
+            seen.append(url)
+            if "greenhouse" in url:
+                return gh
+            if "lever.co" in url:
+                return lv
+            if "smartrecruiters" in url:
+                return sr
+            if "workable" in url:
+                return wk
+            raise RuntimeError("beklenmeyen: " + url)
+        radar.http_get = fake
+        try:
+            out = radar.fetch_ats({"sites": [
+                {"name": "G", "type": "greenhouse", "id": "x"}, {"name": "L", "type": "lever", "id": "y"},
+                {"name": "S", "type": "smartrecruiters", "id": "BoschGroup", "country": "TR"},
+                {"name": "W", "type": "workable", "id": "z"}]})
+        finally:
+            radar.http_get = ORIG_GET
+        self.assertEqual(sorted(j["title"] for j in out), ["Kalite Stajyeri", "Praktikum Produktion", "Production Intern", "Summer Intern"])
+        self.assertTrue(all(j["trusted_intern"] for j in out))
+        sr_job = [j for j in out if j["title"] == "Praktikum Produktion"][0]
+        self.assertEqual(sr_job["url"], "https://jobs.smartrecruiters.com/BoschGroup/77")
+        self.assertIn("Bursa", sr_job["location"])
+        self.assertTrue(any("country=tr" in u for u in seen))
+
+    def test_ats_one_site_failing_keeps_others(self):
+        def fake(url, headers=None, timeout=25, retries=2, data=None):
+            if "lever" in url:
+                raise RuntimeError("404")
+            return json.dumps({"jobs": [{"title": "Intern", "absolute_url": "https://g.test/1"}]})
+        radar.http_get = fake
+        try:
+            out = radar.fetch_ats({"sites": [{"name": "L", "type": "lever", "id": "y"}, {"name": "G", "type": "greenhouse", "id": "x"}]})
+            self.assertEqual(len(out), 1)
+            with self.assertRaises(RuntimeError):
+                radar.fetch_ats({"sites": [{"name": "L", "type": "lever", "id": "y"}]})
+            with self.assertRaises(radar.SkipSource):
+                radar.fetch_ats({"sites": []})
+        finally:
+            radar.http_get = ORIG_GET
+
+    def test_quiet_digest_and_heartbeat(self):
+        import datetime as dt
+        now = dt.datetime(2026, 11, 8, 13, 0, tzinfo=dt.timezone.utc)
+        today = dt.date(2026, 11, 8)
+        old = {"b": {"id": "b", "title": "Eski", "company": "E", "score": 70, "first_seen": "2026-10-01T10:00:00+00:00"}}
+        self.assertIsNone(radar.build_digest(old, {"waiting": 3}, today, 28, now, [], 50, True))  # haber yok -> sessiz
+        mid = dict(old, c={"id": "c", "title": "Orta", "company": "O", "score": 40, "first_seen": "2026-11-08T05:00:00+00:00"})
+        self.assertIsNone(radar.build_digest(mid, {}, today, 28, now, [], 50, True))  # yeni ama sana özel eşiğin altında
+        top = dict(old, d={"id": "d", "title": "Üretim Stajı", "company": "Acme", "score": 62, "first_seen": "2026-11-08T05:00:00+00:00"})
+        subj, body = radar.build_digest(top, {}, today, 28, now, [], 50, True)
+        self.assertIn("Üretim Stajı — Acme", body)
+        # program 14 günden uzaksa sessiz modda sayılmaz, yakınsa haber olur
+        self.assertIsNone(radar.build_digest(old, {}, today, 28, now, [{"name": "P", "deadline": "2026-12-14"}], 50, True))
+        _, pb = radar.build_digest(old, {}, today, 28, now, [{"name": "P", "deadline": "2026-11-20"}], 50, True)
+        self.assertIn("P: son başvuruya 12 gün kaldı", pb)
+        # eski (sessiz olmayan) davranış korunur
+        self.assertIsNotNone(radar.build_digest(old, {}, today, 28, now))
+
+    def test_quiet_run_sends_nothing_then_heartbeat(self):
+        import os
+        radar.http_get = lambda *a, **k: ""
+        old_env = os.environ.get("SEND_DIGEST")
+        sent = []
+        orig_notify = radar.notify
+        radar.notify = lambda subj, body, dry: sent.append(subj) or ["x"]
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                cdir = Path(d) / "cfg"
+                cdir.mkdir()
+                (cdir / "profile.json").write_text(json.dumps(dict(self.prof, digest_quiet=True, pick_min=50)))
+                off = {"enabled": False}
+                (cdir / "sources.json").write_text(json.dumps({"youthall": off, "arbeitnow": off, "adzuna": off, "rss": off, "careers": off, "ats": off, "pages": off}))
+                data = Path(d) / "jobs.json"
+                data.write_text(json.dumps({"meta": {"welcomed": True, "digest_day": radar.utcnow().astimezone(__import__("datetime").timezone(__import__("datetime").timedelta(hours=3))).date().isoformat()},
+                    "jobs": {"a": {"id": "a", "title": "Yaz Stajı", "company": "Acme", "url": "https://a.test/1", "source": "x", "score": 60,
+                    "first_seen": "2026-01-01T00:00:00+00:00", "last_seen": "2999-01-01T00:00:00+00:00", "location": "Bursa", "country": "TR",
+                    "region": "bursa", "km": 0, "reasons": [], "tags": []}}, "announcements": {}, "events": []}))
+                args = Namespace(dry_run=False, no_notify=False, force=True, data=str(data), config_dir=str(cdir))
+                os.environ["SEND_DIGEST"] = "1"
+                radar.run(args)
+                self.assertEqual(sent, [])  # bugün zaten gönderilmiş / haber yok -> sessiz
+                st = json.loads(data.read_text())
+                st["meta"]["digest_day"] = "2026-01-01"  # uzun süredir hiçbir şey gitmedi
+                data.write_text(json.dumps(st))
+                radar.run(args)
+                self.assertEqual(sent, ["Staj Radar çalışıyor"])
+        finally:
+            radar.notify = orig_notify
+            radar.http_get = ORIG_GET
+            if old_env is None:
+                os.environ.pop("SEND_DIGEST", None)
+            else:
+                os.environ["SEND_DIGEST"] = old_env
+
 
 if __name__ == "__main__":
     unittest.main()
