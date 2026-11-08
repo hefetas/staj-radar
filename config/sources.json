@@ -117,15 +117,27 @@
             "langId": "1"
           }
         }
+      },
+      {
+        "name": "Ulusal Staj Programı duyuruları (uab.gov.tr)",
+        "url": "https://www.uab.gov.tr/duyurular/",
+        "notify": "important",
+        "must": [
+          "staj"
+        ]
       }
     ]
   },
   "watchlist": [
     {
-      "name": "Ulusal Staj Programı (Kariyer Kapısı)",
-      "url": "https://kariyerkapisi.cbiko.gov.tr/",
+      "name": "Ulusal Staj Programı (2027 dönemi)",
+      "url": "https://ulusalstajprogrami.iskur.gov.tr/",
       "kind": "kamu",
-      "note": "Kamu kurumlarında staj. Başvurular genelde Aralık-Ocak aylarında açılır (2025 programı Aralık 2024'te duyuruldu)"
+      "note": "Kamu ve özel sektör kurumlarında staj, iş gölgeleme ve eğitim. Başvuru e-Devlet ile yapılır; kurum teklifleri başvuru dönemi bittikten sonra sistemden gelir. Teklifi kabul etmeden önce işletmenin bölümün staj şartlarına uyduğunu (üretim/hizmet faaliyeti, mühendis çalıştırması) bölüm staj komisyonundan teyit et.",
+      "pin": "yurtici",
+      "deadline": "2026-12-14",
+      "window": "2027 dönemi başvuruları AÇIK. Son gün 14 Aralık 2026 (resmi duyuru, 30 Ekim 2026)",
+      "eligibility": "Haber kaynaklarına göre: lisans 2.–4. sınıf, GANO en az 2,00, 1 Ocak 2027'de 35 yaşını doldurmamış olmak. Resmi duyuruda şartlar yazmıyor, başvuru sayfasından doğrula."
     },
     {
       "name": "Instagram: @ulusalstajprg",
@@ -149,13 +161,15 @@
       "name": "IAESTE (yurt dışı staj)",
       "url": "https://youth.europa.eu/go-abroad/traineeships/iaeste-exchange-programme_tr",
       "kind": "yurtdisi",
-      "note": "Teknik öğrenciler için yurt dışı staj değişimi; başvuru üniversitedeki IAESTE komitesi üzerinden"
+      "note": "Teknik öğrenciler için yurt dışı staj değişimi; başvuru üniversitedeki IAESTE komitesi üzerinden",
+      "pin": "yurtdisi"
     },
     {
       "name": "Uludağ Uluslararası Ofis (Erasmus+ staj)",
       "url": "https://uludag.edu.tr/uaik",
       "kind": "yurtdisi",
-      "note": "Erasmus+ staj hareketliliği: başvuru tarihleri ve hibe duyuruları burada"
+      "note": "Erasmus+ staj hareketliliği: başvuru tarihleri ve hibe duyuruları burada",
+      "pin": "yurtdisi"
     },
     {
       "name": "Erasmus+ Ulusal Ajans",

@@ -131,6 +131,7 @@
     </section>
 
     <section class="pane" id="p-yurtici" hidden>
+      <div id="progHome"></div>
       <div class="bar" id="regions" role="group" aria-label="Uzaklık"></div>
       <div class="bar">
         <input type="search" id="q" placeholder="Ara: firma, başlık, şehir…" aria-label="Ara">
@@ -148,6 +149,7 @@
     </section>
 
     <section class="pane" id="p-yurtdisi" hidden>
+      <div id="progAbroad"></div>
       <div class="bar" id="countries" role="group" aria-label="Ülke"></div>
       <div class="bar">
         <input type="search" id="q2" placeholder="Ara: firma, başlık, şehir…" aria-label="Ara">
@@ -640,6 +642,7 @@
     var box = $("board"); box.textContent = "";
     var byId = {}; jobs.forEach(function (j) { byId[j.id] = j; });
     (meta.companies || []).forEach(function (c) { var f = firmJob(c); byId[f.id] = f; });
+    (meta.watchlist || []).forEach(function (w) { if (w.pin) { var p = progJob(w); byId[p.id] = p; } });
     var cols = STATUSES.slice(); if (state.showHidden) cols.push(["hidden", "Gizlenenler"]);
     var any = false;
     cols.forEach(function (st) {
@@ -739,6 +742,32 @@
 
   /* ---------------- firmalar ---------------- */
   function slug(s) { return String(s).toLowerCase().replace(/[^a-z0-9ğüşöçı]+/g, "-").replace(/^-|-$/g, ""); }
+  function progJob(w) { return { id: "prog:" + slug(w.name), title: w.name, company: "Program", location: w.pin === "yurtdisi" ? "Yurt dışı" : "Türkiye", url: w.url }; }
+  function renderPrograms(box, scope) {
+    box.textContent = "";
+    var list = (meta.watchlist || []).filter(function (w) { return w.pin === scope; });
+    if (!list.length) return;
+    box.appendChild(el("div", "group sub", "Programlar: ilan değil, belirli dönemlerde başvuru açılır"));
+    list.forEach(function (w) {
+      var j = progJob(w), r = el("div", "row"), left = el("div"), t = el("h2", "title");
+      t.appendChild(ext(el("a", null, w.name), w.url)); left.appendChild(t);
+      var tags = el("div", "tags"), dl = daysLeft(w.deadline);
+      if (dl !== null && dl >= 0) tags.appendChild(el("span", "tag soon", "⏳ " + (dl === 0 ? "son gün bugün" : dl + " gün kaldı") + " · son başvuru " + trDate(w.deadline)));
+      if (dl !== null && dl < 0) tags.appendChild(el("span", "tag", "başvuru dönemi bitti"));
+      markTags(tags, j);
+      left.appendChild(tags);
+      if (w.window) left.appendChild(el("div", "meta", w.window));
+      if (w.eligibility) left.appendChild(el("div", "meta", "Şartlar: " + w.eligibility));
+      if (w.note) left.appendChild(el("div", "meta", w.note));
+      var act = el("div", "actions");
+      [["saved", "☆ İlgileniyorum"], ["applied", "✓ Başvurdum"]].forEach(function (s) {
+        var b = el("button", "btn" + (status(j) === s[0] ? " on" : ""), s[1]); b.onclick = function () { toggleMark(j, s[0]); }; act.appendChild(b);
+      });
+      var go = el("a", "btn on", "Başvuru sayfası"); ext(go, w.url); act.appendChild(go);
+      left.appendChild(act); personUi(j, act, left);
+      r.appendChild(left); box.appendChild(r);
+    });
+  }
   function firmJob(c) { return { id: "firma:" + slug(c.name), title: c.name + " (ilansız başvuru)", company: c.sector || "", location: c.city || "", url: c.url }; }
   function renderFirms() {
     var list = meta.companies || [];
@@ -932,12 +961,16 @@
     var byId = {}; jobs.forEach(function (j) { byId[j.id] = j; });
     (meta.companies || []).forEach(function (c) { var f = firmJob(c); byId[f.id] = f; });
     var t0 = todayStr(), ev = [];
+    (meta.watchlist || []).forEach(function (w) {
+      if (w.pin) { var p = progJob(w); byId[p.id] = p; }
+      if (w.deadline && w.deadline >= t0) ev.push({ uid: "prog-" + slug(w.name), date: w.deadline, title: "Son başvuru: " + w.name, desc: w.url || "" });
+    });
     jobs.forEach(function (j) {
       if (!j.deadline || j.deadline < t0 || isFar(j) || !visibleBase(j)) return;
       ev.push({ uid: "dl-" + j.id, date: j.deadline, title: "Son başvuru: " + j.title + (j.company ? " — " + j.company : ""), desc: j.url || "" });
     });
     Object.keys(marks).forEach(function (id) {
-      var m = marks[id]; if (m.status !== "applied" || !m.applied_at || !byId[id]) return;
+      var m = marks[id]; if (m.status !== "applied" || !m.applied_at || !byId[id] || id.indexOf("prog:") === 0) return;
       [7, 14].forEach(function (n) {
         var d = addDays(m.applied_at, n);
         if (d >= t0) ev.push({ uid: "fu" + n + "-" + id, date: d, title: "Takip e-postası: " + byId[id].title.replace(/ \(ilansız başvuru\)$/, ""), desc: m.contact || "" });
@@ -1104,7 +1137,7 @@
   function renderStatus() {
     $("status").textContent = meta.updated ? "Son tarama " + ago(meta.updated) + " · " + jobs.length + " ilan" : "Henüz tarama yok";
   }
-  function renderAll() { renderTabs(); renderStatus(); renderEvents(); renderDomestic(); renderAbroad(); renderFar(); renderFirms(); renderCvTab(); renderBoard(); renderDocs(); renderAnns(); renderSources(); renderAccess(); }
+  function renderAll() { renderTabs(); renderStatus(); renderEvents(); renderDomestic(); renderAbroad(); renderFar(); renderFirms(); renderCvTab(); renderPrograms($("progHome"), "yurtici"); renderPrograms($("progAbroad"), "yurtdisi"); renderBoard(); renderDocs(); renderAnns(); renderSources(); renderAccess(); }
 
   $("q").oninput = function (e) { state.q = e.target.value; renderDomestic(); };
   $("sort").onchange = function (e) { state.sort = e.target.value; renderDomestic(); };

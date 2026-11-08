@@ -388,6 +388,8 @@ def fetch_pages(cfg: dict) -> dict:
                     continue
                 if len(text) < (8 if s.get("ajax") else 15) or full in seen or full.rstrip("/") == base.rstrip("/"):
                     continue
+                if s.get("must") and not any(fold(m) in fold(text + " " + full) for m in s["must"]):
+                    continue  # genel kurum sayfalarında yalnızca ilgili duyurular (ör. "staj")
                 seen.add(full)
                 items.append({"id": hashlib.sha1(full.encode()).hexdigest()[:12], "site": s["name"],
                               "title": text[:200], "url": full, "notify": s.get("notify", "important")})
@@ -638,7 +640,12 @@ def save_state(data_path: Path, state: dict) -> None:
     data_path.write_text(json.dumps(state, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8")
 
 
+def utcnow() -> dt.datetime:
+    return dt.datetime.now(dt.timezone.utc)
+
+
 DEADLINE_STEPS = (7, 3, 1)
+PROGRAM_STEPS = (14, 7, 3, 1)
 
 
 def firm_slug(name: str) -> str:
@@ -650,6 +657,9 @@ def company_names(jobs: dict, sources: dict) -> dict:
     out = {j["id"]: j.get("title", j["id"]) for j in jobs.values() if "id" in j}
     for c in sources.get("companies", []):
         out[f"firma:{firm_slug(c['name'])}"] = f"{c['name']} (ilansız başvuru)"
+    for w in sources.get("watchlist", []):
+        if w.get("pin"):
+            out[f"prog:{firm_slug(w['name'])}"] = w["name"]
     return out
 
 
@@ -717,7 +727,7 @@ def run(args) -> int:
     had_events = "events" in state
     events = state.setdefault("events", [])
     welcomed = bool(meta.get("welcomed"))
-    now = dt.datetime.now(dt.timezone.utc)
+    now = utcnow()
     now_iso = now.isoformat(timespec="seconds")
     today = now.astimezone(dt.timezone(dt.timedelta(hours=3))).date()  # Türkiye saati (UTC+3, yaz saati yok)
     min_score = int(prof.get("notify_min_score", 35))
@@ -853,10 +863,27 @@ def run(args) -> int:
                   " · ".join(x for x in (j["company"], j["location"]) if x), j["url"], j["source"], j["score"], True,
                   key=f"dl{min(t for t in DEADLINE_STEPS if left <= t)}|{j['url'] or j['id']}")
 
+    # Programların (Ulusal Staj Programı vb.) son başvuru tarihi: 14, 7, 3 ve 1 gün kala
+    prog_sent = meta.setdefault("prog_sent", {})
+    for w in sources.get("watchlist", []):
+        if not w.get("deadline"):
+            continue
+        try:
+            left = (dt.date.fromisoformat(w["deadline"]) - today).days
+        except ValueError:
+            continue
+        sent_th = prog_sent.setdefault(f"{w['name']}|{w['deadline']}", [])
+        pending = [t for t in PROGRAM_STEPS if 0 <= left <= t and t not in sent_th]
+        if pending:
+            sent_th.extend(pending)
+            step = min(t for t in PROGRAM_STEPS if left <= t)
+            add_event("hatirlatma", f"Son başvuru {left} gün: {w['name']}", w.get("window", ""), w.get("url", ""),
+                      "program", None, True, key=f"prog{step}|{w['name']}|{w['deadline']}")
+
     # Başvuru takibi: 7. ve 14. günde "cevap yok, takip et" hatırlatması (Supabase'teki başvurulardan)
     if not args.no_notify and not args.dry_run:  # RPC kaydı 'bildirildi' işaretler; kuru çalıştırmada dokunma
         try:
-            fups = followups()
+            fups = [f for f in followups() if not str(f["job_id"]).startswith("prog:")]  # programlarda 'cevap yok' takibi anlamsız
         except Exception as e:  # noqa: BLE001
             print(f"Takip hatırlatmaları okunamadı: {type(e).__name__}", file=sys.stderr)
             fups = []

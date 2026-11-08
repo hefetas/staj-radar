@@ -343,6 +343,45 @@ class RadarTests(unittest.TestCase):
             titles = [e["title"] for e in s["events"] if e["type"] == "hatirlatma"]
             self.assertEqual(len(titles), 3, titles)  # 7, 3 ve 1 gün eşikleri birer kez
 
+    def test_program_deadline_reminders_and_must_filter(self):
+        import datetime as dt
+        tr_today = dt.datetime.now(dt.timezone(dt.timedelta(hours=3))).date()
+        page = {"d": 40}
+
+        def fake(url, headers=None, timeout=25, retries=2, data=None):
+            return ('<a href="https://x.gov.tr/duyurular/ulusal-staj-programi-2099-basvurulari/">Ulusal Staj Programı 2099 başvuruları başladı</a>'
+                    '<a href="https://x.gov.tr/duyurular/personel-alimi-ilani-2099/">Karayolları personel alımı duyurusu</a>')
+        radar.http_get = fake
+        with tempfile.TemporaryDirectory() as d:
+            cdir = Path(d) / "cfg"
+            cdir.mkdir()
+            (cdir / "profile.json").write_text(json.dumps(self.prof))
+            off = {"enabled": False}
+            wl = [{"name": "Test Programı", "url": "https://p.test/", "kind": "kamu", "pin": "yurtici",
+                   "deadline": None}]
+            data = Path(d) / "jobs.json"
+            args = Namespace(dry_run=True, no_notify=False, force=True, data=str(data), config_dir=str(cdir))
+            deadline = tr_today + dt.timedelta(days=30)
+            wl[0]["deadline"] = deadline.isoformat()
+            (cdir / "sources.json").write_text(json.dumps({
+                "youthall": off, "arbeitnow": off, "adzuna": off, "rss": off, "careers": off,
+                "pages": {"enabled": True, "sites": [{"name": "Kurum", "url": "https://x.gov.tr/duyurular/", "notify": "important", "must": ["staj"]}]},
+                "watchlist": wl}))
+            real = radar.utcnow
+            try:
+                for ahead in (0, 16, 17, 20, 23, 25, 27, 27, 28, 29, 30):  # saat ilerliyor, tarih sabit
+                    radar.utcnow = lambda a=ahead: real() + dt.timedelta(days=a)
+                    page["d"] = 30 - ahead
+                    radar.run(args)
+            finally:
+                radar.utcnow = real
+            s = json.loads(data.read_text())
+            titles = [e["title"] for e in s["events"] if e["type"] == "hatirlatma"]
+            self.assertEqual(len(titles), 4, titles)  # 14, 7, 3, 1 gün eşikleri birer kez
+            anns = [a["title"] for a in s["announcements"].values()]
+            self.assertTrue(all("staj" in a.lower() for a in anns), anns)  # 'must' süzgeci
+            self.assertEqual(len(anns), 1, anns)
+
     def test_firm_slug_and_names(self):
         self.assertEqual(radar.firm_slug("Oyak Renault"), "oyak-renault")
         names = radar.company_names({}, {"companies": [{"name": "Bosch Bursa"}]})
