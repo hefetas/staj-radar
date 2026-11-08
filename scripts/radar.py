@@ -412,7 +412,9 @@ def fetch_ats(cfg: dict) -> list[dict]:
     out, errors, ok = [], [], 0
     for s in sites:
         try:
-            for r in _ats_postings(s):
+            posts = _ats_postings(s)
+            print(f"[ats] {s['name']}: {len(posts)} ilan okundu", file=sys.stderr)
+            for r in posts:
                 if not r.get("url") or not ATS_INTERN_RE.search(fold(r["title"])):
                     continue
                 out.append(make_job(f"ATS: {s['name']}", r["title"], r["url"], s["name"],
@@ -437,6 +439,8 @@ def fetch_jooble(cfg: dict) -> list[dict]:
         try:
             data = json.loads(http_get(f"https://jooble.org/api/{key}", json_body={
                 "keywords": q["keywords"], "location": q.get("location", ""), "page": 1}))
+            print(f"[jooble] {q['keywords']} / {q.get('location', '')}: toplam={data.get('totalCount')} gelen={len(data.get('jobs', []))}",
+                  file=sys.stderr)
             for r in data.get("jobs", []):
                 if not r.get("link"):
                     continue
