@@ -551,6 +551,26 @@ def region_for_km(km):
     return "uzak"
 
 
+REMOTE_RE = re.compile(r"uzaktan|remote|home ?office|evden calis|work from home|\bwfh\b|telecommut|"
+                       r"online (?:staj|intern)|sanal staj|virtual intern|fully distributed")
+HYBRID_RE = re.compile(r"hybrid|hibrit|karma calisma")
+NOT_REMOTE_RE = re.compile(r"no remote|not remote|remote work is not|remote.{0,20}not (?:possible|available|offered)|"
+                           r"uzaktan.{0,25}(?:yok|degil|mumkun degil|olmayacak)|on-?site only|yuz yuze|office-based|ofiste calis")
+
+
+def detect_remote(job: dict):
+    """İlanı inceler: tam uzaktan ise 'uzaktan', karma ise 'hibrit', değilse None döndürür.
+    Başlık, konum ve açıklamanın başı okunur; 'uzaktan çalışma yok' gibi olumsuzlar sayılmaz."""
+    text = fold(" ".join([job.get("location", ""), job.get("title", ""), (job.get("snippet") or "")[:500]]))
+    if HYBRID_RE.search(text) and not re.search(r"fully remote|tamamen uzaktan|%100 uzaktan", text):
+        return "hibrit"
+    if NOT_REMOTE_RE.search(text):
+        return None
+    if job.get("remote") or REMOTE_RE.search(text):
+        return "uzaktan"
+    return None
+
+
 def classify(job: dict, prof: dict) -> tuple[str, list[str]]:
     loc = fold(job["location"] + " " + job["title"])
     if job["country"] != "TR":
@@ -562,8 +582,9 @@ def classify(job: dict, prof: dict) -> tuple[str, list[str]]:
         job["city"], job["km"] = city, km
         region = region_for_km(km)
     tags = []
-    if job.get("remote") or re.search(r"uzaktan|remote|home ?office|online", loc):
-        tags.append("uzaktan")
+    remote_tag = detect_remote(job)
+    if remote_tag:
+        tags.append(remote_tag)
     full = fold(" ".join([job["title"], job["snippet"]]))
     if re.search(r"\(m/w/d\)|\(w/m/d\)|\(m/f/d\)|deutsch|almanca|fliessend|german", full):
         tags.append("almanca")  # ilan Almanca ya da Almanca bilgisi isteniyor olabilir
@@ -919,6 +940,14 @@ def run(args) -> int:
             j.update(first_seen=now_iso, last_seen=now_iso, notified=False)
             jobs[j["id"]] = j
             new_jobs.append(j)
+
+    for old_job in jobs.values():  # eski ilanların uzaktan/hibrit etiketlerini güncel kurala göre yenile
+        try:
+            tg = classify(dict(old_job), prof)[1]
+            if sorted(tg) != sorted(old_job.get("tags", [])):
+                old_job["tags"] = tg
+        except Exception:  # noqa: BLE001
+            pass
 
     cutoff = now - dt.timedelta(days=int(prof.get("max_age_days", 21)))
     keep_min = int(prof.get("min_score_keep", 10))

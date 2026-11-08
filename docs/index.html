@@ -200,6 +200,12 @@
       <div id="listAbroad"></div>
     </section>
 
+    <section class="pane" id="p-uzaktan" hidden>
+      <p class="hint">İlan metinleri okunup <b>tamamen uzaktan</b> olduğu anlaşılan stajlar burada, Yurt içi ve Yurt dışı olarak ayrı listelenir. “Hibrit” ya da “uzaktan çalışma yok” diyen ilanlar buraya girmez; normal listelerinde kalır.</p>
+      <div id="remoteTr"></div>
+      <div id="remoteAbroad"></div>
+    </section>
+
     <section class="pane" id="p-diger" hidden>
       <p class="hint">Puanı düşük kaldığı ya da 👎 dediğin için ana listelerden ayırdığım ilanlar. Hiçbiri silinmez; 👍 ile ana listeye geri alabilirsin.</p>
       <div class="bar" id="farFilters" role="group" aria-label="Konum"></div>
@@ -317,7 +323,7 @@
   var REGION_ORDER = { bursa: 0, yakin: 1, orta: 2, uzak: 3, belirsiz: 4 };
   var GROUPS = [
     ["yeni", "Bugün", [["yeni", "Bugün"]]],
-    ["ilanlar", "İlanlar", [["yurtici", "Yurt içi"], ["yurtdisi", "Yurt dışı"], ["linkedin", "LinkedIn"], ["diger", "Diğer"]]],
+    ["ilanlar", "İlanlar", [["yurtici", "Yurt içi"], ["yurtdisi", "Yurt dışı"], ["uzaktan", "Uzaktan"], ["linkedin", "LinkedIn"], ["diger", "Diğer"]]],
     ["basvuru", "Başvurularım", [["takip", "Takip"], ["firmalar", "Firmalar"], ["belgeler", "Belgeler"]]],
     ["ayar", "Ayarlar", [["tercih", "Tercihler"], ["cv", "CV"], ["bildirimler", "Bildirim"], ["duyurular", "Duyuru"], ["kaynaklar", "Kaynak"]]]
   ];
@@ -346,6 +352,7 @@
   }
   function daysLeft(d) { return d ? Math.round((new Date(d + "T00:00:00") - new Date(new Date().toDateString())) / 86400000) : null; }
   function isNew(j) { return Date.now() - new Date(j.first_seen).getTime() < 48 * 3600 * 1000; }
+  function isRemote(j) { return (j.tags || []).indexOf("uzaktan") >= 0; }
   function isAbroad(j) { return (j.country || "TR") !== "TR"; }
   /* ---- kişisel puan: tercihler + 👍/👎 öğrenmesi ---- */
   function defaultPrefs() { return { inc: "", exc: "", maxKm: 0, level: 50, noGerman: true, abroad: false, votes: {} }; }
@@ -780,6 +787,8 @@
     var tags = el("div", "tags");
     if (isNew(j)) tags.appendChild(el("span", "tag new", "yeni"));
     if (dlc !== null) tags.appendChild(el("span", "tag" + (dlc <= 14 ? " due" : ""), (dlc <= 14 ? "⏳ " : "") + (dlc <= 0 ? "son gün" : "son başvuru " + dlc + " gün")));
+    if (isRemote(j)) tags.appendChild(el("span", "tag new", "uzaktan"));
+    if ((j.tags || []).indexOf("hibrit") >= 0) tags.appendChild(el("span", "tag", "hibrit"));
     if ((j.tags || []).indexOf("almanca") >= 0) tags.appendChild(el("span", "tag soon", "Almanca olabilir"));
     if (vt === -1) tags.appendChild(el("span", "tag soon", "elediğin ilan"));
     markTags(tags, j);
@@ -795,7 +804,6 @@
     if (open) {
       var rs = (j.reasons || []).filter(function (r) { return r !== "staj ilanı"; }).slice(0, 6);
       var tg = el("div", "tags");
-      if ((j.tags || []).indexOf("uzaktan") >= 0) tg.appendChild(el("span", "tag", "uzaktan"));
       tg.appendChild(el("span", "tag", j.source));
       rs.forEach(function (r) { tg.appendChild(el("span", "tag" + (r.charAt(0) === "-" ? " soon" : ""), r)); });
       body.appendChild(tg);
@@ -830,7 +838,7 @@
     chips($("regions"), REGIONS, function () { return state.region; }, function (v) { state.region = v; });
     var q = state.q.trim().toLowerCase();
     var rows = jobs.filter(function (j) {
-      if (isAbroad(j) || isFar(j) || !visibleBase(j)) return false;
+      if (isAbroad(j) || isFar(j) || isRemote(j) || !visibleBase(j)) return false;
       if (state.region !== "all" && j.region !== state.region) return false;
       if (state.onlyNew && !isNew(j)) return false;
       if (state.dueOnly && !(daysLeft(j.deadline) !== null && daysLeft(j.deadline) <= 14)) return false;
@@ -853,7 +861,7 @@
   }
 
   function renderAbroad() {
-    var all = jobs.filter(function (j) { return isAbroad(j) && !isFar(j) && visibleBase(j); });
+    var all = jobs.filter(function (j) { return isAbroad(j) && !isFar(j) && !isRemote(j) && visibleBase(j); });
     var codes = {}; all.forEach(function (j) { codes[j.country] = (codes[j.country] || 0) + 1; });
     var list = [["all", "Hepsi (" + all.length + ")"]].concat(Object.keys(codes).sort().map(function (c) { return [c, (COUNTRY[c] || c) + " (" + codes[c] + ")"]; }));
     chips($("countries"), list, function () { return state.country; }, function (v) { state.country = v; });
@@ -868,6 +876,18 @@
     if (!rows.length) box.appendChild(el("div", "empty", "Yurt dışı için eşleşen ilan yok."));
     rows.forEach(function (j) { box.appendChild(card(j)); });
     $("fDue2").setAttribute("aria-pressed", String(state.dueOnly));
+  }
+
+  function renderRemote() {
+    var rows = jobs.filter(function (j) { return isRemote(j) && !isFar(j) && visibleBase(j); });
+    sortJobs(rows, "score");
+    [["remoteTr", "Yurt içi", function (j) { return !isAbroad(j); }], ["remoteAbroad", "Yurt dışı", isAbroad]].forEach(function (g) {
+      var box = $(g[0]); box.textContent = "";
+      var list = rows.filter(g[2]);
+      box.appendChild(el("div", "group", "Uzaktan · " + g[1] + " · " + list.length));
+      if (!list.length) box.appendChild(el("div", "empty", "Şu an uzaktan " + g[1].toLowerCase() + " staj ilanı yok."));
+      list.forEach(function (j) { box.appendChild(card(j)); });
+    });
   }
 
   function renderFar() {
@@ -1438,7 +1458,7 @@
   function renderStatus() {
     $("status").textContent = meta.updated ? "Son tarama " + ago(meta.updated) + " · " + jobs.length + " ilan" : "Henüz tarama yok";
   }
-  function renderAll() { fitCache = {}; learnCache = null; renderTabs(); renderStatus(); renderNew(); renderPrefs(); renderEvents(); renderDomestic(); renderAbroad(); renderFar(); renderFirms(); renderCvTab(); renderPrograms($("progHome"), "yurtici"); renderPrograms($("progAbroad"), "yurtdisi"); renderBoard(); renderDocs(); renderLinkedin(); renderAnns(); renderSources(); renderAccess(); }
+  function renderAll() { fitCache = {}; learnCache = null; renderTabs(); renderStatus(); renderNew(); renderPrefs(); renderEvents(); renderDomestic(); renderAbroad(); renderRemote(); renderFar(); renderFirms(); renderCvTab(); renderPrograms($("progHome"), "yurtici"); renderPrograms($("progAbroad"), "yurtdisi"); renderBoard(); renderDocs(); renderLinkedin(); renderAnns(); renderSources(); renderAccess(); }
 
   $("q").oninput = function (e) { state.q = e.target.value; renderDomestic(); };
   $("sort").onchange = function (e) { state.sort = e.target.value; renderDomestic(); };

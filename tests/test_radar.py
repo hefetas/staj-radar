@@ -539,6 +539,36 @@ class RadarTests(unittest.TestCase):
         self.assertEqual(out[0]["company"], "Acme")
         self.assertNotIn("utm_", out[0]["url"])
 
+    def test_remote_detection_reads_the_ad(self):
+        d = radar.detect_remote
+        self.assertEqual(d({"title": "Production Intern (Remote)", "location": "", "snippet": ""}), "uzaktan")
+        self.assertEqual(d({"title": "Uzaktan Veri Analizi Stajyeri", "location": "İstanbul", "snippet": ""}), "uzaktan")
+        self.assertEqual(d({"title": "Kalite Stajyeri", "location": "Bursa", "snippet": "Haftada 2 gün home office imkanı, hibrit çalışma"}), "hibrit")
+        self.assertIsNone(d({"title": "Üretim Stajyeri", "location": "Bursa", "snippet": "Uzaktan çalışma yok, ofiste yüz yüze eğitim"}))
+        self.assertIsNone(d({"title": "Intern", "location": "Berlin", "snippet": "Remote work is not possible for this role"}))
+        self.assertEqual(d({"title": "Intern", "location": "Berlin", "snippet": "", "remote": True}), "uzaktan")
+        self.assertIsNone(d({"title": "Online Marketing Praktikum", "location": "Berlin", "snippet": "Kampagnen"}))
+        self.assertEqual(d({"title": "Intern", "location": "", "snippet": "This is a fully remote internship open to students anywhere."}), "uzaktan")
+
+    def test_old_jobs_get_remote_tags_refreshed(self):
+        radar.http_get = lambda *a, **k: ""
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                cdir = Path(d) / "cfg"
+                cdir.mkdir()
+                (cdir / "profile.json").write_text(json.dumps(self.prof))
+                off = {"enabled": False}
+                (cdir / "sources.json").write_text(json.dumps({k: off for k in ("youthall", "arbeitnow", "adzuna", "rss", "careers", "ats", "jooble", "pages")}))
+                data = Path(d) / "jobs.json"
+                job = {"id": "r", "title": "Remote Production Intern", "company": "X", "url": "https://r.test/1", "source": "x", "score": 60,
+                       "first_seen": "2026-01-01T00:00:00+00:00", "last_seen": "2999-01-01T00:00:00+00:00", "location": "Berlin",
+                       "country": "DE", "region": "yurtdisi", "km": None, "reasons": [], "tags": [], "snippet": ""}
+                data.write_text(json.dumps({"meta": {"welcomed": True}, "jobs": {"r": job}, "announcements": {}, "events": []}))
+                radar.run(Namespace(dry_run=True, no_notify=True, force=True, data=str(data), config_dir=str(cdir)))
+                self.assertIn("uzaktan", json.loads(data.read_text())["jobs"]["r"]["tags"])
+        finally:
+            radar.http_get = ORIG_GET
+
     def test_german_ads_kept_and_tagged(self):
         j = radar.make_job("t", "Praktikum Produktionsplanung (m/w/d)", "https://x.test/de", "Werk GmbH", "Stuttgart", "DE",
                            "Sehr gute Deutschkenntnisse, Lean Manufacturing")
