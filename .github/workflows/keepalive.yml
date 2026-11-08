@@ -1,0 +1,32 @@
+name: Keepalive
+
+# GitHub, 60 gün hiç etkinlik olmayan depolarda zamanlanmış çalışmaları kapatır.
+# Bu iş ayda iki kez depoya küçük bir kayıt (commit) atarak sayacı sıfırlar,
+# böylece günlük tarama hiç durmaz.
+on:
+  schedule:
+    - cron: "17 5 1,15 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keepalive
+  cancel-in-progress: false
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Etkinlik kaydı
+        run: |
+          mkdir -p .keepalive
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .keepalive/last
+          git config user.name "staj-radar-keepalive"
+          git config user.email "actions@users.noreply.github.com"
+          git add .keepalive/last
+          git commit -m "keepalive: $(cat .keepalive/last)"
+          git push
