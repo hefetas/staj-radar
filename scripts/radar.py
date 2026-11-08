@@ -437,7 +437,7 @@ def fetch_jooble(cfg: dict) -> list[dict]:
     out, errors = [], []
     for q in cfg.get("queries", []):
         try:
-            data = json.loads(http_get(f"https://jooble.org/api/{key}", json_body={
+            data = json.loads(http_get(f"https://{q.get('domain', cfg.get('domain', 'jooble.org'))}/api/{key}", json_body={
                 "keywords": q["keywords"], "location": q.get("location", ""), "page": 1}))
             print(f"[jooble] {q['keywords']} / {q.get('location', '')}: toplam={data.get('totalCount')} gelen={len(data.get('jobs', []))}",
                   file=sys.stderr)
