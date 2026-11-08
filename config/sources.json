@@ -421,12 +421,28 @@
         "location": "Bursa"
       },
       {
-        "keywords": "stajyer kalite",
+        "keywords": "stajyer",
+        "location": ""
+      },
+      {
+        "keywords": "staj",
+        "location": "Turkey"
+      },
+      {
+        "keywords": "intern",
+        "location": "Bursa, Turkey"
+      },
+      {
+        "keywords": "production intern",
+        "location": "Turkey"
+      },
+      {
+        "keywords": "mühendis",
         "location": "Bursa"
       },
       {
-        "keywords": "yaz stajı mühendis",
-        "location": "Bursa"
+        "keywords": "engineer",
+        "location": "Turkey"
       },
       {
         "keywords": "endüstri mühendisliği stajyer",
@@ -435,10 +451,6 @@
       {
         "keywords": "üretim stajyeri",
         "location": "Kocaeli"
-      },
-      {
-        "keywords": "üretim stajyeri",
-        "location": "Sakarya"
       },
       {
         "keywords": "üretim stajyeri",
