@@ -510,6 +510,35 @@ class RadarTests(unittest.TestCase):
                 else:
                     os.environ[k] = v
 
+    def test_jooble_needs_key_and_parses(self):
+        import os
+        old = os.environ.pop("JOOBLE_API_KEY", None)
+        got = {}
+
+        def fake(url, headers=None, timeout=25, retries=2, data=None, json_body=None):
+            got.update(url=url, body=json_body)
+            return json.dumps({"totalCount": 2, "jobs": [
+                {"title": "<b>Üretim</b> Stajyeri", "location": "Bursa", "snippet": "Hat verimliliği", "company": "Acme",
+                 "link": "https://jooble.org/desc/1?utm_source=x", "updated": "2026-11-01T00:00:00"},
+                {"title": "Boş link", "link": ""}]})
+        radar.http_get = fake
+        try:
+            with self.assertRaises(radar.SkipSource):
+                radar.fetch_jooble({"queries": [{"keywords": "staj", "location": "Bursa"}]})
+            os.environ["JOOBLE_API_KEY"] = "k123"
+            out = radar.fetch_jooble({"queries": [{"keywords": "staj üretim", "location": "Bursa"}]})
+        finally:
+            radar.http_get = ORIG_GET
+            os.environ.pop("JOOBLE_API_KEY", None)
+            if old:
+                os.environ["JOOBLE_API_KEY"] = old
+        self.assertEqual(got["url"], "https://jooble.org/api/k123")
+        self.assertEqual(got["body"]["keywords"], "staj üretim")
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["title"], "Üretim Stajyeri")
+        self.assertEqual(out[0]["company"], "Acme")
+        self.assertNotIn("utm_", out[0]["url"])
+
     def test_german_ads_kept_and_tagged(self):
         j = radar.make_job("t", "Praktikum Produktionsplanung (m/w/d)", "https://x.test/de", "Werk GmbH", "Stuttgart", "DE",
                            "Sehr gute Deutschkenntnisse, Lean Manufacturing")

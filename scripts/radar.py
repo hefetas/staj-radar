@@ -55,7 +55,8 @@ def safe_url(url: str) -> str:
     return f"{p.scheme}://{p.netloc}{p.path}"
 
 
-def http_get(url: str, headers: dict | None = None, timeout: int = 25, retries: int = 2, data: dict | None = None) -> str:
+def http_get(url: str, headers: dict | None = None, timeout: int = 25, retries: int = 2, data: dict | None = None,
+             json_body: dict | None = None) -> str:
     h = {"User-Agent": UA, "Accept": "*/*"}
     h.update(headers or {})
     body = None
@@ -63,6 +64,9 @@ def http_get(url: str, headers: dict | None = None, timeout: int = 25, retries: 
         body = urllib.parse.urlencode(data).encode("utf-8")
         h["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8"
         h["X-Requested-With"] = "XMLHttpRequest"
+    if json_body is not None:  # JSON POST (ör. Jooble API)
+        body = json.dumps(json_body).encode("utf-8")
+        h["Content-Type"] = "application/json"
     last = None
     for i in range(retries + 1):
         try:
@@ -423,6 +427,30 @@ def fetch_ats(cfg: dict) -> list[dict]:
     return out
 
 
+def fetch_jooble(cfg: dict) -> list[dict]:
+    """Jooble ücretsiz API (JOOBLE_API_KEY gerekir). Türkiye dahil çok ülkeyi kapsar."""
+    key = os.environ.get("JOOBLE_API_KEY")
+    if not key:
+        raise SkipSource("JOOBLE_API_KEY tanımlı değil")
+    out, errors = [], []
+    for q in cfg.get("queries", []):
+        try:
+            data = json.loads(http_get(f"https://jooble.org/api/{key}", json_body={
+                "keywords": q["keywords"], "location": q.get("location", ""), "page": 1}))
+            for r in data.get("jobs", []):
+                if not r.get("link"):
+                    continue
+                out.append(make_job("Jooble", strip_tags(r.get("title", "")), r["link"], r.get("company", ""),
+                                    r.get("location", "") or q.get("location", ""), q.get("country", "TR"),
+                                    strip_tags(r.get("snippet", "")), r.get("updated")))
+            time.sleep(PAUSE)
+        except Exception as e:  # noqa: BLE001
+            errors.append(str(e))
+    if not out and errors:
+        raise RuntimeError("; ".join(errors)[:300])
+    return out
+
+
 def fetch_pages(cfg: dict) -> dict:
     """Duyuru sayfalarındaki bağlantıları toplar. Yeni görünen bağlantı = yeni duyuru.
     Dönüş: {"items": [...], "ok_sites": [başarıyla okunan site adları]}"""
@@ -470,6 +498,7 @@ FETCHERS = {
     "rss": fetch_rss,
     "careers": fetch_careers,
     "ats": fetch_ats,
+    "jooble": fetch_jooble,
     "pages": fetch_pages,
 }
 

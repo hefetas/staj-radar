@@ -411,5 +411,39 @@
         "note": "Doğrulanmadı: ilk taramada hata verirse Kaynak sekmesinde görünür"
       }
     ]
+  },
+  "jooble": {
+    "enabled": true,
+    "min_interval_hours": 24,
+    "queries": [
+      {
+        "keywords": "staj üretim",
+        "location": "Bursa"
+      },
+      {
+        "keywords": "stajyer kalite",
+        "location": "Bursa"
+      },
+      {
+        "keywords": "yaz stajı mühendis",
+        "location": "Bursa"
+      },
+      {
+        "keywords": "endüstri mühendisliği stajyer",
+        "location": "Bursa"
+      },
+      {
+        "keywords": "üretim stajyeri",
+        "location": "Kocaeli"
+      },
+      {
+        "keywords": "üretim stajyeri",
+        "location": "Sakarya"
+      },
+      {
+        "keywords": "üretim stajyeri",
+        "location": "İstanbul"
+      }
+    ]
   }
 }
