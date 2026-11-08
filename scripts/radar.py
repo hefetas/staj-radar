@@ -571,6 +571,10 @@ def detect_remote(job: dict):
     return None
 
 
+# Uzaktan stajlarda yaz/kısa dönem şartı aranmaz: süre ile ilgili cezalar uygulanmaz
+REMOTE_IGNORE_NEG = {"uzun dönem", "long term", "long-term", "part time", "yarı zamanlı"}
+
+
 def classify(job: dict, prof: dict) -> tuple[str, list[str]]:
     loc = fold(job["location"] + " " + job["title"])
     if job["country"] != "TR":
@@ -617,12 +621,14 @@ def score_job(job: dict, prof: dict):
         s += min(15, 5 * len(skills))
         reasons.append("beceri: " + ", ".join(skills))
 
+    region, tags = classify(job, prof)
     for kw, w in prof.get("negative", {}).items():
+        if "uzaktan" in tags and kw in REMOTE_IGNORE_NEG:
+            continue  # uzaktan stajlarda süre (uzun dönem, yarı zamanlı) puan düşürmez
         if kw_re(kw).search(text):
             s -= w
             reasons.append(f"-{w}: {kw}")
 
-    region, tags = classify(job, prof)
     weights = prof.get("location", {}).get("weights", {})
     s += weights.get({"bursa": "home", "yakin": "near", "orta": "turkey", "uzak": "turkey",
                       "belirsiz": "turkey", "yurtdisi": "abroad"}[region], 0)

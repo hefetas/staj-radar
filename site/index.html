@@ -201,7 +201,7 @@
     </section>
 
     <section class="pane" id="p-uzaktan" hidden>
-      <p class="hint">İlan metinleri okunup <b>tamamen uzaktan</b> olduğu anlaşılan stajlar burada, Yurt içi ve Yurt dışı olarak ayrı listelenir. “Hibrit” ya da “uzaktan çalışma yok” diyen ilanlar buraya girmez; normal listelerinde kalır.</p>
+      <p class="hint">İlan metinleri okunup <b>tamamen uzaktan</b> olduğu anlaşılan, endüstri mühendisliğiyle ilgili tüm stajlar burada, Yurt içi ve Yurt dışı olarak ayrı listelenir. Yaz dönemi olması ya da süresi (kısa, uzun, yarı zamanlı) aranmaz. “Hibrit” ya da “uzaktan çalışma yok” diyen ilanlar buraya girmez.</p>
       <div id="remoteTr"></div>
       <div id="remoteAbroad"></div>
     </section>
@@ -401,7 +401,13 @@
     var out = { score: Math.max(0, Math.min(100, Math.round(s))), why: plus.concat(minus).slice(0, 5).join(" · ") };
     fitCache[j.id] = out; return out;
   }
-  function isFar(j) { var v = prefs.votes[j.id]; if (v === -1) return true; if (v === 1) return false; return fitInfo(j).score < ((meta && meta.far_below) || 28); }
+  function roleHit(j) { return (j.reasons || []).some(function (r) { return r !== "staj ilanı" && r.charAt(0) !== "-" && r.indexOf("beceri:") !== 0; }); }
+  function isFar(j) {
+    var v = prefs.votes[j.id]; if (v === -1) return true; if (v === 1) return false;
+    var cut = (meta && meta.far_below) || 28;
+    if (isRemote(j) && roleHit(j)) cut = Math.min(cut, 12);  // uzaktan + alanla ilgili: süre/dönem aranmaz, düşük puanda bile Uzaktan'da kalır
+    return fitInfo(j).score < cut;
+  }
   function savePrefs() { if (user) sb.from("staj_profile").upsert({ email: user.email, prefs: prefs, updated_at: new Date().toISOString() }, { onConflict: "email" }).then(function () {}); }
   function voteJob(j, v) { if (prefs.votes[j.id] === v) delete prefs.votes[j.id]; else prefs.votes[j.id] = v; savePrefs(); renderAll(); }
   function status(j) { var m = marks[j.id]; return m && m.status !== "known" ? m.status : null; }

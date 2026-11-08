@@ -569,6 +569,21 @@ class RadarTests(unittest.TestCase):
         finally:
             radar.http_get = ORIG_GET
 
+    def test_remote_ads_ignore_duration_penalties(self):
+        base = dict(company="X", snippet="Endüstri mühendisliği öğrencisi, üretim süreçleri. Uzun dönem part time staj.")
+        remote = radar.make_job("t", "Uzaktan Üretim Stajyeri (Uzun Dönem)", "https://x.test/1", **base)
+        onsite = radar.make_job("t", "Üretim Stajyeri (Uzun Dönem)", "https://x.test/2", **base)
+        sr, rr, _, tr = radar.score_job(remote, self.prof)
+        so, ro, _, to = radar.score_job(onsite, self.prof)
+        self.assertIn("uzaktan", tr)
+        self.assertNotIn("uzaktan", to)
+        self.assertGreater(sr, so)
+        self.assertFalse([r for r in rr if "uzun dönem" in r or "part time" in r])
+        self.assertTrue([r for r in ro if "uzun dönem" in r])
+        # sınıf şartı (4. sınıf) uzaktan ilanda da cezalı kalır
+        r4 = radar.make_job("t", "Remote Production Intern", "https://x.test/3", "X", snippet="Only for 4. sınıf students")
+        self.assertTrue([r for r in radar.score_job(r4, self.prof)[1] if "4. sınıf" in r])
+
     def test_german_ads_kept_and_tagged(self):
         j = radar.make_job("t", "Praktikum Produktionsplanung (m/w/d)", "https://x.test/de", "Werk GmbH", "Stuttgart", "DE",
                            "Sehr gute Deutschkenntnisse, Lean Manufacturing")
