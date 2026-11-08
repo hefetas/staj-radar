@@ -90,6 +90,14 @@
   .chk label { flex: 1; cursor: pointer; }
   .chk.done label { color: var(--muted); text-decoration: line-through; }
   .chk input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
+  .brief h3 { font-size: .95rem; margin: 14px 0 6px; color: var(--accent); }
+  .brief h4 { font-size: .9rem; margin: 10px 0 4px; }
+  .brief p { margin: 6px 0; font-size: .9rem; }
+  .brief ul, .brief ol { margin: 4px 0 8px; padding-left: 20px; font-size: .9rem; }
+  .brief li { margin: 3px 0; }
+  .brief a { color: var(--accent); word-break: break-word; }
+  details.how { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 8px; }
+  details.how summary { cursor: pointer; color: var(--muted); font-size: .88rem; }
   .modal { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: grid; place-items: center; padding: 14px; z-index: 10; overflow-y: auto; }
   .sheet { background: var(--card); border: 1px solid var(--line); border-radius: 16px; max-width: 640px; width: 100%; max-height: 92vh; overflow-y: auto; padding: 16px 18px; }
   .sheet h2 { margin: 0 0 4px; font-size: 1.05rem; }
@@ -186,6 +194,23 @@
       </div>
     </section>
 
+    <div class="modal" id="briefModal" hidden>
+      <div class="sheet">
+        <h2 id="brTitle">Firma özeti</h2>
+        <div class="meta" id="brSub"></div>
+        <div class="brief" id="brView"></div>
+        <details class="how" id="brHow">
+          <summary>Yeni özet hazırla veya yapıştır</summary>
+          <p class="meta">1) İstemi kopyala. 2) Claude'a (web araması açık) yapıştır. 3) Cevabı aşağıya yapıştırıp kaydet. Kaynaksız veya şüpheli kısımları firmanın kendi sitesinden kontrol et.</p>
+          <textarea class="big" id="brPrompt" readonly style="min-height:120px"></textarea>
+          <div class="actions"><button class="btn on" id="brCopy">İstemi kopyala</button><a class="btn" href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">Claude'u aç</a></div>
+          <textarea class="big" id="brPaste" style="margin-top:10px" placeholder="Claude'un cevabını buraya yapıştır"></textarea>
+          <div class="actions"><button class="btn on" id="brSave">Kaydet</button><button class="btn" id="brDel">Özeti sil</button><span class="meta" id="brMsg"></span></div>
+        </details>
+        <div class="actions"><button class="btn" id="brClose">Kapat</button></div>
+      </div>
+    </div>
+
     <div class="modal" id="mailModal" hidden>
       <div class="sheet">
         <h2>Başvuru e-postası</h2>
@@ -248,7 +273,7 @@
 
   var state = { farFilter: "all", q3: "", dueOnly: false, firmFilter: "all", cvLang: "tr", cvJob: null, region: "all", q: "", sort: "km", onlyNew: false, country: "all", q2: "", sort2: "score", evFilter: "all", annFilter: "all", showHidden: false, open: {}, mailKind: "ilk" };
   var tab = "bildirimler";
-  var user = null, jobs = [], meta = {}, events = [], anns = [], marks = {}, checked = {}, lastRead = 0, profile = { cv_tr: "", cv_en: "" };
+  var user = null, jobs = [], meta = {}, events = [], anns = [], marks = {}, briefs = {}, checked = {}, lastRead = 0, profile = { cv_tr: "", cv_en: "" };
 
   function load(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
   function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
@@ -368,8 +393,11 @@
     Promise.all([
       sb.from("staj_state").select("data").eq("id", 1).maybeSingle(),
       sb.from("staj_marks").select("job_id,status,note,contact,applied_at,person"),
-      sb.from("staj_profile").select("cv_tr,cv_en,checklist").maybeSingle()
+      sb.from("staj_profile").select("cv_tr,cv_en,checklist").maybeSingle(),
+      sb.from("staj_briefs").select("firm_key,firm_name,content,updated_at")
     ]).then(function (res) {
+      briefs = {};
+      ((res[3] && res[3].data) || []).forEach(function (b) { briefs[b.firm_key] = b; });
       if (res[0].error) { $("status").textContent = "Veri yüklenemedi"; return; }
       var d = (res[0].data && res[0].data.data) || {};
       meta = d.meta || {}; events = d.events || [];
@@ -529,6 +557,7 @@
       b.onclick = function () { toggleMark(j, p[0]); }; act.appendChild(b);
     });
     var cvb = el("button", "btn", "CV'yi uyarla"); cvb.onclick = function () { openCv(j); }; act.appendChild(cvb);
+    briefBtn(act, { name: j.company, title: j.title, location: j.location || (COUNTRY[j.country] || j.country), url: j.url });
     body.appendChild(act); personUi(j, act, body); c.appendChild(body); return c;
   }
   function sortJobs(arr, how) {
@@ -745,6 +774,7 @@
       var cvb = el("button", "btn", "CV'yi uyarla"); cvb.onclick = function () { openCv({ title: "Staj başvurusu (ilansız)", company: c.name, location: c.city, url: c.url, snippet: c.sector || "", reasons: [], country: "TR" }); };
       act.appendChild(cvb);
       var mb = el("button", "btn", "✉ E-posta taslağı"); mb.onclick = function () { openMail(c, fj); }; act.appendChild(mb);
+      briefBtn(act, { name: c.name, title: "Staj (ilansız başvuru)", location: c.city, sector: c.sector, url: c.url });
       body.appendChild(act); personUi(fj, act, body);
       var cr = el("div", "fieldrow"), ci = document.createElement("input");
       ci.type = "email"; ci.className = "field"; ci.placeholder = "İK / staj e-postası (biliyorsan)"; ci.value = (marks[fj.id] || {}).contact || "";
@@ -930,6 +960,110 @@
     $("status").textContent = ev.length + " tarih takvim dosyasına yazıldı";
   }
   $("fIcs").onclick = exportIcs; $("fIcs2").onclick = exportIcs;
+
+  /* ---------------- firma özeti (araştırma) ---------------- */
+  var briefCtx = null;
+  function briefKey(name) { return slug(name || ""); }
+  function briefBtn(act, ctx) {
+    if (!ctx.name) return;
+    var has = !!briefs[briefKey(ctx.name)];
+    var b = el("button", "btn" + (has ? " on" : ""), has ? "📄 Firma özeti" : "🔎 Firma araştır");
+    b.onclick = function () { openBrief(ctx); };
+    act.appendChild(b);
+  }
+  function buildBriefPrompt(c) {
+    var L = [];
+    L.push("Web araması yaparak aşağıdaki firmayı araştır ve staj başvurum için beni hazırla.");
+    L.push("");
+    L.push("FİRMA: " + c.name);
+    if (c.title) L.push("İLAN / BAŞVURU: " + c.title);
+    if (c.location) L.push("KONUM: " + c.location);
+    if (c.sector) L.push("SEKTÖR: " + c.sector);
+    if (c.url) L.push("BAĞLANTI: " + c.url);
+    L.push("");
+    L.push("BEN KİMİM: Bursa Uludağ Üniversitesi Endüstri Mühendisliği 2. sınıf öğrencisiyim; 20 iş günlük zorunlu yaz stajı arıyorum. Excel, SQL, Power BI, AutoCAD ve Inventor biliyorum; İngilizce B2, Almanca A1.");
+    L.push("");
+    L.push("KURALLAR:");
+    L.push("- Yalnızca doğrulayabildiğin bilgiyi yaz. Her önemli iddianın yanına kaynak bağlantısı koy; resmi site ve resmi açıklamalar öncelikli.");
+    L.push("- Bulamadığın şeyi “bulunamadı” diye yaz. Uydurma, tahmin etme. Bilginin tarihini belirt.");
+    L.push("- Bir mühendis adayının neyi bilirse işverene ciddi bir ilgi göstereceğini düşün; ezber veya abartılı övgü değil, gerçek bilgi ve iyi sorular öne çıksın.");
+    L.push("");
+    L.push("ÇIKTI (Türkçe, Markdown, bölüm başlıkları ## ile, kısa maddeler, en fazla ~700 kelime):");
+    L.push("## Firma kimliği — ne yapar, hangi gruba bağlı, Türkiye/Bursa'daki tesisleri");
+    L.push("## Üretim / operasyon yapısı — endüstri mühendisi gözüyle: ürünler, süreçler, kullandıkları yaklaşımlar");
+    L.push("## Benim alanım — bu ilandaki bölümde bir endüstri mühendisi/stajyer neler yapar");
+    L.push("## Güncel gelişmeler — son 12 ay: yatırım, ürün, sertifika, haber");
+    L.push("## Kültür ve staj programı — bilinenler");
+    L.push("## Etkilemek için bilmem gerekenler — 8-10 konuşma noktası");
+    L.push("## Öğrenmem gereken kavramlar — firmaya özgü araç/yöntemler, her biri 1 cümleyle (nedenini de söyle, ben öğreneyim)");
+    L.push("## Mülakat — olası 6 soru + cevap yönü; firmaya sorabileceğim 5 iyi soru");
+    L.push("## CV ve ön yazıda öne çıkaracağım 3 nokta — yalnızca yukarıda saydığım gerçek becerilerime dayansın");
+    L.push("## Doğrulama notu — emin olmadığın veya kaynaksız kalan kısımlar");
+    L.push("## Kaynaklar — bağlantı listesi");
+    return L.join("\n");
+  }
+  function mdInline(parent, s) {
+    var re = /(\*\*[^*]+\*\*|\[[^\]]+\]\(https?:\/\/[^)\s]+\))/g, last = 0, m;
+    while ((m = re.exec(s))) {
+      if (m.index > last) parent.appendChild(document.createTextNode(s.slice(last, m.index)));
+      var t = m[0];
+      if (t.charAt(0) === "*") parent.appendChild(el("strong", null, t.slice(2, -2)));
+      else { var k = t.indexOf("]("); parent.appendChild(ext(el("a", null, t.slice(1, k)), t.slice(k + 2, -1))); }
+      last = m.index + t.length;
+    }
+    if (last < s.length) parent.appendChild(document.createTextNode(s.slice(last)));
+  }
+  function renderMd(box, text) {
+    box.textContent = "";
+    var list = null, kind = null;
+    String(text || "").split(/\r?\n/).forEach(function (raw) {
+      var line = raw.replace(/\s+$/, ""), mm;
+      if ((mm = /^\s*[-*•]\s+(.*)$/.exec(line)) || (mm = /^\s*\d+[.)]\s+(.*)$/.exec(line))) {
+        var k = /^\s*\d/.test(line) ? "ol" : "ul";
+        if (!list || kind !== k) { list = el(k); kind = k; box.appendChild(list); }
+        var li = el("li"); mdInline(li, mm[1]); list.appendChild(li); return;
+      }
+      list = null;
+      if (!line.trim()) return;
+      if ((mm = /^#{1,2}\s+(.*)$/.exec(line))) { var h = el("h3"); mdInline(h, mm[1]); box.appendChild(h); }
+      else if ((mm = /^#{3,}\s+(.*)$/.exec(line))) { var h4 = el("h4"); mdInline(h4, mm[1]); box.appendChild(h4); }
+      else { var p = el("p"); mdInline(p, line); box.appendChild(p); }
+    });
+  }
+  function openBrief(ctx) { briefCtx = ctx; $("brMsg").textContent = ""; $("brPaste").value = ""; $("briefModal").hidden = false; renderBrief(); }
+  function renderBrief() {
+    var c = briefCtx; if (!c) return;
+    var b = briefs[briefKey(c.name)];
+    $("brTitle").textContent = c.name + " — firma özeti";
+    $("brSub").textContent = b ? "Kaydedilme: " + new Date(b.updated_at).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" }) + " · bilgileri firmanın kendi sitesinden de doğrula" : "Bu firma için henüz özet yok.";
+    if (b) renderMd($("brView"), b.content); else { $("brView").textContent = ""; }
+    $("brPrompt").value = buildBriefPrompt(c);
+    $("brHow").open = !b;
+    $("brDel").hidden = !b;
+  }
+  $("brClose").onclick = function () { $("briefModal").hidden = true; };
+  $("brCopy").onclick = function () {
+    var t = $("brPrompt"); t.select();
+    var done = function () { $("brCopy").textContent = "Kopyalandı ✓"; setTimeout(function () { $("brCopy").textContent = "İstemi kopyala"; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t.value).then(done, function () { document.execCommand("copy"); done(); });
+    else { document.execCommand("copy"); done(); }
+  };
+  $("brSave").onclick = function () {
+    var v = $("brPaste").value.trim(); if (!briefCtx || !v) { $("brMsg").textContent = "Önce cevabı yapıştır."; return; }
+    var key = briefKey(briefCtx.name), now = new Date().toISOString();
+    $("brMsg").textContent = "Kaydediliyor…";
+    sb.from("staj_briefs").upsert({ email: user.email, firm_key: key, firm_name: briefCtx.name, content: v, updated_at: now }, { onConflict: "email,firm_key" })
+      .then(function (r) {
+        if (r && r.error) { $("brMsg").textContent = "Kaydedilemedi"; return; }
+        briefs[key] = { firm_key: key, firm_name: briefCtx.name, content: v, updated_at: now };
+        $("brPaste").value = ""; $("brMsg").textContent = "Kaydedildi ✓"; renderBrief(); renderAll();
+      });
+  };
+  $("brDel").onclick = function () {
+    if (!briefCtx) return;
+    var key = briefKey(briefCtx.name);
+    sb.from("staj_briefs").delete().eq("firm_key", key).then(function () { delete briefs[key]; renderBrief(); renderAll(); });
+  };
 
   /* ---------------- belgeler / kontrol listesi ---------------- */
   var DOC_DEFAULT = [
