@@ -1,0 +1,36 @@
+name: Probe
+
+# Tanılama: yeni kaynak eklerken bir adresin Actions ortamından nasıl göründüğüne bakmak için elle çalıştırılır.
+on:
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: Boşlukla ayrılmış adresler
+        required: true
+      pattern:
+        description: Bağlantı süzgeci (regex)
+        required: false
+        default: ""
+      ctx:
+        description: Eşleşme çevresinden gösterilecek karakter
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bak
+        env:
+          URLS: ${{ inputs.urls }}
+          PATTERN: ${{ inputs.pattern }}
+          CTX: ${{ inputs.ctx }}
+        run: python scripts/probe.py "$URLS" "$PATTERN" "$CTX"
