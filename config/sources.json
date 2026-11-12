@@ -20,6 +20,26 @@
     ],
     "max_pages": 4
   },
+  "kariyer": {
+    "enabled": true,
+    "urls": [
+      "https://www.kariyer.net/is-ilanlari/bursa-stajyer",
+      "https://www.kariyer.net/is-ilanlari/kocaeli-stajyer",
+      "https://www.kariyer.net/is-ilanlari/sakarya-stajyer",
+      "https://www.kariyer.net/is-ilanlari/yalova-stajyer",
+      "https://www.kariyer.net/is-ilanlari/balikesir-stajyer",
+      "https://www.kariyer.net/is-ilanlari/bilecik-stajyer",
+      "https://www.kariyer.net/is-ilanlari/eskisehir-stajyer",
+      "https://www.kariyer.net/is-ilanlari/tekirdag-stajyer",
+      "https://www.kariyer.net/is-ilanlari/canakkale-stajyer",
+      "https://www.kariyer.net/is-ilanlari/istanbul-stajyer",
+      "https://www.kariyer.net/is-ilanlari/manisa-stajyer",
+      "https://www.kariyer.net/is-ilanlari/izmir-stajyer",
+      "https://www.kariyer.net/is-ilanlari/ankara-stajyer"
+    ],
+    "max_pages": 3,
+    "note": "Yalnızca <şehir>-stajyer adresleri geçerli; geçersiz adres kariyer.net'te genel ulusal listeye düşer. Sayfalama ?cp=N"
+  },
   "arbeitnow": {
     "enabled": true,
     "bases": [
@@ -229,7 +249,7 @@
       "name": "Kariyer.net: Bursa staj",
       "url": "https://www.kariyer.net/is-ilanlari/bursa-staj",
       "kind": "manuel",
-      "note": "Otomatik taranamaz; her gün bak"
+      "note": "Şehir sayfaları otomatik taranıyor (günlük). Kendi kayıtlı aramanı yine de kurabilirsin"
     }
   ],
   "companies": [

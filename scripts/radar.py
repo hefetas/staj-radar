@@ -497,8 +497,105 @@ def fetch_pages(cfg: dict) -> dict:
     return {"items": items, "ok_sites": ok_sites}
 
 
+KARIYER_BASE = "https://www.kariyer.net"
+KARIYER_ICON_TEXTS = {"accessible", "update", "sponsorlu ilan", "sponsorlu"}
+KARIYER_MORE_CITIES = re.compile(r"\+\s*(\d+)\s*il daha")
+
+
+class KariyerParser(HTMLParser):
+    """kariyer.net liste sayfası. Her ilan, öznitelikleri (cityName, workModelText…) taşıyan bir
+    <div data-test="ad-card"> ile onun içindeki <a href="/is-ilani/…"> bağlantısından oluşur.
+    html.parser öznitelik adlarını küçük harfe çevirir (cityName -> cityname)."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.cards: list[dict] = []
+        self._attrs: dict = {}
+        self._cur: dict | None = None
+        self._skip = 0
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag in ("script", "style"):
+            self._skip += 1
+        elif tag == "div" and a.get("data-test") == "ad-card":
+            self._attrs = a
+        elif tag == "a" and self._cur is None and "/is-ilani/" in (a.get("href") or ""):
+            self._cur = {"href": a["href"], "attrs": self._attrs, "texts": [], "alt": ""}
+            self._attrs = {}
+        elif tag == "img" and self._cur is not None and not self._cur["alt"]:
+            self._cur["alt"] = ws(a.get("alt"))
+
+    def handle_data(self, data):
+        if self._cur is not None and not self._skip:
+            t = ws(data)
+            if t:
+                self._cur["texts"].append(t)
+
+    def handle_endtag(self, tag):
+        if tag in ("script", "style"):
+            self._skip = max(0, self._skip - 1)
+        elif tag == "a" and self._cur is not None:
+            self.cards.append(self._cur)
+            self._cur = None
+
+
+def kariyer_job(card: dict) -> dict | None:
+    """Ayrıştırılmış bir kariyer.net kartını ortak ilan biçimine çevirir."""
+    texts = [t for t in card["texts"] if fold(t) not in KARIYER_ICON_TEXTS]
+    if not texts:
+        return None
+    a = card["attrs"]
+    title = texts[0]
+    company = card["alt"] or (texts[1] if len(texts) > 1 else "")
+    model = a.get("workmodeltext", "")
+    remote = "uzaktan" in fold(model) or "remote" in fold(model)
+    city = ws(a.get("cityname", ""))
+    more = next((m.group(0) for t in texts if (m := KARIYER_MORE_CITIES.search(t))), "")
+    # Uzaktan ilanlar tek bir şehre ait değil: şehir yazılırsa Bursa puanı haksız yere artar.
+    location = "Uzaktan (Türkiye)" if remote else city
+    snippet = " · ".join(x for x in (model, a.get("worktypetext", ""), a.get("sectorname", ""),
+                                     f"{city} {more}".strip() if remote or more else "") if x)
+    return make_job("Kariyer.net", title, urllib.parse.urljoin(KARIYER_BASE, card["href"]), company,
+                    location, "TR", snippet, trusted_intern=True, remote=remote)
+
+
+def fetch_kariyer(cfg: dict) -> list[dict]:
+    """kariyer.net'in herkese açık <şehir>-stajyer liste sayfaları (giriş gerekmez).
+    Sayfalama ?cp=N ile yapılır; sponsorlu ilanlar her sayfada tekrar ettiği için kimliğe göre tekilleştirilir.
+    Geçersiz bir adres kariyer.net'te sessizce genel ulusal listeye düşer; şehir bu yüzden URL'den değil
+    kartın kendi cityName alanından alınır."""
+    urls = cfg.get("urls", [])
+    if not urls:
+        raise SkipSource("adres listesi boş")
+    out, errors = {}, []
+    for base in urls:
+        try:
+            for page in range(1, int(cfg.get("max_pages", 3)) + 1):
+                url = base if page == 1 else f"{base}{'&' if '?' in base else '?'}cp={page}"
+                p = KariyerParser()
+                p.feed(http_get(url))
+                rows = [j for j in (kariyer_job(c) for c in p.cards) if j]
+                if not rows:
+                    if page == 1:
+                        errors.append(f"{safe_url(url)}: ilan kartı bulunamadı (sayfa yapısı değişmiş olabilir)")
+                    break
+                new = [r for r in rows if r["id"] not in out]
+                for r in new:
+                    out[r["id"]] = r
+                if not new:
+                    break
+                time.sleep(PAUSE)
+        except Exception as e:  # noqa: BLE001
+            errors.append(str(e))
+    if not out:
+        raise RuntimeError(("; ".join(errors) or "hiç ilan bulunamadı")[:300])
+    return list(out.values())
+
+
 FETCHERS = {
     "youthall": fetch_youthall,
+    "kariyer": fetch_kariyer,
     "arbeitnow": fetch_arbeitnow,
     "adzuna": fetch_adzuna,
     "rss": fetch_rss,

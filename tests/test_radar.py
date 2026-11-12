@@ -647,6 +647,72 @@ class RadarTests(unittest.TestCase):
         finally:
             radar.http_get = ORIG_GET
 
+    @staticmethod
+    def _kariyer_card(href, title, company, city, model, wtype, sector, sponsored=False, more=""):
+        """kariyer.net'in gerçek kart yapısı: öznitelikli div + içinde bağlantı (sponsorlu/ikon metinleriyle)."""
+        return (f'<div data-test="ad-card" workModelText="{model}" workTypeText="{wtype}" sectorName="{sector}" '
+                f'cityName="{city}" positionName="Stajyer" class="job-list-card-item"><div>'
+                f'<a href="{href}" target="_blank" data-test="ad-card-item" class="k-ad-card">'
+                + ("<span>Sponsorlu İlan</span>" if sponsored else "")
+                + f'<div data-test="company-logo"><img data-test="company-image" alt="{company}"></div>'
+                f'<div class="title-wrapper"><span>{title}</span> <i>accessible</i></div>'
+                f'<span>{company}</span> <span>{city} {more}</span> <i>update</i> 3 gün</a></div></div>')
+
+    def test_kariyer_parse_pagination_and_failure(self):
+        c = self._kariyer_card
+        yazaki = c("/is-ilani/yazaki-long-term-internship-4595088", "Long Term Internship (Spring Semester)",
+                   "Yazaki Systems Technologies Turkey", "Bursa", "İş Yerinde", "Tam zamanlı", "Mühendislik Hizmetleri")
+        tunca = c("/is-ilani/tunca-stajyer-muhendis-4556944", "Stajyer Mühendis", "TUNCA GROUP DANIŞMANLIK LİMİTED",
+                  "Bursa", "Uzaktan / Remote", "Dönemsel", "Danışmanlık")
+        sponsor = c("/is-ilani/korino-produksiyon-stajyeri-4591634", "Prodüksiyon Stajyeri", "Korino Medya", "İstanbul",
+                    "İş Yerinde", "Tam zamanlı", "Medya", sponsored=True)
+        faurecia = c("/is-ilani/faurecia-long-term-intern-4585485", "Long Term Intern", "Faurecia Otomotiv Sanayi",
+                     "Bursa", "İş Yerinde", "Yarı zamanlı", "Otomotiv", more="+3 il daha")
+        pages = {"p1": yazaki + tunca + sponsor, "p2": sponsor + faurecia, "p3": sponsor + faurecia}
+        seen = []
+
+        def fake(url, headers=None, timeout=25, retries=2, data=None):
+            seen.append(url)
+            key = "p3" if "cp=3" in url else "p2" if "cp=2" in url else "p1"
+            return f"<html><body><script>var a='<a href=\"/is-ilani/x-1\">x</a>'</script>{pages[key]}</body></html>"
+        radar.http_get = fake
+        try:
+            out = radar.fetch_kariyer({"urls": ["https://www.kariyer.net/is-ilanlari/bursa-stajyer"], "max_pages": 5})
+            self.assertEqual(seen, ["https://www.kariyer.net/is-ilanlari/bursa-stajyer",
+                                    "https://www.kariyer.net/is-ilanlari/bursa-stajyer?cp=2",
+                                    "https://www.kariyer.net/is-ilanlari/bursa-stajyer?cp=3"])  # 3. sayfada yeni yok -> durur
+            by = {j["url"].rsplit("-", 1)[-1]: j for j in out}
+            self.assertEqual(len(out), 4)  # tekrar eden sponsorlu ilan bir kez sayılır
+            y = by["4595088"]
+            self.assertEqual((y["company"], y["location"], y["country"]), ("Yazaki Systems Technologies Turkey", "Bursa", "TR"))
+            self.assertTrue(y["trusted_intern"])
+            self.assertEqual(y["url"], "https://www.kariyer.net/is-ilani/yazaki-long-term-internship-4595088")
+            self.assertEqual(by["4591634"]["title"], "Prodüksiyon Stajyeri")  # "Sponsorlu İlan" başlık sanılmaz
+            self.assertEqual(by["4585485"]["title"], "Long Term Intern")  # "accessible"/"update" ikon metinleri elenir
+            self.assertIn("+3 il daha", by["4585485"]["snippet"])
+            t = by["4556944"]
+            self.assertTrue(t["remote"])
+            self.assertEqual(t["location"], "Uzaktan (Türkiye)")  # uzaktan ilan Bursa ilanı gibi puanlanmaz
+            self.assertEqual(radar.detect_remote(t), "uzaktan")
+            res = radar.score_job(y, self.prof)
+            self.assertIsNotNone(res)
+            self.assertEqual(res[2], "bursa")
+            self.assertEqual(radar.score_job(t, self.prof)[2], "belirsiz")
+            # sayfa yapısı değişirse (kart yok) sessizce 0 ilan dönmek yerine hata verir
+            radar.http_get = lambda *a, **k: "<html><body>captcha</body></html>"
+            with self.assertRaises(RuntimeError):
+                radar.fetch_kariyer({"urls": ["https://www.kariyer.net/is-ilanlari/bursa-stajyer"]})
+            with self.assertRaises(radar.SkipSource):
+                radar.fetch_kariyer({"urls": []})
+        finally:
+            radar.http_get = ORIG_GET
+
+    def test_kariyer_enabled_in_config_with_valid_city_urls(self):
+        cfg = json.loads((ROOT / "config" / "sources.json").read_text(encoding="utf-8"))["kariyer"]
+        self.assertTrue(cfg["enabled"])
+        self.assertTrue(cfg["urls"][0].endswith("/bursa-stajyer"))  # Bursa önce
+        self.assertTrue(all(u.startswith("https://www.kariyer.net/is-ilanlari/") and u.endswith("-stajyer") for u in cfg["urls"]))
+
     def test_quiet_digest_and_heartbeat(self):
         import datetime as dt
         now = dt.datetime(2026, 11, 8, 13, 0, tzinfo=dt.timezone.utc)
