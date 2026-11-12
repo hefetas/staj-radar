@@ -25,6 +25,8 @@ def main():
                 print("  işaret:", mark, "@", html.index(mark))
         anchors = re.findall(r'<a\b[^>]*href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', html, re.S | re.I)
         print("bağlantı sayısı:", len(anchors))
+        if not anchors or u.endswith("robots.txt"):
+            print(html[:3500])
         shown = 0
         seen = set()
         for href, inner in anchors:
