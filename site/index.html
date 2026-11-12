@@ -33,6 +33,13 @@
   select { border-radius: 10px; }
   .chip[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
   .group { margin: 22px 0 8px; font-size: .78rem; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; display: flex; justify-content: space-between; }
+  .cityTabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; position: sticky; top: 0; z-index: 3; background: var(--bg); padding: 6px 0; }
+  .cityTabs::-webkit-scrollbar { display: none; }
+  .cityTabs .chip { white-space: nowrap; flex: none; }
+  .cityHead { margin: 26px 0 10px; padding-bottom: 6px; border-bottom: 2px solid var(--accent); display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .cityHead h3 { margin: 0; font-size: 1.15rem; font-weight: 650; color: var(--accent); }
+  .cityHead span { color: var(--muted); font-size: .82rem; }
+  .cityMore { display: block; width: 100%; margin: 0 0 6px; text-align: center; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: grid; grid-template-columns: 50px 1fr; gap: 12px; }
   .score { width: 50px; height: 50px; border-radius: 12px; display: grid; place-items: center; font-weight: 650; background: var(--accent-soft); color: var(--accent); }
   .score.mid { background: var(--warn-soft); color: var(--warn); }
@@ -169,7 +176,7 @@
 
     <section class="pane" id="p-yurtici" hidden>
       <div id="progHome"></div>
-      <div class="bar" id="regions" role="group" aria-label="Uzaklık"></div>
+      <div class="bar cityTabs" id="regions" role="group" aria-label="Şehir"></div>
       <div class="bar">
         <input type="search" id="q" placeholder="Ara: firma, başlık, şehir…" aria-label="Ara">
         <select id="sort" aria-label="Sırala">
@@ -333,7 +340,7 @@
   var ACTIVE_AFTER = ["applied", "interview", "offer", "rejected"];
   var COUNTRY = { DE: "Almanya", GB: "Birleşik Krallık", NL: "Hollanda", AT: "Avusturya", CH: "İsviçre", FR: "Fransa" };
 
-  var state = { farFilter: "all", q3: "", dueOnly: false, firmFilter: "all", cvLang: "tr", cvJob: null, region: "all", q: "", sort: "km", onlyNew: false, country: "all", q2: "", sort2: "score", evFilter: "all", annFilter: "all", showHidden: false, open: {}, cardOpen: {}, sub: {}, picksAll: false, mailKind: "ilk", liTime: "r604800", liIntern: false };
+  var state = { farFilter: "all", q3: "", dueOnly: false, firmFilter: "all", cvLang: "tr", cvJob: null, region: "all", city: load("radar.city", "all"), q: "", sort: "km", onlyNew: false, country: "all", q2: "", sort2: "score", evFilter: "all", annFilter: "all", showHidden: false, open: {}, cardOpen: {}, sub: {}, picksAll: false, mailKind: "ilk", liTime: "r604800", liIntern: false };
   var tab = "yeni", newSince = null, seenSaved = false;
   var user = null, jobs = [], meta = {}, events = [], anns = [], marks = {}, briefs = {}, checked = {}, lastRead = 0, profile = { cv_tr: "", cv_en: "" };
 
@@ -840,12 +847,34 @@
   }
   function visibleBase(j) { var s = status(j); return s !== "hidden" && ACTIVE_AFTER.indexOf(s) < 0; }
 
+  /* Şehir: "İstanbul(Avr.)", "İstanbul(Asya)", "İstanbul +" → İstanbul; konumsuz/uzaktan/hibrit → "Konum yok" */
+  var NO_CITY = "Konum yok";
+  function cityOf(j) {
+    if (j.region === "belirsiz") return NO_CITY;
+    var s = (j.location || "").replace(/\(.*?\)/g, " ").replace(/\+/g, " ").split(/[,/|]/)[0].trim();
+    if (!s) return NO_CITY;
+    if (cfold(s).trim().indexOf("istanbul") === 0) return "İstanbul";
+    return s.charAt(0).toLocaleUpperCase("tr") + s.slice(1);
+  }
+  var CITY_PREVIEW = 6;
   function renderDomestic() {
-    chips($("regions"), REGIONS, function () { return state.region; }, function (v) { state.region = v; });
+    var base = jobs.filter(function (j) { return !isAbroad(j) && !isFar(j) && !isRemote(j) && visibleBase(j); });
+    var counts = {}, minKm = {};
+    base.forEach(function (j) {
+      var c = cityOf(j); counts[c] = (counts[c] || 0) + 1;
+      if (j.km != null && (minKm[c] == null || j.km < minKm[c])) minKm[c] = j.km;
+    });
+    /* Sıra: Bursa önce, sonra ilan sayısı çok olan şehirler, "Konum yok" en sonda */
+    var cities = Object.keys(counts).sort(function (a, b) {
+      function rank(c) { return c === "Bursa" ? 0 : c === NO_CITY ? 2 : 1; }
+      return rank(a) - rank(b) || counts[b] - counts[a] || a.localeCompare(b, "tr");
+    });
+    if (state.city !== "all" && !counts[state.city]) state.city = "all";
+    chips($("regions"), [["all", "Hepsi (" + base.length + ")"]].concat(cities.map(function (c) { return [c, c + " (" + counts[c] + ")"]; })),
+      function () { return state.city; }, function (v) { state.city = v; store("radar.city", v); });
     var q = state.q.trim().toLowerCase();
-    var rows = jobs.filter(function (j) {
-      if (isAbroad(j) || isFar(j) || isRemote(j) || !visibleBase(j)) return false;
-      if (state.region !== "all" && j.region !== state.region) return false;
+    var rows = base.filter(function (j) {
+      if (state.city !== "all" && cityOf(j) !== state.city) return false;
       if (state.onlyNew && !isNew(j)) return false;
       if (state.dueOnly && !(daysLeft(j.deadline) !== null && daysLeft(j.deadline) <= 14)) return false;
       return !q || (j.title + " " + j.company + " " + j.location + " " + j.source).toLowerCase().indexOf(q) >= 0;
@@ -853,14 +882,22 @@
     sortJobs(rows, state.sort);
     var box = $("list"); box.textContent = "";
     if (!rows.length) { box.appendChild(el("div", "empty", jobs.length ? "Bu filtreyle ilan yok." : "Henüz ilan yok. İlk tarama çalışınca burada görünecek.")); }
-    var last = null;
-    rows.forEach(function (j) {
-      if (state.sort === "km" && j.region !== last) {
-        var n = rows.filter(function (x) { return x.region === j.region; }).length;
-        var g = el("div", "group"); g.appendChild(el("span", null, REGION_TITLE[j.region] || j.region)); g.appendChild(el("span", null, String(n)));
-        box.appendChild(g); last = j.region;
+    /* Şehir başlıkları altında grupla; "Hepsi"de her şehirden ilk birkaç ilan, gerisi "tümünü göster" ile */
+    var collapse = state.city === "all" && !q;
+    cities.forEach(function (c) {
+      var list = rows.filter(function (j) { return cityOf(j) === c; });
+      if (!list.length) return;
+      var h = el("div", "cityHead");
+      h.appendChild(el("h3", null, c));
+      h.appendChild(el("span", null, list.length + " ilan" + (c !== "Bursa" && c !== NO_CITY && minKm[c] != null ? " · ~" + minKm[c] + " km" : "")));
+      box.appendChild(h);
+      var shown = collapse && !state.open["city:" + c] ? list.slice(0, CITY_PREVIEW) : list;
+      shown.forEach(function (j) { box.appendChild(card(j)); });
+      if (shown.length < list.length) {
+        var more = el("button", "btn cityMore", c + " · kalan " + (list.length - shown.length) + " ilanı göster");
+        more.onclick = function () { state.city = c; store("radar.city", c); renderAll(); window.scrollTo(0, $("regions").offsetTop); };
+        box.appendChild(more);
       }
-      box.appendChild(card(j));
     });
     $("fNew").setAttribute("aria-pressed", String(state.onlyNew));
     $("fDue").setAttribute("aria-pressed", String(state.dueOnly));
