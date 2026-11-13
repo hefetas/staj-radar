@@ -16,7 +16,9 @@
       "https://www.youthall.com/tr/is-ilanlari/izmir-stajyer/",
       "https://www.youthall.com/tr/is-ilanlari/ankara-stajyer/",
       "https://www.youthall.com/tr/OyakRenault/",
-      "https://www.youthall.com/tr/bosch"
+      "https://www.youthall.com/tr/bosch",
+      "https://www.youthall.com/tr/coskunozholding/jobs",
+      "https://www.youthall.com/tr/beycelikgestamp/jobs"
     ],
     "max_pages": 4
   },
@@ -175,6 +177,29 @@
           "staj",
           "intern"
         ]
+      },
+      {
+        "name": "Coşkunöz Holding kariyer sayfası (Youthall)",
+        "url": "https://www.youthall.com/tr/coskunozholding",
+        "notify": "important",
+        "must": [
+          "staj",
+          "yetenek",
+          "program",
+          "intern"
+        ]
+      },
+      {
+        "name": "Beyçelik Gestamp kariyer sayfası (Youthall)",
+        "url": "https://www.youthall.com/tr/beycelikgestamp",
+        "notify": "important",
+        "must": [
+          "staj",
+          "yetenek",
+          "program",
+          "intern",
+          "dostum"
+        ]
       }
     ]
   },
@@ -281,17 +306,17 @@
       "name": "TOGG",
       "sector": "Otomotiv",
       "city": "Gemlik, Bursa",
-      "url": "https://www.google.com/search?q=TOGG%20kariyer%20staj%20ba%C5%9Fvuru",
-      "verified": false,
-      "note": ""
+      "url": "https://www.kariyer.net/firma-profil/turkiye-nin-otomobili-girisim-grubu-sanayi-ve-tica-201193-230593",
+      "verified": true,
+      "note": "Asıl tesisi Gemlik'te değil Gebze'de; iş ilanları LinkedIn ve kariyer.net üzerinden paylaşılıyor, kariyer.net şehir taramasına giriyor"
     },
     {
       "name": "Karsan",
       "sector": "Otomotiv",
       "city": "Bursa",
-      "url": "https://www.google.com/search?q=Karsan%20kariyer%20staj%20ba%C5%9Fvuru",
-      "verified": false,
-      "note": ""
+      "url": "https://www.kariyer.net/firma-profil/karsan-1372-36918",
+      "verified": true,
+      "note": "kariyer.net Bursa-stajyer taramasına giriyor"
     },
     {
       "name": "Bosch Rexroth",
@@ -329,17 +354,17 @@
       "name": "Beyçelik Gestamp",
       "sector": "Otomotiv yan sanayi",
       "city": "Bursa",
-      "url": "https://www.google.com/search?q=Bey%C3%A7elik%20Gestamp%20kariyer%20staj%20ba%C5%9Fvuru",
-      "verified": false,
-      "note": ""
+      "url": "https://www.youthall.com/tr/beycelikgestamp/jobs",
+      "verified": true,
+      "note": "\"Genç Dostum\" aday uzman programı dönemsel açılıyor; Youthall firma sayfası artık taranıyor"
     },
     {
       "name": "Coşkunöz Metal Form",
       "sector": "Metal / otomotiv yan sanayi",
       "city": "Bursa",
-      "url": "https://www.google.com/search?q=Co%C5%9Fkun%C3%B6z%20Metal%20Form%20kariyer%20staj%20ba%C5%9Fvuru",
-      "verified": false,
-      "note": ""
+      "url": "https://www.youthall.com/tr/coskunozholding/jobs",
+      "verified": true,
+      "note": "Coşkunöz Holding bünyesinde; staj başvurusu holding üzerinden, Youthall firma sayfası artık taranıyor"
     },
     {
       "name": "T.K.G. Otomotiv",
@@ -401,9 +426,9 @@
       "name": "Sütaş",
       "sector": "Gıda / süt",
       "city": "Karacabey, Bursa",
-      "url": "https://www.google.com/search?q=S%C3%BCta%C5%9F%20kariyer%20staj%20ba%C5%9Fvuru",
-      "verified": false,
-      "note": ""
+      "url": "https://www.kariyer.net/firma-profil/sutas-sut-urunleri-a-s-9087-225986",
+      "verified": true,
+      "note": "\"SÜTAJYER+\" uzun dönem staj programı var; kısa yaz stajı ilanı için kariyer.net taramasını takip et"
     },
     {
       "name": "Eker Süt Ürünleri",
