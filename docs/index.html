@@ -224,6 +224,21 @@
       <div id="newList"></div>
     </section>
 
+    <section class="pane" id="p-beni" hidden>
+      <p class="hint">Burada kendini tanıt. Verdiğin cevaplar "CV'yi uyarla" istemini ve zamanla ilan puanlamasını daha isabetli yapar. Bu bilgileri yalnızca sen görürsün; istediğin zaman güncelleyip silebilirsin.</p>
+      <div class="panel">
+        <h2 id="beniTitle">Beni Tanı</h2>
+        <div id="beniFields"></div>
+        <div class="bar" style="margin-top:14px"><button class="btn on" id="beniSave">Kaydet</button><span class="meta" id="beniMsg"></span></div>
+      </div>
+      <div class="panel">
+        <h2>Zamanla eklediğim notlar</h2>
+        <p class="hint">Yukarıdaki alanlara sığmayan ama bilmemi istediğin her şeyi buraya not düş: bir deneyim, bir tercih, bir uyarı…</p>
+        <div class="fieldrow"><input type="text" class="field" id="beniNoteNew" placeholder="örn. Vize haftasında mülakata gidemem"><button class="btn" id="beniNoteAdd">Ekle</button></div>
+        <div id="beniNotes" style="margin-top:10px"></div>
+      </div>
+    </section>
+
     <section class="pane" id="p-tercih" hidden>
       <p class="hint">Bugün sekmesindeki “Sana özel” liste buradaki ayarlara ve kartlardaki 👍 / 👎 seçimlerine göre kişiselleşir. Hiçbir ilan silinmez: 👎 dediğin ilan Diğer sekmesine geçer, 👍 ile geri alabilirsin.</p>
       <div class="panel">
@@ -409,6 +424,7 @@
   var REGION_ORDER = { bursa: 0, yakin: 1, orta: 2, uzak: 3, belirsiz: 4 };
   var GROUPS = [
     ["yeni", "Bugün", [["yeni", "Bugün"]]],
+    ["profil", "Profilim", [["beni", "Beni Tanı"]]],
     ["ilanlar", "İlanlar", [["yurtici", "Yurt içi"], ["yurtdisi", "Yurt dışı"], ["uzaktan", "Uzaktan"], ["linkedin", "LinkedIn"], ["diger", "Diğer"]]],
     ["basvuru", "Başvurularım", [["takip", "Takip"], ["firmalar", "Firmalar"], ["belgeler", "Belgeler"]]],
     ["ayar", "Ayarlar", [["tercih", "Tercihler"], ["cv", "CV"], ["bildirimler", "Bildirim"], ["duyurular", "Duyuru"], ["kaynaklar", "Kaynak"]]]
@@ -421,7 +437,7 @@
 
   var state = { farFilter: "all", q3: "", dueOnly: false, firmFilter: "all", cvLang: "tr", cvJob: null, region: "all", city: load("radar.city", "all"), farCity: load("radar.farCity", "all"), q: "", sort: "km", onlyNew: false, country: "all", q2: "", sort2: "score", evFilter: "all", annFilter: "all", showHidden: false, open: {}, cardOpen: {}, sub: {}, picksAll: false, mailKind: "ilk", liTime: "r604800", liIntern: false };
   var tab = "yeni", newSince = null, seenSaved = false;
-  var user = null, jobs = [], meta = {}, events = [], anns = [], marks = {}, briefs = {}, checked = {}, lastRead = 0, profile = { cv_tr: "", cv_en: "" };
+  var user = null, jobs = [], meta = {}, events = [], anns = [], marks = {}, briefs = {}, checked = {}, lastRead = 0, profile = { cv_tr: "", cv_en: "", about: null };
 
   function load(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
   function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
@@ -597,7 +613,7 @@
     Promise.all([
       sb.from("staj_state").select("data").eq("id", 1).maybeSingle(),
       sb.from("staj_marks").select("job_id,status,note,contact,applied_at,person"),
-      sb.from("staj_profile").select("cv_tr,cv_en,checklist,last_seen,prefs").maybeSingle(),
+      sb.from("staj_profile").select("cv_tr,cv_en,checklist,last_seen,prefs,about").maybeSingle(),
       sb.from("staj_briefs").select("firm_key,firm_name,content,updated_at")
     ]).then(function (res) {
       briefs = {};
@@ -607,7 +623,7 @@
       meta = d.meta || {}; events = d.events || [];
       jobs = Object.keys(d.jobs || {}).map(function (k) { return d.jobs[k]; });
       anns = Object.keys(d.announcements || {}).map(function (k) { return d.announcements[k]; });
-      if (res[2] && res[2].data) { profile = { cv_tr: res[2].data.cv_tr || "", cv_en: res[2].data.cv_en || "", checklist: res[2].data.checklist || null, last_seen: res[2].data.last_seen || null, prefs: res[2].data.prefs || null }; if (!prefsDirty) prefs = mergePrefs(res[2].data.prefs); }
+      if (res[2] && res[2].data) { profile = { cv_tr: res[2].data.cv_tr || "", cv_en: res[2].data.cv_en || "", checklist: res[2].data.checklist || null, last_seen: res[2].data.last_seen || null, prefs: res[2].data.prefs || null, about: res[2].data.about || null }; if (!prefsDirty) prefs = mergePrefs(res[2].data.prefs); }
       if (newSince === null) newSince = profile.last_seen ? new Date(profile.last_seen).getTime() : Date.now() - 3 * 86400000;
       marks = {};
       ((res[1].data) || []).forEach(function (m) {
@@ -683,6 +699,7 @@
     star: '<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2-5.5-2.9-5.5 2.9 1-6.2L3 9.6l6.2-.9z"/>',
     send: '<path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/>',
     cv: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
+    profil: '<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/>',
     chev: '<path d="m6 9 6 6 6-6"/>',
     go: '<path d="m9 6 6 6-6 6"/>'
   };
@@ -745,6 +762,7 @@
     var rows = [
       ["ilanlar", "Yurt içi ilanlar", dom.length ? dom.length + " uygun ilan" : "Şu an uygun ilan yok", !dom.length, "yurtici", false],
       ["due", "Yaklaşan son tarih", due ? (due.company || due.title) + " · " + (dd === 0 ? "son gün" : dd + " gün") : "Yaklaşan son tarih yok", dd !== null && dd <= 14, "yurtici", false],
+      ["profil", "Profilim", aboutFilledCount() ? aboutFilledCount() + "/" + ABOUT_FIELDS.length + " alan dolu" : "Seni tanımamı sağla", !aboutFilledCount(), "beni", true],
       ["star", "Kaydettiklerin", saved ? saved + " ilan" : "Henüz ilan kaydetmedin", !saved, "takip", true],
       ["send", "Başvurularım", applied ? applied + " başvuru" : "Henüz başvuru yok", !applied, "takip", true],
       ["cv", "CV", profile.cv_tr ? "Hazır" : "CV eklenmedi", !profile.cv_tr, "cv", true],
@@ -1296,7 +1314,7 @@
     var L = [];
     L.push("Aşağıdaki staj ilanı için CV'mi uyarla. Dil: " + (lang === "en" ? "İngilizce" : "Türkçe") + ".");
     L.push("");
-    L.push("KİM: Bursa Uludağ Üniversitesi Endüstri Mühendisliği 2. sınıf öğrencisi. 20 iş günlük I. yaz stajı arıyorum (üretim veya hizmet işletmesi, işletmede en az bir mühendis olmalı).");
+    L.push(whoLine());
     L.push("");
     L.push("İLAN:");
     L.push("- Pozisyon: " + (j.title || ""));
@@ -1615,6 +1633,69 @@
     sb.from("staj_briefs").delete().eq("firm_key", key).then(function () { delete briefs[key]; renderBrief(); renderAll(); });
   };
 
+  /* ---------------- beni tanı ---------------- */
+  var ABOUT_FIELDS = [
+    ["universite", "Üniversite", "örn. Uludağ Üniversitesi"],
+    ["bolum", "Bölüm ve sınıf", "örn. Endüstri Mühendisliği, 2. sınıf"],
+    ["gano", "GANO", "örn. 2.85"],
+    ["zorunluTarih", "Stajı bu tarihe kadar bulmuş olmam gerekiyor", "örn. Haziran 2027"],
+    ["hedefSektor", "Hedeflediğim alanlar / roller", "örn. üretim, kalite, tedarik zinciri, proses geliştirme"],
+    ["kisit", "Kabul edemeyeceğim kısıtlar", "örn. vardiyalı olmaz, konaklama sağlamalı, yurt dışında olmaz"],
+    ["beceri", "Beceri ve sertifikalar", "örn. Excel, SQL, Power BI, AutoCAD, Inventor, İngilizce B2, Almanca A2"],
+    ["ekstra", "Projeler / ekstra deneyim", "örn. Kaggle üretim veri analizi projesi (GitHub: hefetas)"]
+  ];
+  function about() { if (!profile.about) profile.about = {}; if (!profile.about.notlar) profile.about.notlar = []; return profile.about; }
+  function aboutFilledCount() { var a = about(); return ABOUT_FIELDS.filter(function (f) { return (a[f[0]] || "").trim(); }).length; }
+  function saveAbout() {
+    $("beniMsg").textContent = "Kaydediliyor…";
+    sb.from("staj_profile").upsert({ email: user.email, about: profile.about, updated_at: new Date().toISOString() }, { onConflict: "email" })
+      .then(function (r) { $("beniMsg").textContent = r && r.error ? "Kaydedilemedi" : "Kaydedildi ✓"; renderHero(); });
+  }
+  function renderBeni() {
+    var a = about(), box = $("beniFields"); box.textContent = "";
+    ABOUT_FIELDS.forEach(function (f) {
+      var lb = el("label", "lbl", f[1]); lb.htmlFor = "beni_" + f[0];
+      box.appendChild(lb);
+      var inp = document.createElement("input"); inp.className = "field"; inp.type = "text"; inp.id = "beni_" + f[0]; inp.placeholder = f[2];
+      if (document.activeElement !== inp) inp.value = a[f[0]] || "";
+      box.appendChild(inp);
+    });
+    $("beniTitle").textContent = "Beni Tanı · " + aboutFilledCount() + "/" + ABOUT_FIELDS.length + " dolu";
+    var nl = $("beniNotes"); nl.textContent = "";
+    if (!a.notlar.length) nl.appendChild(el("div", "empty", "Henüz not yok. İstediğin an bir şey eklersin, istediğin an silersin."));
+    a.notlar.forEach(function (n, i) {
+      var row = el("div", "chk");
+      row.appendChild(el("span", null, n.t));
+      row.appendChild(el("span", "meta", " · " + ago(n.ts)));
+      var rm = el("button", "link", "✕"); rm.title = "Notu sil";
+      rm.onclick = function () { a.notlar.splice(i, 1); saveAbout(); renderBeni(); };
+      row.appendChild(rm); nl.appendChild(row);
+    });
+  }
+  $("beniSave").onclick = function () {
+    var a = about();
+    ABOUT_FIELDS.forEach(function (f) { var inp = $("beni_" + f[0]); a[f[0]] = inp ? inp.value.trim() : (a[f[0]] || ""); });
+    saveAbout(); renderBeni();
+  };
+  $("beniNoteAdd").onclick = function () {
+    var v = $("beniNoteNew").value.trim(); if (!v) return;
+    about().notlar.unshift({ t: v, ts: new Date().toISOString() });
+    $("beniNoteNew").value = ""; saveAbout(); renderBeni();
+  };
+  $("beniNoteNew").onkeydown = function (e) { if (e.key === "Enter") $("beniNoteAdd").onclick(); };
+  function whoLine() {
+    var a = about();
+    var L = ["KİM: " + (a.universite || "Bursa Uludağ Üniversitesi") + ", " + (a.bolum || "Endüstri Mühendisliği 2. sınıf öğrencisi") + ". 20 iş günlük I. yaz stajı arıyorum (üretim veya hizmet işletmesi, işletmede en az bir mühendis olmalı)."];
+    if (a.gano) L.push("GANO: " + a.gano + ".");
+    if (a.zorunluTarih) L.push("Stajı " + a.zorunluTarih + "'e kadar bulmuş olmam gerekiyor.");
+    if (a.hedefSektor) L.push("Hedeflediğim alanlar: " + a.hedefSektor + ".");
+    if (a.beceri) L.push("Beceri/sertifikalar: " + a.beceri + ".");
+    if (a.ekstra) L.push("Projeler/ekstra deneyim: " + a.ekstra + ".");
+    if (a.kisit) L.push("Kısıtlarım: " + a.kisit + ".");
+    if (a.notlar && a.notlar.length) L.push("Bilmeni istediğim ek notlar: " + a.notlar.slice(0, 6).map(function (n) { return n.t; }).join(" | ") + ".");
+    return L.join(" ");
+  }
+
   /* ---------------- belgeler / kontrol listesi ---------------- */
   var DOC_DEFAULT = [
     "2. sınıf sonunda GANO en az 1,80 olmalı (kontrol et)",
@@ -1654,7 +1735,7 @@
   function renderStatus() {
     $("status").textContent = meta.updated ? "Son tarama " + ago(meta.updated) + " · " + jobs.length + " ilan" : "Henüz tarama yok";
   }
-  function renderAll() { fitCache = {}; learnCache = null; renderTabs(); renderStatus(); renderHero(); renderNew(); renderPrefs(); renderEvents(); renderDomestic(); renderAbroad(); renderRemote(); renderFar(); renderFirms(); renderCvTab(); renderPrograms($("progHome"), "yurtici"); renderPrograms($("progAbroad"), "yurtdisi"); renderBoard(); renderDocs(); renderLinkedin(); renderAnns(); renderSources(); renderAccess(); }
+  function renderAll() { fitCache = {}; learnCache = null; renderTabs(); renderStatus(); renderHero(); renderNew(); renderBeni(); renderPrefs(); renderEvents(); renderDomestic(); renderAbroad(); renderRemote(); renderFar(); renderFirms(); renderCvTab(); renderPrograms($("progHome"), "yurtici"); renderPrograms($("progAbroad"), "yurtdisi"); renderBoard(); renderDocs(); renderLinkedin(); renderAnns(); renderSources(); renderAccess(); }
 
   $("q").oninput = function (e) { state.q = e.target.value; renderDomestic(); };
   $("sort").onchange = function (e) { state.sort = e.target.value; renderDomestic(); };
