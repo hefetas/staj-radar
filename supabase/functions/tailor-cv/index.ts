@@ -2,7 +2,8 @@
 // Gizli değişken: NVIDIA_API_KEY (Supabase → Edge Functions → Secrets)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const MODELS = ["deepseek-ai/deepseek-v4.1-flash", "mistralai/mistral-large-4-1t-a52b"];
+const MODELS = ["nvidia/nemotron-3.5-lightning-30b-a3b", "deepseek-ai/deepseek-v4.1-flash"];
+const BUDGET_MS = 130000; // Supabase 150 sn'de isteği keser
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -18,7 +19,7 @@ async function pageText(url: string): Promise<string> {
       .replace(/<(script|style|noscript)[\s\S]*?<\/\1>/gi, " ")
       .replace(/<[^>]+>/g, " ")
       .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&")
-      .replace(/\s+/g, " ").trim().slice(0, 12000);
+      .replace(/\s+/g, " ").trim().slice(0, 6000);
   } catch {
     return "";
   }
@@ -44,6 +45,7 @@ function parseJson(text: string) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  const started = Date.now();
 
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
     global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
@@ -78,15 +80,17 @@ Reply with ONLY a JSON object with keys: cv, cover_letter, email_subject, email_
 
   let lastErr = "";
   for (const model of MODELS) {
+    const left = BUDGET_MS - (Date.now() - started);
+    if (left < 15000) break;
     try {
       const r = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
         method: "POST",
         headers: { Authorization: `Bearer ${Deno.env.get("NVIDIA_API_KEY")}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], temperature: 0.4, max_tokens: 4000 }),
-        signal: AbortSignal.timeout(110000),
+        body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], temperature: 0.4, max_tokens: 3000 }),
+        signal: AbortSignal.timeout(Math.min(left, 90000)),
       });
       if (r.status === 401 || r.status === 403) return json({ error: "NVIDIA_API_KEY geçersiz veya eksik." }, 500);
-      if (!r.ok) { lastErr = `NVIDIA ${r.status}`; continue; }
+      if (!r.ok) { lastErr = `NVIDIA ${r.status}`; console.error(model, lastErr, (await r.text()).slice(0, 300)); continue; }
       const d = await r.json();
       const res = parseJson(d.choices[0].message.content);
       for (const k of ["cv", "cover_letter", "email_subject", "email_body"]) res[k] = restore(String(res[k] ?? ""));
@@ -94,6 +98,7 @@ Reply with ONLY a JSON object with keys: cv, cover_letter, email_subject, email_
       return json(res);
     } catch (e) {
       lastErr = String(e);
+      console.error(model, lastErr, Date.now() - started, "ms");
     }
   }
   return json({ error: `Yanıt alınamadı (${lastErr}). Biraz sonra tekrar dene.` }, 502);
