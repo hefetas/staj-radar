@@ -155,6 +155,10 @@
   .kw { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
   .kw .tag.ok { background: var(--accent-soft); color: var(--accent); }
   .kw .tag.miss { background: var(--warn-soft); color: var(--warn); }
+  .cvdoc { background: #fff; color: #111; border: 1px solid var(--line); border-radius: 8px; padding: 18px 22px; font: 13px/1.45 Arial, sans-serif; margin: 10px 0; }
+  .cvdoc h1 { font-size: 20px; margin: 0 0 2px; } .cvdoc h2 { font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #999; margin: 12px 0 4px; padding-bottom: 2px; }
+  .cvdoc p { margin: 2px 0; } .cvdoc ul { margin: 2px 0; padding-left: 18px; }
+  details.cvalt { margin-top: 12px; } details.cvalt summary { cursor: pointer; color: var(--muted); }
   .subtabs { display: none; gap: 6px; flex-wrap: wrap; margin: -8px 0 16px; }
   .why { margin-top: 6px; font-size: .84rem; color: var(--accent); }
   .lbl { display: block; margin: 12px 0 4px; font-size: .86rem; color: var(--muted); }
@@ -392,8 +396,19 @@
         <div class="bar" style="margin-top:10px"><button class="chip" id="cvLangTr" aria-pressed="true">Türkçe</button><button class="chip" id="cvLangEn" aria-pressed="false">English</button></div>
         <div class="meta">İlandaki anahtar kelimeler ve CV'nde geçip geçmediği:</div>
         <div class="kw" id="cvKw"></div>
-        <textarea class="big" id="cvPrompt" readonly></textarea>
-        <div class="actions"><button class="btn on" id="cvCopy">İstemi kopyala</button><a class="btn" id="cvOpen" target="_blank" rel="noopener noreferrer" href="https://claude.ai/new">Claude'u aç</a><button class="btn" id="cvClose">Kapat</button></div>
+        <div class="actions"><button class="btn on" id="cvGen">✨ Claude ile CV hazırla</button><button class="btn" id="cvClose">Kapat</button></div>
+        <p class="meta" id="cvStatus"></p>
+        <div id="cvOut" hidden>
+          <div class="cvdoc" id="cvDoc"></div>
+          <div class="actions"><button class="btn on" id="cvApply">🚀 Başvur</button><button class="btn" id="cvPdf">PDF indir</button><a class="btn" id="cvMail" href="mailto:">E-posta ile başvur</a><button class="btn" id="cvCopyLetter">Ön yazıyı kopyala</button></div>
+          <p class="meta" id="cvApplyNote"></p>
+          <div class="panel"><h2>Ön yazı</h2><textarea class="big" id="cvLetter"></textarea></div>
+          <div class="panel"><h2>CV'nde eksik kalanlar</h2><ul id="cvMissing"></ul><h2>Neler değişti</h2><ul id="cvChanges"></ul></div>
+        </div>
+        <details class="cvalt"><summary>API'siz yol: istemi kopyalayıp Claude'a yapıştır</summary>
+          <textarea class="big" id="cvPrompt" readonly></textarea>
+          <div class="actions"><button class="btn" id="cvCopy">İstemi kopyala</button><a class="btn" id="cvOpen" target="_blank" rel="noopener noreferrer" href="https://claude.ai/new">Claude'u aç</a></div>
+        </details>
         <p class="meta" id="cvNote"></p>
       </div>
     </div>
@@ -413,6 +428,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
 (function () {
   var SB_URL = "https://plaoulgdbgtpqhemfqix.supabase.co";
@@ -1342,6 +1358,67 @@
     state.cvLang = (j.country && j.country !== "TR") ? "en" : "tr";
     $("cvModal").hidden = false; renderCv();
   }
+  // --- Claude ile otomatik CV (Edge Function: tailor-cv) ---
+  function cvKey() { return "radar.cv." + (state.cvJob.id || state.cvJob.company) + "." + state.cvLang; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function inline(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>"); }
+  function mdToHtml(md) {
+    var out = [], inList = false;
+    md.split("\n").forEach(function (l) {
+      l = l.trim();
+      var li = /^[-*•] /.test(l);
+      if (inList && !li) { out.push("</ul>"); inList = false; }
+      if (!l) return;
+      if (li) { if (!inList) { out.push("<ul>"); inList = true; } out.push("<li>" + inline(l.slice(2)) + "</li>"); }
+      else if (l.indexOf("## ") === 0) out.push("<h2>" + inline(l.slice(3)) + "</h2>");
+      else if (l.indexOf("# ") === 0) out.push("<h1>" + inline(l.slice(2)) + "</h1>");
+      else out.push("<p>" + inline(l) + "</p>");
+    });
+    if (inList) out.push("</ul>");
+    return out.join("");
+  }
+  function fillList(id, arr) { var u = $(id); u.textContent = ""; (arr || []).forEach(function (t) { u.appendChild(el("li", null, t)); }); if (!u.children.length) u.appendChild(el("li", "meta", "—")); }
+  function showCvResult(r) {
+    state.cvRes = r;
+    $("cvOut").hidden = !r;
+    if (!r) return;
+    $("cvDoc").innerHTML = mdToHtml(r.cv);
+    $("cvLetter").value = r.cover_letter;
+    fillList("cvMissing", r.missing); fillList("cvChanges", r.changes);
+    $("cvMail").href = "mailto:?subject=" + encodeURIComponent(r.email_subject) + "&body=" + encodeURIComponent(r.email_body);
+    $("cvApplyNote").textContent = "";
+    $("cvGen").textContent = "↻ Yeniden hazırla";
+  }
+  function cvFileName() {
+    var j = state.cvJob, name = ((state.cvRes.cv.match(/^# (.+)$/m) || [])[1] || "CV");
+    return (name + " CV " + (j.company || "")).trim().replace(/[^\wçğıöşüÇĞİÖŞÜ]+/g, "_") + ".pdf";
+  }
+  function cvPdf() {
+    return html2pdf().set({ margin: 10, filename: cvFileName(), html2canvas: { scale: 2 }, jsPDF: { format: "a4" } }).from($("cvDoc")).save();
+  }
+  $("cvGen").onclick = function () {
+    var b = $("cvGen"); b.disabled = true;
+    $("cvStatus").textContent = "Claude ilanı okuyup CV'ni uyarlıyor… (30-60 sn)";
+    sb.functions.invoke("tailor-cv", { body: { job: state.cvJob, lang: state.cvLang, who: whoLine() } }).then(function (res) {
+      if (res.error) {
+        var ctx = res.error.context;
+        return (ctx && ctx.json ? ctx.json() : Promise.reject(res.error)).then(function (d) { throw new Error(d.error || "Hata"); });
+      }
+      store(cvKey(), res.data); showCvResult(res.data);
+      $("cvStatus").textContent = "Hazır. Kontrol et; gerekirse ön yazıyı düzenle.";
+    }).catch(function (e) { $("cvStatus").textContent = "Olmadı: " + (e.message || e); })
+      .then(function () { b.disabled = false; });
+  };
+  $("cvPdf").onclick = cvPdf;
+  $("cvCopyLetter").onclick = function () { navigator.clipboard.writeText($("cvLetter").value); $("cvCopyLetter").textContent = "Kopyalandı ✓"; };
+  $("cvApply").onclick = function () {
+    var j = state.cvJob;
+    if (j.url) window.open(j.url, "_blank", "noopener");
+    if (navigator.clipboard) navigator.clipboard.writeText($("cvLetter").value);
+    cvPdf();
+    if (j.id) saveMark(j, "applied");
+    $("cvApplyNote").textContent = "CV indirildi, ön yazı panoda, ilan yeni sekmede açıldı ve Takip'te “Başvurdum” olarak işaretlendi. Formda CV'yi yükle, ön yazıyı yapıştır, gönder.";
+  };
   function renderCv() {
     var j = state.cvJob; if (!j) return;
     $("cvSub").textContent = [j.title, j.company].filter(Boolean).join(" · ");
@@ -1356,6 +1433,8 @@
       box.appendChild(el("span", "tag " + (has ? "ok" : "miss"), (has ? "✓ " : "✗ ") + k));
     });
     $("cvPrompt").value = buildPrompt(j, state.cvLang);
+    $("cvStatus").textContent = ""; $("cvGen").textContent = "✨ Claude ile CV hazırla";
+    showCvResult(load(cvKey(), null));
     $("cvNote").textContent = cvText(state.cvLang).trim() ? "" : "CV metnin boş. CV sekmesine yapıştırıp kaydedersen istem tam dolar.";
   }
   $("cvLangTr").onclick = function () { state.cvLang = "tr"; renderCv(); };
