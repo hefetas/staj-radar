@@ -9,7 +9,7 @@ Sekmeler: Bugün (Sana özel), Uzaktan, Diğer, Takip, LinkedIn, CV, Beni Tanı,
 - `scripts/radar.py`: ilanları tarar, puanlar, `docs/data/jobs.json` yazar, bildirim gönderir (GitHub Actions, 3 saatte bir).
 - `docs/index.html`: yayındaki site (Pages `/docs`). `site/index.html` aynı dosyanın kopyası; birini değiştirince diğerini de eşitle.
 - `config/`: `profile.json` (puan ağırlıkları), `sources.json` (kaynaklar), `cities.json`.
-- `supabase/functions/tailor-cv`: Claude API ile ilana özel CV/ön yazı/e-posta (Supabase Edge Function, secret `ANTHROPIC_API_KEY`, `staj_is_allowed()` ile korunur). Değişince Supabase'e yeniden deploy et.
+- `supabase/functions/tailor-cv`: NVIDIA ücretsiz API (build.nvidia.com) ile ilana özel İngilizce CV/ön yazı/e-posta. Supabase Edge Function, secret `NVIDIA_API_KEY`, `staj_is_allowed()` ile korunur; e-posta/telefon gönderilmeden gizlenir. Değişince Supabase'e yeniden deploy et.
 - Test: `python -I -m unittest discover -s tests`
 - Workflow'lar `docs/data` ve `.keepalive` dosyalarına otomatik commit atar; push öncesi `git pull --rebase`.
 
