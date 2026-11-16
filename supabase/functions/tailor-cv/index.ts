@@ -2,7 +2,7 @@
 // Gizli değişken: NVIDIA_API_KEY (Supabase → Edge Functions → Secrets)
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const MODELS = ["nvidia/nemotron-3.5-lightning-30b-a3b", "deepseek-ai/deepseek-v4.1-flash"];
+const MODELS = ["mistralai/mistral-large-4-1t-a52b", "deepseek-ai/deepseek-v4.1-flash"];
 const BUDGET_MS = 130000; // Supabase 150 sn'de isteği keser
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -86,13 +86,14 @@ Reply with ONLY a JSON object with keys: cv, cover_letter, email_subject, email_
       const r = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
         method: "POST",
         headers: { Authorization: `Bearer ${Deno.env.get("NVIDIA_API_KEY")}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], temperature: 0.4, max_tokens: 3000 }),
+        body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], temperature: 0.4, max_tokens: 6000 }),
         signal: AbortSignal.timeout(Math.min(left, 90000)),
       });
       if (r.status === 401 || r.status === 403) return json({ error: "NVIDIA_API_KEY geçersiz veya eksik." }, 500);
       if (!r.ok) { lastErr = `NVIDIA ${r.status}`; console.error(model, lastErr, (await r.text()).slice(0, 300)); continue; }
       const d = await r.json();
-      const res = parseJson(d.choices[0].message.content);
+      const msg = d.choices?.[0]?.message || {};
+      const res = parseJson(msg.content || msg.reasoning_content || "");
       for (const k of ["cv", "cover_letter", "email_subject", "email_body"]) res[k] = restore(String(res[k] ?? ""));
       res.model = model;
       return json(res);
