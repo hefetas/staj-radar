@@ -1415,8 +1415,11 @@
   }
   $("cvGen").onclick = function () {
     var b = $("cvGen"); b.disabled = true;
-    $("cvStatus").textContent = "İlan okunuyor, İngilizce CV hazırlanıyor… (30-90 sn)";
-    sb.functions.invoke("tailor-cv", { body: { job: state.cvJob, who: whoLine() } }).then(function (res) {
+    var t0 = Date.now(), tick = setInterval(function () {
+      $("cvStatus").textContent = "İngilizce CV hazırlanıyor… " + Math.round((Date.now() - t0) / 1000) + " sn (en fazla ~2 dk)";
+    }, 1000);
+    var limit = new Promise(function (_, rej) { setTimeout(function () { rej(new Error("Süre doldu, NVIDIA şu an yavaş. Biraz sonra tekrar dene.")); }, 150000); });
+    Promise.race([sb.functions.invoke("tailor-cv", { body: { job: state.cvJob, who: whoLine() } }), limit]).then(function (res) {
       if (res.error) {
         var ctx = res.error.context;
         return (ctx && ctx.json ? ctx.json() : Promise.reject(res.error)).then(function (d) { throw new Error(d.error || "Hata"); });
@@ -1424,7 +1427,7 @@
       store(cvKey(), res.data); showCvResult(res.data);
       $("cvStatus").textContent = "Hazır. Kontrol et; gerekirse ön yazıyı düzenle.";
     }).catch(function (e) { $("cvStatus").textContent = "Olmadı: " + (e.message || e); })
-      .then(function () { b.disabled = false; });
+      .then(function () { clearInterval(tick); b.disabled = false; });
   };
   $("cvPdf").onclick = cvPdf;
   $("cvCopyLetter").onclick = function () { navigator.clipboard.writeText($("cvLetter").value); $("cvCopyLetter").textContent = "Kopyalandı ✓"; };
