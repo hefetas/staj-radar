@@ -194,7 +194,8 @@
   .card, .panel, .row, .ev, .mini { border-radius: 10px; }
   .card { padding: 11px 14px; grid-template-columns: 38px 1fr; gap: 10px; }
   .card:hover { border-color: #2e2e33; }
-  .score { width: 38px; height: 38px; border-radius: 8px; font-size: .85rem; }
+  .score { width: 44px; height: 38px; border-radius: 8px; font-size: .8rem; }
+  .card { grid-template-columns: 44px 1fr; }
   .title { font-weight: 500; font-size: .94rem; }
   .btn { font-size: .78rem; padding: 2px 9px; border-radius: 6px; color: var(--muted); }
   .btn:hover { color: var(--ink); border-color: #3a3a40; }
@@ -270,6 +271,17 @@
     </section>
 
     <section class="pane" id="p-beni" hidden>
+      <div class="panel">
+        <h2>CV</h2>
+        <div class="fieldrow"><label class="btn">İngilizce CV (PDF) yükle<input type="file" accept="application/pdf" id="cvFileEn" hidden></label><span class="meta" id="cvInfoEn"></span></div>
+        <div class="fieldrow"><label class="btn">Türkçe CV (PDF) yükle<input type="file" accept="application/pdf" id="cvFileTr" hidden></label><span class="meta" id="cvInfoTr"></span></div>
+        <details class="cvalt"><summary>Okunan metni gör / düzelt</summary>
+          <div class="lbl">İngilizce</div><textarea class="big" id="cvEn"></textarea>
+          <div class="lbl">Türkçe</div><textarea class="big" id="cvTr"></textarea>
+          <div class="bar" style="margin-top:8px"><button class="btn" id="cvSave">Kaydet</button></div>
+        </details>
+        <p class="meta" id="cvMsg"></p>
+      </div>
       <p class="hint">Burada kendini tanıt. Verdiğin cevaplar "CV'yi uyarla" istemini ve zamanla ilan puanlamasını daha isabetli yapar. Bu bilgileri yalnızca sen görürsün; istediğin zaman güncelleyip silebilirsin.</p>
       <div class="panel">
         <h2 id="beniTitle">Beni Tanı</h2>
@@ -287,20 +299,20 @@
     <section class="pane" id="p-tercih" hidden>
       <p class="hint">Bugün sekmesindeki “Sana özel” liste buradaki ayarlara ve kartlardaki 👍 / 👎 seçimlerine göre kişiselleşir. Hiçbir ilan silinmez: 👎 dediğin ilan Diğer sekmesine geçer, 👍 ile geri alabilirsin.</p>
       <div class="panel">
-        <h2>Sana özel puan</h2>
+        <h2>Eşleşme ayarları</h2>
         <label class="lbl" for="pfInc">Aradığım kelimeler (virgülle; geçen ilanların puanı artar)</label>
         <input class="field" type="text" id="pfInc" placeholder="örn: kalite, planlama, yalın üretim, bakım">
         <label class="lbl" for="pfExc">İstemediğim kelimeler (puanı düşer)</label>
         <input class="field" type="text" id="pfExc" placeholder="örn: satış, çağrı merkezi, muhasebe">
         <label class="lbl" for="pfKm">Bursa'dan en fazla</label>
         <select id="pfKm"><option value="0">Sınırsız</option><option value="30">30 km</option><option value="60">60 km</option><option value="100">100 km</option><option value="150">150 km</option><option value="250">250 km</option></select>
-        <label class="lbl" for="pfLevel">Bugün sekmesinin seçiciliği</label>
-        <select id="pfLevel"><option value="60">Sıkı: yalnızca en iyiler</option><option value="50">Dengeli</option><option value="40">Geniş: daha fazla ilan</option></select>
+        <label class="lbl" for="pfLevel" hidden>Seçicilik</label>
+        <select id="pfLevel" hidden><option value="60">Sıkı: yalnızca en iyiler</option><option value="50">Dengeli</option><option value="40">Geniş: daha fazla ilan</option></select>
         <label class="chk2"><input type="checkbox" id="pfDe"> Almanca isteyebilecek ilanların puanını düşür</label>
-        <label class="chk2"><input type="checkbox" id="pfAbroad"> Yurt dışı ilanları da “Sana özel”de göster</label>
+        <label class="chk2" hidden><input type="checkbox" id="pfAbroad"> Yurt dışı ilanları da “Sana özel”de göster</label>
         <div class="bar" style="margin-top:14px"><button class="btn on" id="pfSave">Kaydet</button><span class="meta" id="pfMsg"></span></div>
       </div>
-      <div class="panel">
+      <div class="panel" hidden>
         <h2>Öğrendiklerim</h2>
         <div class="meta" id="pfLearn"></div>
         <div class="bar" style="margin-top:10px"><button class="btn" id="pfReset">👍/👎 geçmişini sıfırla</button></div>
@@ -313,34 +325,32 @@
     </section>
 
     <section class="pane" id="p-yurtici" hidden>
-      <div id="progHome"></div>
+      <div id="progHome" hidden></div>
       <div class="bar cityTabs" id="regions" role="group" aria-label="Şehir"></div>
       <div class="bar">
         <input type="search" id="q" placeholder="Ara: firma, başlık, şehir…" aria-label="Ara">
         <select id="sort" aria-label="Sırala">
           <option value="km">Bursa'ya yakınlık</option>
-          <option value="score">Puana göre</option>
+          <option value="score">Eşleşmeye göre</option>
           <option value="new">En yeni</option>
           <option value="deadline">Son başvuru yakın</option>
         </select>
-        <button class="chip" id="fNew" aria-pressed="false">Yeni (48 saat)</button>
-        <button class="chip" id="fDue" aria-pressed="false">⏳ Yaklaşan</button>
-        <button class="chip" id="fIcs" title="Son başvuru ve takip tarihlerini telefon takvimine ekle">📅 Takvime ekle</button>
+        <span hidden><button id="fNew"></button><button id="fDue"></button><button id="fIcs"></button></span>
       </div>
       <div id="list"></div>
     </section>
 
     <section class="pane" id="p-yurtdisi" hidden>
-      <div id="progAbroad"></div>
+      <div id="progAbroad" hidden></div>
       <div class="bar" id="countries" role="group" aria-label="Ülke"></div>
       <div class="bar">
         <input type="search" id="q2" placeholder="Ara: firma, başlık, şehir…" aria-label="Ara">
         <select id="sort2" aria-label="Sırala">
-          <option value="score">Puana göre</option>
+          <option value="score">Eşleşmeye göre</option>
           <option value="new">En yeni</option>
           <option value="deadline">Son başvuru yakın</option>
         </select>
-        <button class="chip" id="fDue2" aria-pressed="false">⏳ Yaklaşan</button>
+        <span hidden><button id="fDue2"></button></span>
       </div>
       <div id="listAbroad"></div>
     </section>
@@ -364,12 +374,7 @@
       <div id="firmList"></div>
     </section>
 
-    <section class="pane" id="p-cv" hidden>
-      <p class="hint">CV metinlerini buraya yapıştır (yalnızca sen görürsün). İlan kartlarındaki “CV'yi uyarla” düğmesi bu metinlerle Claude için hazır bir istem oluşturur. Para harcamaz: istemi kopyalayıp Claude'a yapıştırırsın.</p>
-      <div class="panel"><h2>Türkçe CV</h2><textarea class="big" id="cvTr" placeholder="Türkçe CV metnini buraya yapıştır"></textarea></div>
-      <div class="panel"><h2>English CV</h2><textarea class="big" id="cvEn" placeholder="Paste your English CV here"></textarea></div>
-      <div class="bar"><button class="btn on" id="cvSave">Kaydet</button><span class="meta" id="cvMsg"></span></div>
-    </section>
+    <section class="pane" id="p-cv" hidden></section>
 
     <section class="pane" id="p-takip" hidden>
       <p class="hint">Kaydettiğin ve başvurduğun ilanlar. Durumu değiştir, not ekle. Telefon ve bilgisayar arasında eşitlenir.</p>
@@ -432,11 +437,9 @@
 
     <div class="modal" id="cvModal" hidden>
       <div class="sheet">
-        <h2 id="cvTitle">CV'yi bu ilana uyarla</h2>
+        <h2 id="cvTitle">CV uyarla</h2>
         <div class="meta" id="cvSub"></div>
-        <div class="bar" style="margin-top:10px"><button class="chip" id="cvLangTr" aria-pressed="true">Türkçe</button><button class="chip" id="cvLangEn" aria-pressed="false">English</button></div>
-        <div class="meta">İlandaki anahtar kelimeler ve CV'nde geçip geçmediği:</div>
-        <div class="kw" id="cvKw"></div>
+        <div hidden><button id="cvLangTr"></button><button id="cvLangEn"></button><div id="cvKw"></div></div>
         <div class="actions"><button class="btn on" id="cvGen">İngilizce CV hazırla</button><button class="btn" id="cvClose">Kapat</button></div>
         <p class="meta" id="cvStatus"></p>
         <div id="cvOut" hidden>
@@ -446,7 +449,7 @@
           <div class="panel"><h2>Ön yazı</h2><textarea class="big" id="cvLetter"></textarea></div>
           <div class="panel"><h2>CV'nde eksik kalanlar</h2><ul id="cvMissing"></ul><h2>Neler değişti</h2><ul id="cvChanges"></ul></div>
         </div>
-        <details class="cvalt"><summary>API'siz yol: istemi kopyalayıp Claude'a yapıştır</summary>
+        <details class="cvalt" hidden><summary>API'siz yol</summary>
           <textarea class="big" id="cvPrompt" readonly></textarea>
           <div class="actions"><button class="btn" id="cvCopy">İstemi kopyala</button><a class="btn" id="cvOpen" target="_blank" rel="noopener noreferrer" href="https://claude.ai/new">Claude'u aç</a></div>
         </details>
@@ -470,6 +473,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 (function () {
   var SB_URL = "https://plaoulgdbgtpqhemfqix.supabase.co";
@@ -480,11 +484,10 @@
   var REGION_TITLE = { bursa: "Bursa", yakin: "Yakın şehirler (≤200 km)", orta: "Orta uzaklık (≤450 km)", uzak: "Uzak şehirler", belirsiz: "Konum belirtilmemiş" };
   var REGION_ORDER = { bursa: 0, yakin: 1, orta: 2, uzak: 3, belirsiz: 4 };
   var GROUPS = [
-    ["yeni", "Bugün", [["yeni", "Bugün"]]],
-    ["profil", "Profilim", [["beni", "Beni Tanı"]]],
-    ["ilanlar", "İlanlar", [["yurtici", "Yurt içi"], ["yurtdisi", "Yurt dışı"], ["uzaktan", "Uzaktan"], ["linkedin", "LinkedIn"], ["diger", "Diğer"]]],
-    ["basvuru", "Başvurularım", [["takip", "Takip"], ["firmalar", "Firmalar"], ["belgeler", "Belgeler"]]],
-    ["ayar", "Ayarlar", [["tercih", "Tercihler"], ["cv", "CV"], ["bildirimler", "Bildirim"], ["duyurular", "Duyuru"], ["kaynaklar", "Kaynak"]]]
+    ["ilanlar", "İlanlar", [["yurtici", "Yurt içi"], ["yurtdisi", "Yurt dışı"]]],
+    ["profil", "Profil", [["beni", "Profil"]]],
+    ["basvuru", "Başvurular", [["takip", "Başvurular"]]],
+    ["ayar", "Ayarlar", [["tercih", "Ayarlar"]]]
   ];
   function tabList() { var o = []; GROUPS.forEach(function (g) { g[2].forEach(function (t) { o.push(t); }); }); return o; }
   function groupOf(t) { for (var i = 0; i < GROUPS.length; i++) if (GROUPS[i][2].some(function (x) { return x[0] === t; })) return GROUPS[i]; return GROUPS[0]; }
@@ -493,7 +496,7 @@
   var COUNTRY = { DE: "Almanya", GB: "Birleşik Krallık", NL: "Hollanda", AT: "Avusturya", CH: "İsviçre", FR: "Fransa" };
 
   var state = { farFilter: "all", q3: "", dueOnly: false, firmFilter: "all", cvLang: "tr", cvJob: null, region: "all", city: load("radar.city", "all"), farCity: load("radar.farCity", "all"), q: "", sort: "km", onlyNew: false, country: "all", q2: "", sort2: "score", evFilter: "all", annFilter: "all", showHidden: false, open: {}, cardOpen: {}, sub: {}, picksAll: false, mailKind: "ilk", liTime: "r604800", liIntern: false };
-  var tab = "yeni", newSince = null, seenSaved = false;
+  var tab = "yurtici", newSince = null, seenSaved = false;
   var user = null, jobs = [], meta = {}, events = [], anns = [], marks = {}, briefs = {}, checked = {}, lastRead = 0, profile = { cv_tr: "", cv_en: "", about: null };
 
   function load(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
@@ -1010,47 +1013,19 @@
   /* ---------------- ilan kartı ---------------- */
   function card(j, opt) {
     opt = opt || {};
-    var st = status(j), fi = fitInfo(j), open = !!state.cardOpen[j.id], vt = prefs.votes[j.id];
-    var dlc = daysLeft(j.deadline);
-    var c = el("article", "card" + (dlc !== null && dlc <= 14 ? " dueSoon" : ""));
-    c.appendChild(el("div", "score" + (fi.score < 35 ? " low" : fi.score < 55 ? " mid" : ""), String(fi.score)));
+    var fi = fitInfo(j), pct = Math.max(0, Math.min(100, Math.round(fi.score)));
+    var c = el("article", "card");
+    var sc = el("div", "score" + (pct < 35 ? " low" : pct < 55 ? " mid" : ""), "%" + pct); sc.title = "Eşleşme oranı";
+    c.appendChild(sc);
     var body = el("div"), t = el("h2", "title");
     t.appendChild(ext(el("a", null, j.title || "(başlıksız)"), j.url)); body.appendChild(t);
-    var where = j.location || (COUNTRY[j.country] || j.country);
-    if (!isAbroad(j) && j.km) where += " · ~" + j.km + " km";
-    body.appendChild(el("div", "meta", [j.company, where].filter(Boolean).join(" · ")));
-    var tags = el("div", "tags");
-    if (isNew(j)) tags.appendChild(el("span", "tag new", "yeni"));
-    if (dlc !== null) tags.appendChild(el("span", "tag" + (dlc <= 14 ? " due" : ""), (dlc <= 14 ? "⏳ " : "") + (dlc <= 0 ? "son gün" : "son başvuru " + dlc + " gün")));
-    if (isRemote(j)) tags.appendChild(el("span", "tag new", "uzaktan"));
-    if ((j.tags || []).indexOf("hibrit") >= 0) tags.appendChild(el("span", "tag", "hibrit"));
-    if ((j.tags || []).indexOf("almanca") >= 0) tags.appendChild(el("span", "tag soon", "Almanca olabilir"));
-    if (vt === -1) tags.appendChild(el("span", "tag soon", "elediğin ilan"));
-    markTags(tags, j);
-    if (tags.childNodes.length) body.appendChild(tags);
-    if ((opt.why || open) && fi.why) body.appendChild(el("div", "why", fi.why));
+    body.appendChild(el("div", "meta", [j.company, j.location || (COUNTRY[j.country] || j.country)].filter(Boolean).join(" · ")));
+    if (isRemote(j)) { var tags = el("div", "tags"); tags.appendChild(el("span", "tag new", "Tamamen uzaktan")); body.appendChild(tags); }
     var act = el("div", "actions");
     act.appendChild(ext(el("a", "btn", "İlana git"), j.url));
-    var sv = el("button", "btn" + (st === "saved" ? " on" : ""), "★ Kaydet"); sv.onclick = function () { toggleMark(j, "saved"); }; act.appendChild(sv);
-    var up = el("button", "btn" + (vt === 1 ? " on" : ""), "👍"); up.title = "Bana uygun: benzerlerini öne çıkar"; up.setAttribute("aria-label", "Uygun"); up.onclick = function () { voteJob(j, 1); }; act.appendChild(up);
-    var dn = el("button", "btn" + (vt === -1 ? " on" : ""), "👎"); dn.title = "Değil: Diğer sekmesine geç, benzerlerini düşür"; dn.setAttribute("aria-label", "Değil"); dn.onclick = function () { voteJob(j, -1); }; act.appendChild(dn);
-    var mo = el("button", "btn", open ? "Ayrıntı ▴" : "Ayrıntı ▾"); mo.onclick = function () { state.cardOpen[j.id] = !open; renderAll(); }; act.appendChild(mo);
+    var cvb = el("button", "btn", "CV uyarla"); cvb.onclick = function () { openCv(j, true); }; act.appendChild(cvb);
+    briefBtn(act, { name: j.company, title: j.title, location: j.location || (COUNTRY[j.country] || j.country), url: j.url });
     body.appendChild(act);
-    if (open) {
-      var rs = (j.reasons || []).filter(function (r) { return r !== "staj ilanı"; }).slice(0, 6);
-      var tg = el("div", "tags");
-      tg.appendChild(el("span", "tag", j.source));
-      rs.forEach(function (r) { tg.appendChild(el("span", "tag" + (r.charAt(0) === "-" ? " soon" : ""), r)); });
-      body.appendChild(tg);
-      var act2 = el("div", "actions");
-      [["applied", "✓ Başvurdum"], ["hidden", "Gizle"]].forEach(function (p) {
-        var b = el("button", "btn" + (st === p[0] ? " on" : ""), p[1]); b.onclick = function () { toggleMark(j, p[0]); }; act2.appendChild(b);
-      });
-      var cvb = el("button", "btn", "CV'yi uyarla"); cvb.onclick = function () { openCv(j); }; act2.appendChild(cvb);
-      briefBtn(act2, { name: j.company, title: j.title, location: j.location || (COUNTRY[j.country] || j.country), url: j.url });
-      liBtns(act2, j.company);
-      body.appendChild(act2); personUi(j, act2, body);
-    }
     c.appendChild(body); return c;
   }
   function sortJobs(arr, how) {
@@ -1126,7 +1101,7 @@
   }
   function renderDomestic() {
     cityList({
-      base: jobs.filter(function (j) { return !isAbroad(j) && !isFar(j) && !isRemote(j) && visibleBase(j); }),
+      base: jobs.filter(function (j) { return !isAbroad(j) && !isFar(j) && visibleBase(j); }),
       filter: function (j) {
         if (state.onlyNew && !isNew(j)) return false;
         return !(state.dueOnly && !(daysLeft(j.deadline) !== null && daysLeft(j.deadline) <= 14));
@@ -1139,7 +1114,7 @@
   }
 
   function renderAbroad() {
-    var all = jobs.filter(function (j) { return isAbroad(j) && !isFar(j) && !isRemote(j) && visibleBase(j); });
+    var all = jobs.filter(function (j) { return isAbroad(j) && !isFar(j) && visibleBase(j); });
     var codes = {}; all.forEach(function (j) { codes[j.country] = (codes[j.country] || 0) + 1; });
     var list = [["all", "Hepsi (" + all.length + ")"]].concat(Object.keys(codes).sort().map(function (c) { return [c, (COUNTRY[c] || c) + " (" + codes[c] + ")"]; }));
     chips($("countries"), list, function () { return state.country; }, function (v) { state.country = v; });
@@ -1394,10 +1369,11 @@
     L.push("6. Neyi neden değiştirdiğini kısaca açıkla; ben de öğreneyim.");
     return L.join("\n");
   }
-  function openCv(j) {
+  function openCv(j, auto) {
     state.cvJob = j;
-    state.cvLang = (j.country && j.country !== "TR") ? "en" : "tr";
+    state.cvLang = "en";
     $("cvModal").hidden = false; renderCv();
+    if (auto && !state.cvRes && !$("cvGen").disabled && (profile.cv_en || profile.cv_tr)) $("cvGen").click();
   }
   // --- Claude ile otomatik CV (Edge Function: tailor-cv) ---
   function cvKey() { return "radar.cv." + (state.cvJob.id || state.cvJob.company) + ".en"; }
@@ -1476,7 +1452,7 @@
     $("cvPrompt").value = buildPrompt(j, state.cvLang);
     $("cvStatus").textContent = ""; $("cvGen").textContent = "İngilizce CV hazırla";
     showCvResult(load(cvKey(), null));
-    $("cvNote").textContent = cvText(state.cvLang).trim() ? "" : "CV metnin boş. CV sekmesine yapıştırıp kaydedersen istem tam dolar.";
+    $("cvNote").textContent = (profile.cv_en || profile.cv_tr || "").trim() ? "" : "Önce Profil'den CV'ni (PDF) yükle.";
   }
   $("cvLangTr").onclick = function () { state.cvLang = "tr"; renderCv(); };
   $("cvLangEn").onclick = function () { state.cvLang = "en"; renderCv(); };
@@ -1491,13 +1467,36 @@
     var a = $("cvTr"), b = $("cvEn");
     if (document.activeElement !== a) a.value = profile.cv_tr;
     if (document.activeElement !== b) b.value = profile.cv_en;
+    $("cvInfoEn").textContent = profile.cv_en ? "Yüklü ✓" : "Yüklenmedi";
+    $("cvInfoTr").textContent = profile.cv_tr ? "Yüklü ✓" : "İsteğe bağlı";
   }
-  $("cvSave").onclick = function () {
-    profile.cv_tr = $("cvTr").value; profile.cv_en = $("cvEn").value;
+  function saveCv() {
     $("cvMsg").textContent = "Kaydediliyor…";
     sb.from("staj_profile").upsert({ email: user.email, cv_tr: profile.cv_tr, cv_en: profile.cv_en, updated_at: new Date().toISOString() }, { onConflict: "email" })
-      .then(function (r) { $("cvMsg").textContent = r && r.error ? "Kaydedilemedi" : "Kaydedildi ✓"; });
-  };
+      .then(function (r) { $("cvMsg").textContent = r && r.error ? "Kaydedilemedi" : "Kaydedildi ✓"; renderCvTab(); });
+  }
+  $("cvSave").onclick = function () { profile.cv_tr = $("cvTr").value; profile.cv_en = $("cvEn").value; saveCv(); };
+  function pdfText(file) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    return file.arrayBuffer().then(function (buf) { return pdfjsLib.getDocument({ data: buf }).promise; }).then(function (pdf) {
+      var pages = [];
+      for (var i = 1; i <= pdf.numPages; i++) pages.push(pdf.getPage(i).then(function (p) { return p.getTextContent(); }).then(function (tc) {
+        return tc.items.map(function (it) { return it.str + (it.hasEOL ? "\n" : ""); }).join("");
+      }));
+      return Promise.all(pages);
+    }).then(function (arr) { return arr.join("\n").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim(); });
+  }
+  [["cvFileEn", "cv_en"], ["cvFileTr", "cv_tr"]].forEach(function (p) {
+    $(p[0]).onchange = function (e) {
+      var f = e.target.files[0]; if (!f) return;
+      $("cvMsg").textContent = "PDF okunuyor…";
+      pdfText(f).then(function (txt) {
+        if (txt.length < 100) { $("cvMsg").textContent = "PDF'ten metin okunamadı (taranmış görüntü olabilir). Metin içeren bir PDF yükle."; return; }
+        profile[p[1]] = txt; saveCv();
+      }).catch(function () { $("cvMsg").textContent = "PDF okunamadı."; });
+      e.target.value = "";
+    };
+  });
 
   /* ---------------- e-posta taslağı ---------------- */
   var mailCtx = null;
@@ -1655,7 +1654,7 @@
   function briefBtn(act, ctx) {
     if (!ctx.name) return;
     var has = !!briefs[briefKey(ctx.name)];
-    var b = el("button", "btn" + (has ? " on" : ""), has ? "📄 Firma özeti" : "🔎 Firma araştır");
+    var b = el("button", "btn" + (has ? " on" : ""), has ? "Firma özeti" : "Firma araştır");
     b.onclick = function () { openBrief(ctx); };
     act.appendChild(b);
   }
