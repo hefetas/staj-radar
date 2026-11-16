@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<meta name="theme-color" content="#050d16">
+<meta name="theme-color" content="#0b0b0c">
 <title>Staj Radar</title>
 <style>
   :root {
-    --bg: #050d16; --card: #101b26; --card2: #182633; --ink: #eef2f6; --muted: #8b99a8; --line: #1d2b39;
-    --accent: #5b93ff; --accent-soft: #15284a; --warn: #f5a54a; --warn-soft: #36270f; --bad: #ef7d7d;
+    --bg: #0b0b0c; --card: #131315; --card2: #1a1a1d; --ink: #e4e4e6; --muted: #85858c; --line: #222225;
+    --accent: #8ea8d8; --accent-soft: rgba(142,168,216,.10); --warn: #cfa36a; --warn-soft: rgba(207,163,106,.10); --bad: #d98a8a;
   }
   * { box-sizing: border-box; }
   html { color-scheme: dark; }
   body { margin: 0; color: var(--ink); min-height: 100vh;
-         background: radial-gradient(1100px 760px at -8% -18%, rgba(28,86,160,.75) 0%, rgba(16,52,102,.35) 38%, transparent 68%) fixed, var(--bg);
-         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+         background: var(--bg);
+         font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
   .wrap { min-height: 100vh; }
   h1 { font-size: 1.45rem; margin: 0; letter-spacing: -0.01em; font-weight: 650; }
   h1 span { color: var(--accent); }
@@ -167,11 +167,52 @@
   [hidden] { display: none !important; }
   .card, .panel, .row, .ev, .mini { border-radius: 16px; }
   .card:hover { border-color: #2a3c50; }
-  .group { color: #9fb0c2; }
+  .group { color: var(--muted); }
+  /* --- Sade koyu tema --- */
+  .hint { display: none; }
+  .brand { font-size: 1.05rem; padding-bottom: 20px; }
+  .logo { width: 30px; height: 30px; border-radius: 8px; font-size: .75rem; background: var(--card2); border: 1px solid var(--line); box-shadow: none; }
+  .app { grid-template-columns: 220px minmax(0, 1fr); }
+  .side { border-right: 1px solid var(--line); }
+  .tab { font-size: .9rem; padding: 7px 10px; gap: 10px; border-radius: 8px; color: var(--muted); }
+  .tab svg { width: 17px; height: 17px; }
+  .tab[aria-selected=true] { background: var(--card2); color: var(--ink); font-weight: 500; }
+  .subnav { margin-left: 37px; }
+  .subitem { font-size: .85rem; padding: 5px 10px; border-radius: 6px; }
+  .subitem[aria-current=true] { background: var(--card2); font-weight: 500; }
+  .top h1 { font-size: 1.25rem; font-weight: 600; }
+  .badge { background: var(--card2); color: var(--ink); font-weight: 500; }
+  .hero { display: block; background: none; border: 0; border-radius: 0; margin-bottom: 18px; }
+  .heroL { display: none; }
+  .heroR { background: none; padding: 0; border-top: 1px solid var(--line); }
+  .hrow { padding: 9px 4px; gap: 10px; border-radius: 0; border-bottom: 1px solid var(--line); }
+  .hrow:hover { background: var(--card); }
+  .hico { width: 28px; height: 28px; background: none; color: var(--muted); }
+  .hico svg { width: 17px; height: 17px; }
+  .hrow b { font-size: .9rem; font-weight: 500; display: inline; }
+  .hrow small { display: inline; margin-left: 8px; font-size: .82rem; }
+  .card, .panel, .row, .ev, .mini { border-radius: 10px; }
+  .card { padding: 11px 14px; grid-template-columns: 38px 1fr; gap: 10px; }
+  .card:hover { border-color: #2e2e33; }
+  .score { width: 38px; height: 38px; border-radius: 8px; font-size: .85rem; }
+  .title { font-weight: 500; font-size: .94rem; }
+  .btn { font-size: .78rem; padding: 2px 9px; border-radius: 6px; color: var(--muted); }
+  .btn:hover { color: var(--ink); border-color: #3a3a40; }
+  .btn.on { background: transparent; border-color: var(--line); color: var(--accent); }
+  .chip, select, input[type=search] { font-size: .82rem; padding: 4px 11px; }
+  .chip[aria-pressed=true] { background: var(--card2); border-color: #3a3a40; color: var(--ink); }
+  .cityHead { border-bottom: 1px solid var(--line); }
+  .cityHead h3 { color: var(--ink); font-size: 1rem; font-weight: 600; }
+  .col { background: var(--card); border: 1px solid var(--line); }
+  .col h3 { color: var(--muted); }
+  .ico { background: var(--card2); color: var(--muted); }
+  .login .btn { font-size: .9rem; padding: 6px 16px; background: transparent; border-color: var(--line); color: var(--ink); }
+  h1 span { color: var(--ink); font-weight: 400; }
+  .userchip { background: none; }
   @media (max-width: 860px) {
     .app { display: block; }
     .side { position: sticky; top: 0; z-index: 6; height: auto; display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-            background: rgba(5,13,22,.9); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+            background: rgba(11,11,12,.92); width: auto; border-right: 0; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
     .brand { padding: 0; }
     .brand .name { display: none; }
     .logo { width: 34px; height: 34px; border-radius: 10px; font-size: .8rem; }
