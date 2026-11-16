@@ -282,6 +282,10 @@
         </details>
         <p class="meta" id="cvMsg"></p>
       </div>
+      <div class="panel">
+        <h2>Hazırlanan CV'ler</h2>
+        <div id="cvList"></div>
+      </div>
       <p class="hint">Burada kendini tanıt. Verdiğin cevaplar "CV'yi uyarla" istemini ve zamanla ilan puanlamasını daha isabetli yapar. Bu bilgileri yalnızca sen görürsün; istediğin zaman güncelleyip silebilirsin.</p>
       <div class="panel">
         <h2 id="beniTitle">Beni Tanı</h2>
@@ -670,6 +674,7 @@
   /* ---------------- veri ---------------- */
   function refresh() {
     $("status").textContent = "yükleniyor…";
+    loadCvs();
     Promise.all([
       sb.from("staj_state").select("data").eq("id", 1).maybeSingle(),
       sb.from("staj_marks").select("job_id,status,note,contact,applied_at,person"),
@@ -1376,7 +1381,6 @@
     if (auto && !state.cvRes && !$("cvGen").disabled && (profile.cv_en || profile.cv_tr)) $("cvGen").click();
   }
   // --- Claude ile otomatik CV (Edge Function: tailor-cv) ---
-  function cvKey() { return "radar.cv." + (state.cvJob.id || state.cvJob.company) + ".en"; }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function inline(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>"); }
   function mdToHtml(md) {
@@ -1413,21 +1417,52 @@
   function cvPdf() {
     return html2pdf().set({ margin: 10, filename: cvFileName(), html2canvas: { scale: 2 }, jsPDF: { format: "a4" } }).from($("cvDoc")).save();
   }
+  // Hazırlanan CV'ler staj_cvs tablosunda, ilan başına bir satır
+  var cvs = {};
+  function loadCvs() {
+    return sb.from("staj_cvs").select("job_id,title,company,url,status,data,error,updated_at").then(function (r) {
+      cvs = {}; ((r && r.data) || []).forEach(function (c) { cvs[c.job_id] = c; }); renderCvList();
+    });
+  }
+  function renderCvList() {
+    var box = $("cvList"); if (!box) return; box.textContent = "";
+    var rows = Object.keys(cvs).map(function (k) { return cvs[k]; }).sort(function (a, b) { return a.updated_at < b.updated_at ? 1 : -1; });
+    if (!rows.length) { box.appendChild(el("div", "meta", "Henüz yok. İlanlarda “CV uyarla”ya bas.")); return; }
+    rows.forEach(function (c) {
+      var r = el("div", "row"), t = el("div");
+      t.appendChild(el("div", "title", c.title || "(ilan)"));
+      t.appendChild(el("div", "meta", [c.company, c.status === "done" ? "hazır" : c.status === "error" ? "hata" : "hazırlanıyor"].filter(Boolean).join(" · ")));
+      r.appendChild(t);
+      var b = el("button", "btn", "Aç");
+      b.onclick = function () { openCv(jobs.filter(function (j) { return String(j.id) === c.job_id; })[0] || { id: c.job_id, title: c.title, company: c.company, url: c.url }); };
+      r.appendChild(b); box.appendChild(r);
+    });
+  }
+  var pollTimer = null;
+  function waitCv(jobId, t0) {
+    clearTimeout(pollTimer);
+    var sec = Math.round((Date.now() - t0) / 1000);
+    sb.from("staj_cvs").select("job_id,title,company,url,status,data,error,updated_at").eq("job_id", jobId).maybeSingle().then(function (r) {
+      var c = r && r.data;
+      if (c) { cvs[jobId] = c; renderCvList(); }
+      var mine = state.cvJob && String(state.cvJob.id) === jobId;
+      if (c && c.status === "done") { if (mine) { showCvResult(c.data); $("cvStatus").textContent = "Hazır. Profil › Hazırlanan CV'ler altında da duruyor."; $("cvGen").disabled = false; } return; }
+      if (c && c.status === "error" || sec > 170) { if (mine) { $("cvStatus").textContent = "Olmadı: " + ((c && c.error) || "Süre doldu, biraz sonra tekrar dene."); $("cvGen").disabled = false; } return; }
+      if (mine) $("cvStatus").textContent = "İngilizce CV hazırlanıyor… " + sec + " sn. Pencereyi kapatabilirsin; bitince Profil'de görünür.";
+      pollTimer = setTimeout(function () { waitCv(jobId, t0); }, 3000);
+    });
+  }
   $("cvGen").onclick = function () {
-    var b = $("cvGen"); b.disabled = true;
-    var t0 = Date.now(), tick = setInterval(function () {
-      $("cvStatus").textContent = "İngilizce CV hazırlanıyor… " + Math.round((Date.now() - t0) / 1000) + " sn (en fazla ~2 dk)";
-    }, 1000);
-    var limit = new Promise(function (_, rej) { setTimeout(function () { rej(new Error("Süre doldu, NVIDIA şu an yavaş. Biraz sonra tekrar dene.")); }, 150000); });
-    Promise.race([sb.functions.invoke("tailor-cv", { body: { job: state.cvJob, who: whoLine() } }), limit]).then(function (res) {
+    var j = state.cvJob, b = $("cvGen"); b.disabled = true;
+    showCvResult(null);
+    $("cvStatus").textContent = "Başlatılıyor…";
+    sb.functions.invoke("tailor-cv", { body: { job: j, who: whoLine() } }).then(function (res) {
       if (res.error) {
         var ctx = res.error.context;
         return (ctx && ctx.json ? ctx.json() : Promise.reject(res.error)).then(function (d) { throw new Error(d.error || "Hata"); });
       }
-      store(cvKey(), res.data); showCvResult(res.data);
-      $("cvStatus").textContent = "Hazır. Kontrol et; gerekirse ön yazıyı düzenle.";
-    }).catch(function (e) { $("cvStatus").textContent = "Olmadı: " + (e.message || e); })
-      .then(function () { clearInterval(tick); b.disabled = false; });
+      waitCv(String(j.id), Date.now());
+    }).catch(function (e) { $("cvStatus").textContent = "Olmadı: " + (e.message || e); b.disabled = false; });
   };
   $("cvPdf").onclick = cvPdf;
   $("cvCopyLetter").onclick = function () { navigator.clipboard.writeText($("cvLetter").value); $("cvCopyLetter").textContent = "Kopyalandı ✓"; };
@@ -1454,7 +1489,11 @@
     });
     $("cvPrompt").value = buildPrompt(j, state.cvLang);
     $("cvStatus").textContent = ""; $("cvGen").textContent = "İngilizce CV hazırla";
-    showCvResult(load(cvKey(), null));
+    var saved = cvs[String(j.id)];
+    showCvResult(saved && saved.status === "done" ? saved.data : null);
+    $("cvGen").disabled = false;
+    if (saved && saved.status === "pending" && Date.now() - new Date(saved.updated_at) < 170000) { $("cvGen").disabled = true; waitCv(String(j.id), new Date(saved.updated_at).getTime()); }
+    else if (saved && saved.status === "error") $("cvStatus").textContent = "Son deneme olmadı: " + saved.error;
     $("cvNote").textContent = (profile.cv_en || profile.cv_tr || "").trim() ? "" : "Önce Profil'den CV'ni (PDF) yükle.";
   }
   $("cvLangTr").onclick = function () { state.cvLang = "tr"; renderCv(); };
